@@ -56,7 +56,8 @@ check_doc() {
     local sect
     sect=$(awk '/^## +.*产物与目录/{f=1;next} /^## /{f=0} f' "$p")
     if [ -n "$sect" ] && ! printf '%s' "$sect" | grep -q 'file:///'; then
-      echo "  [链] $label.md 「产物与目录」没有可点击的 file:/// 链接，用户点不开（仅告警）"
+      echo "  [链] $label.md 「产物与目录」没有可点击的 file:/// 链接，用户点不开"
+      fail=1
     fi
   fi
   if [ "$label" = CONTEXT ] && grep -qE "^- \[ \]$" "$p"; then
@@ -80,6 +81,14 @@ for taskdir in "$ROOT"/*/; do
   echo "== $name"
   check_doc "$taskdir/README.md"  "$README_SECTIONS"  README
   check_doc "$taskdir/CONTEXT.md" "$CONTEXT_SECTIONS" CONTEXT
+  # 两档顶部「最近更新」必须同日：一边改了另一边没跟上，说明有一侧在说谎
+  top_date() { grep -oE "最近更新：[0-9]{4}-[0-9]{2}-[0-9]{2}" "$1" 2>/dev/null | head -1 | grep -oE "[0-9]{4}-[0-9]{2}-[0-9]{2}"; }
+  rd="$(top_date "$taskdir/README.md")"
+  ctxd="$(top_date "$taskdir/CONTEXT.md")"
+  if [ -n "$rd" ] && [ -n "$ctxd" ] && [ "$rd" != "$ctxd" ]; then
+    echo "  [期] 两档「最近更新」不一致：README=$rd CONTEXT=$ctxd — 有一侧改动没同步（必须同日）"
+    fail=1
+  fi
 done
 
 echo
