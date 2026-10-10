@@ -44,6 +44,18 @@ Both files start with an H1 (`# <task-folder> · 设计思路与使用说明` / 
 
 `设计思路` must be a three-column trade-off table: **决策 / 理由 / 代价**. A conclusion without its cost is not a design note.
 
+## Naming
+
+Three names are fixed and never translated: `README.md`, `CONTEXT.md`, `AGENTS.md`.
+
+The ban covers **role duplication**, not "a third file". A file whose job is "the manual" belongs inside `README.md`; one whose job is "handoff notes / progress" belongs inside `CONTEXT.md` — so `使用说明.md`, `进度.md`, `notes.txt` are forbidden as duplicates of the two docs. Ask: *is this an explanation for a reader, or the work product itself?*
+
+Any **other output document — a real deliverable** (design draft, review opinion, decision memo, evaluation report, question list) may exist as its own file, and **must have a Chinese filename**: `设计总览.md`, `归属决策件.md`, `他人设计稿评审意见书.md`. Readers are Chinese colleagues and the files get forwarded into group chats and Feishu; an ASCII name makes them guess which file is which.
+
+Exempt from Chinese naming: non-`.md` deliverables (`.docx` / `.pdf` must keep the vendor's filename so versions match), `_`-prefixed machine artifacts, anything under `archive/` or `inputs/`, and code/scripts/config.
+
+`check-docs.sh` enforces this as `[名]` — a **failure** — scanning only top-level `.md` files, which is what lets `archive/` and `inputs/` fall out for free.
+
 ## Content division (the part agents get wrong)
 
 - Progress, verification logs, TODOs, open issues → `CONTEXT.md` **only**.

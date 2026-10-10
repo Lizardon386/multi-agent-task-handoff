@@ -43,6 +43,23 @@ top_date() {
     | head -1 | grep -oE "[0-9]{4}-[0-9]{2}-[0-9]{2}"
 }
 
+# 顶层「其他输出文档」必须中文命名。README/CONTEXT/AGENTS 是规范固定名，_ 前缀是机器
+# 产物（如 _ref-*），非 .md 文件（.docx/.pdf 常需与对方系统里的原件同名）一律豁免。
+# 只用 LC_ALL=C 判「含非 ASCII 字节」，不依赖 grep -P（收件方的 grep 未必编译了 PCRE）。
+check_names() {
+  local dir="$1" f b
+  for f in "$dir"*.md; do
+    [ -f "$f" ] || continue
+    b=$(basename "$f")
+    case "$b" in README.md|CONTEXT.md|AGENTS.md) continue ;; esac
+    case "$b" in _*) continue ;; esac
+    if ! LC_ALL=C grep -q '[^ -~]' <<< "$b"; then
+      echo "  [名] $b 顶层输出文档必须用中文命名（双档与 _ 前缀机器产物除外）"
+      fail=1
+    fi
+  done
+}
+
 check_doc() {
   local p="$1" secs="$2" label="$3" miss
   if [ ! -f "$p" ]; then
@@ -61,7 +78,9 @@ check_doc() {
   fi
   if [ "$label" = README ]; then
     local sect
-    sect=$(awk '/^## +.*产物与目录/{f=1;next} /^## /{f=0} f' "$p")
+    # 先剥掉 HTML 注释：模板在注释和表头里写了 file:/// 示例，不剥的话空表格也会"命中链接"，
+    # 变成假绿灯。
+    sect=$(awk '/^## +.*产物与目录/{f=1;next} /^## /{f=0} f' "$p" | sed '/<!--/,/-->/d')
     if [ -n "$sect" ] && ! printf '%s' "$sect" | grep -q 'file:///'; then
       echo "  [链] $label.md 「产物与目录」没有可点击的 file:/// 链接，用户点不开"
       fail=1
@@ -88,6 +107,7 @@ for taskdir in "$ROOT"/*/; do
   echo "== $name"
   check_doc "$taskdir/README.md"  "$README_SECTIONS"  README
   check_doc "$taskdir/CONTEXT.md" "$CONTEXT_SECTIONS" CONTEXT
+  check_names "$taskdir"
   # 两档顶部「最近更新」必须同日：一边改了另一边没跟上，说明有一侧在说谎
   rd="$(top_date "$taskdir/README.md")"
   ctxd="$(top_date "$taskdir/CONTEXT.md")"
