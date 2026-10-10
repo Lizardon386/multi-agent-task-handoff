@@ -60,34 +60,44 @@ check_names() {
   done
 }
 
-# 把路径归一成可比较的形态：msys 的 /d/x 与 Windows 的 D:/x 视为同一个根。
-# Linux 的 /home/... 保持原样（正则只匹配单字母目录，故 /u/x 这类会被误判——极罕见）。
-canon() {
-  local p="$1"
-  p="${p#file:///}"
-  if printf '%s' "$p" | grep -qE '^/[a-zA-Z]/'; then
-    p="${p#/}"; p="${p%%/*}:${p#*/}"
-  fi
-  printf '%s' "$p" | tr 'A-Z' 'a-z' | sed 's|/*$||'
+# 平台判定只做一次（一个子进程），供 _norm 决定是否把 /d/x 当 msys 盘符。
+case "$(uname -s 2>/dev/null)" in MINGW*|MSYS*|CYGWIN*) ON_WINDOWS=1 ;; *) ON_WINDOWS=0 ;; esac
+
+# 路径归一：msys 的 /d/x 与 Windows 的 D:/x 视为同一个根；file:/// 剥掉三斜杠后
+# Linux 路径会丢前导斜杠，这里统一补回。不补这层，非 Windows 的根会让前缀比较全部
+# 落空、可达性校验静默跳过（假绿灯）。
+# /d/x 的盘符转换仅在 Windows/msys 下做——否则 Linux 上真存在 /u/x 这种根时会被
+# 误认成 u: 盘，存在性测试就指向了一个不存在的 Windows 路径。
+# 结果写进全局 NORM 而非 echo——本函数每条链接调两次，用命令替换会各起一个子 shell，
+# 262 条链接就把闸门从 8 秒拖到 38 秒。纯 bash 字符串操作才留得住收工必跑的意愿。
+_norm() {  # $1=路径  $2=lc 则小写（仅用于比较）
+  local p="${1#file:///}"
+  case "$p" in
+    [a-zA-Z]:*) ;;                       # Windows: D:/x
+    /[a-zA-Z]/*) if [ "$ON_WINDOWS" = 1 ]; then p="${p:1:1}:/${p#/*/}"; fi ;;
+    *) p="/${p#/}" ;;                    # 缺前导斜杠才补，已有则不重复
+  esac
+  while [ -n "$p" ] && [ "${p%/}" != "$p" ]; do p="${p%/}"; done
+  [ "${2:-}" = lc ] && p="${p,,}"
+  NORM="$p"
 }
+canon() { _norm "$1" lc; printf '%s' "$NORM"; }
 
 # [链] 之二：链接可达性。只校验指向本工作区内部的 file:/// 目标——脚本会发给别的机器，
 # 对方没有 D: 盘，指向外部的链接一律放过才不会全线误报。
 check_links() {
-  local dir="$1" f dead raw p c t
-  local rootc; rootc="$(canon "$ROOT")"
+  local dir="$1" f dead raw u rootc
+  rootc="$(canon "$ROOT")"
   while IFS= read -r f; do
     [ -f "$f" ] || continue
-    # 子 shell 只用来收集输出，fail 在外层置位；内层用进程替换而非管道，continue 才有效。
     dead="$(
       while IFS= read -r raw; do
-        p="${raw%%#*}"; p="${p#file:///}"
-        p=$(printf '%b' "${p//%/\\x}")
-        c="$(canon "$p")"
-        case "$c" in "$rootc"/*) : ;; *) continue ;; esac
-        t="$p"
-        printf '%s' "$t" | grep -qE '^[a-zA-Z]:' || t="/$t"
-        [ -e "$t" ] || printf '  [链] %s 链接指向不存在的文件: %s\n' "$(basename "$f")" "$raw"
+        u="${raw%%#*}"
+        case "$u" in *%*) u=$(printf '%b' "${u//%/\\x}");; esac   # 只在真需要时解码
+        _norm "$u" lc
+        case "$NORM" in "$rootc"/*) : ;; *) continue ;; esac
+        _norm "$u"
+        [ -e "$NORM" ] || printf '  [链] %s 链接指向不存在的文件: %s\n' "$(basename "$f")" "$raw"
       done < <(grep -oE '\]\(file:///[^)]+\)' "$f" 2>/dev/null | sed 's|^](||; s|)$||')
     )"
     if [ -n "$dead" ]; then printf '%s\n' "$dead"; fail=1; fi
