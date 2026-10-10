@@ -40,7 +40,7 @@ Order is fixed. Extra sections are allowed; these are not deletable.
 
 `CONTEXT.md`: `背景与目标` → `当前状态` → `计划 / 待办` → `关键约束与注意事项` → `变更记录` → `给下一个 agent 的追加区`
 
-Both files start with an H1 (`# <task-folder> · 设计思路与使用说明` / `# <task-folder> · 会话上下文与进展`) and a blockquote carrying `> 最近更新：YYYY-MM-DD`.
+Both files start with an H1 (`# <task-folder> · 设计思路与使用说明` / `# <task-folder> · 会话上下文与进展`) and a blockquote carrying `> 最近更新：YYYY-MM-DD` — `[新]`/`[旧]`/`[期]` read **only that blockquote line**, so a date mentioned in body text never counts as the top date.
 
 `设计思路` must be a three-column trade-off table: **决策 / 理由 / 代价**. A conclusion without its cost is not a design note.
 

@@ -36,6 +36,13 @@ have_section() {
   printf '%s' "$missing"
 }
 
+# 顶部日期只认 blockquote 行（与 [占] 的锚定一致）。不锚定的话，正文里出现的
+# 「最近更新：日期」会在顶部缺失时被 head -1 当成顶部日期，[新] 就静默失效。
+top_date() {
+  grep -oE "^> 最近更新：[0-9]{4}-[0-9]{2}-[0-9]{2}" "$1" 2>/dev/null \
+    | head -1 | grep -oE "[0-9]{4}-[0-9]{2}-[0-9]{2}"
+}
+
 check_doc() {
   local p="$1" secs="$2" label="$3" miss
   if [ ! -f "$p" ]; then
@@ -64,7 +71,7 @@ check_doc() {
     echo "  [空] CONTEXT.md 待办还是空复选框，目标没写"; fail=1
   fi
   local d
-  d=$(grep -oE "最近更新：[0-9]{4}-[0-9]{2}-[0-9]{2}" "$p" | head -1 | grep -oE "[0-9]{4}-[0-9]{2}-[0-9]{2}")
+  d="$(top_date "$p")"
   if [ -z "$d" ]; then
     echo "  [新] $label.md 顶部无「最近更新：YYYY-MM-DD」"; fail=1
   else
@@ -82,7 +89,6 @@ for taskdir in "$ROOT"/*/; do
   check_doc "$taskdir/README.md"  "$README_SECTIONS"  README
   check_doc "$taskdir/CONTEXT.md" "$CONTEXT_SECTIONS" CONTEXT
   # 两档顶部「最近更新」必须同日：一边改了另一边没跟上，说明有一侧在说谎
-  top_date() { grep -oE "最近更新：[0-9]{4}-[0-9]{2}-[0-9]{2}" "$1" 2>/dev/null | head -1 | grep -oE "[0-9]{4}-[0-9]{2}-[0-9]{2}"; }
   rd="$(top_date "$taskdir/README.md")"
   ctxd="$(top_date "$taskdir/CONTEXT.md")"
   if [ -n "$rd" ] && [ -n "$ctxd" ] && [ "$rd" != "$ctxd" ]; then
