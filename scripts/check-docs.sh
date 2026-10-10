@@ -104,6 +104,48 @@ check_links() {
   done < <(find "$dir" -name "*.md" -not -path "*/node_modules/*" -not -path "*/.git/*" 2>/dev/null)
 }
 
+# [链] 之三：反引号裸文件名。指向本任务目录内真实存在的 .md/.txt 却没有写成 file:/// 链接
+# 的行——用户点不开，是死链的姊妹问题（2026-10-10 dsp-hal-eval 改名后 README「产物与目录」
+# 的 archive 条目就踩了这个）。已在 markdown 链接 display text（`` [`x.md`](...) ``）里的
+# 不算违规。fenced code block 里的不算违规。
+check_bare_refs() {
+  local dir="$1" f rel bn hit
+  while IFS= read -r f; do
+    [ -f "$f" ] || continue
+    bn="$(basename "$f")"
+    case "$bn" in README.md|CONTEXT.md|AGENTS.md) continue ;; esac
+    hit="$(
+      awk -v file="$f" -v dir="$dir" '
+        /^```/ { fence = !fence; next }
+        fence { next }
+        {
+          s = $0
+          while (match(s, /`[^`\/:]*\.(md|txt)`/)) {
+            tok = substr(s, RSTART, RLENGTH)
+            before = substr(s, 1, RSTART-1)
+            after = substr(s, RSTART+RLENGTH)
+            inner = substr(tok, 2, length(tok)-2)
+            # link display text: [`inner`](...) or [`inner`]
+            if (before ~ /\[$/ && (after ~ /^\]\(/ || after ~ /^\]/)) {
+              # skip
+            } else if (system("[ -e \"" dir "/" inner "\" ] || [ -e \"" dir "/archive/" inner "\" ] || [ -e \"" dir "/inputs/" inner "\" ]")==0) {
+              printf "%d %s\n", NR, inner
+            }
+            s = after
+          }
+        }
+      ' "$f" 2>/dev/null
+    )"
+    if [ -n "$hit" ]; then
+      while IFS= read -r line; do
+        [ -z "$line" ] && continue
+        echo "  [链] $(basename "$f") 反引号裸文件名应为 file:/// 链接: \`$line\`"
+        fail=1
+      done <<< "$hit"
+    fi
+  done < <(find "$dir" -maxdepth 1 -name "*.md" 2>/dev/null)
+}
+
 check_doc() {
   local p="$1" secs="$2" label="$3" miss
   if [ ! -f "$p" ]; then
@@ -153,6 +195,7 @@ for taskdir in "$ROOT"/*/; do
   check_doc "$taskdir/CONTEXT.md" "$CONTEXT_SECTIONS" CONTEXT
   check_names "$taskdir"
   check_links "$taskdir"
+  check_bare_refs "$taskdir"
   # 两档顶部「最近更新」必须同日：一边改了另一边没跟上，说明有一侧在说谎
   rd="$(top_date "$taskdir/README.md")"
   ctxd="$(top_date "$taskdir/CONTEXT.md")"
