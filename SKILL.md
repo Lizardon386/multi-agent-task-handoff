@@ -1,6 +1,6 @@
 ---
 name: multi-agent-task-handoff
-description: 多agent间工作任务交接手顺 — Enforce the two-document handoff convention (README.md for users + CONTEXT.md for agents) in every task subfolder of an agent workspace such as D:\agent_workspace, and require every file artifact shown to the user to be a clickable [名字](file:///绝对路径) link. Use when starting work in a workspace task folder, creating a new task/project folder, updating progress or handoff notes, ending a session, or when the user asks to set up / bootstrap / enforce this handoff procedure on another agent or machine.
+description: 多agent间工作任务交接手顺 — Enforce the two-document handoff convention (README.md for users + CONTEXT.md for agents) in every task subfolder of an agent workspace such as D:\agent_workspace, and require every file artifact shown to the user to be a clickable Markdown link (file:/// absolute URLs inside workspace documents; workspace-relative #L line anchors in chat replies on hosts that support jump-to-line). Use when starting work in a workspace task folder, creating a new task/project folder, updating progress or handoff notes, ending a session, or when the user asks to set up / bootstrap / enforce this handoff procedure on another agent or machine.
 when_to_use: Working inside an agent workspace root that has task subfolders; creating or updating task docs; before claiming a session's work is finished.
 argument-hint: [task-folder-name]
 ---
@@ -68,16 +68,25 @@ Full spec, including naming bans and edge cases: `references/doc-spec.md`.
 
 ## Artifact links (required)
 
-Any file artifact shown to the user must be a **clickable Markdown link with a `file:///` absolute URL**. Bare filenames, backticked paths, and `path:line` prose are not clickable in Qoder's sidebar preview — the user has to hunt for the file himself.
+Any file artifact shown to the user must be a **clickable Markdown link** — bare filenames, backticked paths, and `path:line` prose make the user hunt for the file himself. Two tracks, picked by where the link lives:
+
+**Workspace `.md` documents** (`产物与目录` in `README.md`, status / change-log lines in `CONTEXT.md`, artifact references inside deliverables) — always a `file:///` absolute URL, line number in the link **text**, never a `#L42` fragment:
 
 ```markdown
 [game.js](file:///D:/agent_workspace/uno-webgame/game.js)
+[game.js:42](file:///D:/agent_workspace/uno-webgame/game.js)
 ```
 
 - Forward slashes always, Windows too: `D:\x\y.js` → `file:///D:/x/y.js`.
-- Put the line number in the link **text**, not a `#L42` fragment (fragments are unverified): `[game.js:42](file:///D:/agent_workspace/uno-webgame/game.js)`.
-- Applies to chat replies, to `产物与目录` in `README.md`, and to status / change-log lines in `CONTEXT.md`.
+- Documents get forwarded and opened in arbitrary viewers; `file:///` is the only form that clicks everywhere, and the only form the gate validates.
 - `check-docs.sh` reports `[链]` and **fails** when a `README.md` lists artifacts with no such link, when any `file:///` link inside the workspace points at a file that no longer exists (links to paths outside the workspace root are skipped so the scripts stay portable to other machines), when a top-level deliverable `.md` mentions a workspace `.md`/`.txt` file as a bare backtick reference (`` `foo.md` ``) instead of a `file:///` link (dead-link's sibling: not clickable, easy to leave behind after a rename), or `[期]` when the two docs' `最近更新` dates disagree.
+
+**Chat replies** — pick by host capability:
+
+- Hosts that follow workspace-relative `#L` line anchors (verified: Claude Code's VSCode extension): `[spidevice.c:489](dsp-hal-eval/finalfile/codecs/ccd5001/spidevice.c#L489)`, ranges `#L217-L240` — one click lands on the line; the preferred form there.
+- Other hosts (e.g. Qoder's sidebar preview) or when unsure: keep the `file:///` form above.
+
+Why the split (decided 2026-10-10): a `file:///` link opens the file but cannot carry a line number — the user clicked one and landed at the top of the file. Chat replies therefore use anchor links on hosts that support jumping; documents stay on `file:///` because the gate only checks that form.
 
 ## Target workspace
 
