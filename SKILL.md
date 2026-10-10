@@ -77,7 +77,7 @@ Any file artifact shown to the user must be a **clickable Markdown link with a `
 - Forward slashes always, Windows too: `D:\x\y.js` → `file:///D:/x/y.js`.
 - Put the line number in the link **text**, not a `#L42` fragment (fragments are unverified): `[game.js:42](file:///D:/agent_workspace/uno-webgame/game.js)`.
 - Applies to chat replies, to `产物与目录` in `README.md`, and to status / change-log lines in `CONTEXT.md`.
-- `check-docs.sh` reports `[链]` and **fails** when a `README.md` lists artifacts with no such link, and `[期]` when the two docs' `最近更新` dates disagree.
+- `check-docs.sh` reports `[链]` and **fails** when a `README.md` lists artifacts with no such link, when any `file:///` link inside the workspace points at a file that no longer exists (links to paths outside the workspace root are skipped so the scripts stay portable to other machines), and `[期]` when the two docs' `最近更新` dates disagree.
 
 ## Target workspace
 

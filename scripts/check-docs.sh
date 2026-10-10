@@ -60,6 +60,40 @@ check_names() {
   done
 }
 
+# 把路径归一成可比较的形态：msys 的 /d/x 与 Windows 的 D:/x 视为同一个根。
+# Linux 的 /home/... 保持原样（正则只匹配单字母目录，故 /u/x 这类会被误判——极罕见）。
+canon() {
+  local p="$1"
+  p="${p#file:///}"
+  if printf '%s' "$p" | grep -qE '^/[a-zA-Z]/'; then
+    p="${p#/}"; p="${p%%/*}:${p#*/}"
+  fi
+  printf '%s' "$p" | tr 'A-Z' 'a-z' | sed 's|/*$||'
+}
+
+# [链] 之二：链接可达性。只校验指向本工作区内部的 file:/// 目标——脚本会发给别的机器，
+# 对方没有 D: 盘，指向外部的链接一律放过才不会全线误报。
+check_links() {
+  local dir="$1" f dead raw p c t
+  local rootc; rootc="$(canon "$ROOT")"
+  while IFS= read -r f; do
+    [ -f "$f" ] || continue
+    # 子 shell 只用来收集输出，fail 在外层置位；内层用进程替换而非管道，continue 才有效。
+    dead="$(
+      while IFS= read -r raw; do
+        p="${raw%%#*}"; p="${p#file:///}"
+        p=$(printf '%b' "${p//%/\\x}")
+        c="$(canon "$p")"
+        case "$c" in "$rootc"/*) : ;; *) continue ;; esac
+        t="$p"
+        printf '%s' "$t" | grep -qE '^[a-zA-Z]:' || t="/$t"
+        [ -e "$t" ] || printf '  [链] %s 链接指向不存在的文件: %s\n' "$(basename "$f")" "$raw"
+      done < <(grep -oE '\]\(file:///[^)]+\)' "$f" 2>/dev/null | sed 's|^](||; s|)$||')
+    )"
+    if [ -n "$dead" ]; then printf '%s\n' "$dead"; fail=1; fi
+  done < <(find "$dir" -name "*.md" -not -path "*/node_modules/*" -not -path "*/.git/*" 2>/dev/null)
+}
+
 check_doc() {
   local p="$1" secs="$2" label="$3" miss
   if [ ! -f "$p" ]; then
@@ -108,6 +142,7 @@ for taskdir in "$ROOT"/*/; do
   check_doc "$taskdir/README.md"  "$README_SECTIONS"  README
   check_doc "$taskdir/CONTEXT.md" "$CONTEXT_SECTIONS" CONTEXT
   check_names "$taskdir"
+  check_links "$taskdir"
   # 两档顶部「最近更新」必须同日：一边改了另一边没跟上，说明有一侧在说谎
   rd="$(top_date "$taskdir/README.md")"
   ctxd="$(top_date "$taskdir/CONTEXT.md")"
