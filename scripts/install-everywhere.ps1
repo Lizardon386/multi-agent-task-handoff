@@ -6,7 +6,7 @@
 #         ③ 给每个工作区铺 tools/ + AGENTS.md 规则块（与 bootstrap.sh 同一标记「任务双档规范」）
 param(
   [string]$Source = (Split-Path $PSScriptRoot -Parent),
-  [string[]]$AgentHomes = @("~\.codex", "~/.qoder-cn"),
+  [string[]]$AgentHomes = @("~\.codex", "~/.qoder-cn", "~\.claude"),
   [string[]]$WorkspaceRoots = @("D:\agent_workspace")
 )
 $ErrorActionPreference = "Stop"
@@ -58,7 +58,7 @@ foreach ($root in $WorkspaceRoots) {
   if (-not (Test-Path $root)) { $report += "跳过（工作区不存在）: $root"; continue }
   $tools = Join-Path $root "tools"
   New-Item -ItemType Directory -Path (Join-Path $tools "templates") -Force | Out-Null
-  foreach ($s in @("init-task.sh", "check-docs.sh", "bootstrap.sh")) {
+  foreach ($s in @("init-task.sh", "check-docs.sh", "bootstrap.sh", "install-everywhere.ps1")) {
     $src = Join-Path $Source "scripts\$s"; $dst = Join-Path $tools $s
     if ((Test-Path $dst) -and (Get-FileHash $src -Algorithm MD5).Hash -eq (Get-FileHash $dst -Algorithm MD5).Hash) { continue }
     Copy-Item $src $dst -Force

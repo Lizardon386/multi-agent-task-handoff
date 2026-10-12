@@ -104,6 +104,21 @@
 
    跑闸门**不要加管道**（`| tail`、`| grep`）——只看结尾两行会把前面的违规行截掉，制造假绿灯。
 
+### 真源与「更新即铺满」（铁律）
+
+本规范的**唯一真源是用户级 skill `multi-agent-task-handoff`**；工作区 `tools/` 里的脚本只是同步副本。
+
+- skill 任何变更——不管是本地改的还是 `git pull` 拉进来的——**必须立刻铺满本机**，否则其他 agent 下次会话仍在跑旧规矩，等于规矩分叉：
+
+  ```powershell
+  powershell -NoProfile -ExecutionPolicy Bypass -File <最新skill目录>\scripts\install-everywhere.ps1
+  ```
+
+  `-Source` 缺省 = **脚本自身所在的 skill 目录**，所以永远从最新那份里运行它。同一趟会幂等刷新：各 agent 的技能目录、各 agent 的全局规则块、每个已登记工作区的 `tools/` 副本（含 `install-everywhere.ps1` 自己，2026-10-12 起——之前它不铺自己，导致工作区那份长期停在旧版）。
+- 只铺单个工作区时用 `bash tools/bootstrap.sh --root <工作区根>`（`--force` 覆盖脚本副本）。
+- **不要只在本工作区副本里修 bug**：下次铺满会被覆盖，改动一律提到 skill。
+- **已有规则块的工作区不会被自动更新**：bootstrap 与 install-everywhere 都靠「任务双档规范」标题判重，只补不覆盖。skill 改了条款，必须**手工同步一次该工作区的 `AGENTS.md`**，否则那里的 agent 读到的还是旧版。
+
 ### 边界与特例
 
 - `tools/`、`templates/`、`node_modules/`、`.git/` 是基础设施与素材，不参与自检。

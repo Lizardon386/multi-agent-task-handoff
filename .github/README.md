@@ -90,7 +90,7 @@ powershell -NoProfile -File <skill目录>\scripts\install-everywhere.ps1 `
   -Source <真源skill目录> -WorkspaceRoots D:\agent_workspace
 ```
 
-幂等、可重复跑，**只补不删**：已存在同名文件才按 MD5 比对更新，规则块靠「任务双档规范」标记判重（与 `bootstrap.sh` 同一把锁），所以不会追加出第二份。默认覆盖 `.codex` 与 `.qoder-cn` 两个 agent 家目录，`.codex/AGENTS.md`、`.claude/CLAUDE.md` 会被写入全局规则块——**不想改别的 agent 的全局指令文件就别跑它**，改用 `bootstrap.sh` 只铺工作区。
+幂等、可重复跑，**只补不删**：已存在同名文件才按 MD5 比对更新，规则块靠「任务双档规范」标记判重（与 `bootstrap.sh` 同一把锁），所以不会追加出第二份。默认覆盖 `.codex`、`.qoder-cn`、`.claude` 三个 agent 家目录（**2026-10-12 补上 `.claude`**：它本来就会被写全局规则块，却没有 skill 副本可指，规则里点名的 `references/agents-rule.md` 在它那儿是空的），`.codex/AGENTS.md`、`.claude/CLAUDE.md` 会被写入全局规则块——**不想改别的 agent 的全局指令文件就别跑它**，改用 `bootstrap.sh` 只铺工作区。
 
 `-Source` 缺省为**脚本自身所在的 skill 目录**——`git pull` 后在真源克隆里直接跑即可完成铺满，不用再手填路径。
 
@@ -164,7 +164,7 @@ bash tools/check-docs.sh --root E:/other_ws   # 换工作区根（或 export AGE
 | `[占]` | 模板占位符没替换 | 是 |
 | `[空]` | 骨架未填（空取舍表、空待办、缺日期） | 是 |
 | `[新]` | 顶部缺「最近更新：YYYY-MM-DD」 | 是 |
-| `[链]` | 「产物与目录」没有可点击链接，**或**链接指向的文件不存在 | **是**（2026-10-10 由告警升级） |
+| `[链]` | 「产物与目录」没有可点击链接，**或**链接指向的文件不存在，**或**顶层交付 `.md` 里用反引号裸写工作区 `.md`/`.txt`（改名遗留的不可点裸名） | **是**（2026-10-10 由告警升级） |
 | `[名]` | 顶层输出 `.md` 用了纯 ASCII（英文）文件名 | **是** |
 | `[期]` | 两档顶部「最近更新」日期不一致 | **是** |
 | `[旧]` | 超期未更新（`STALE_DAYS` 可调，默认 30 天） | 否，仅告警 |
@@ -180,7 +180,7 @@ SKILL.md                    skill 入口：工作流、必备章节、产物链�
 scripts/init-task.sh        建任务目录 + 铺双档骨架
 scripts/check-docs.sh       合规闸门
 scripts/bootstrap.sh        把整套规矩装进任意工作区根（--force 可重同步副本）
-scripts/install-everywhere.ps1  铁律「更新即铺满」的执行工具：一次铺满本机所有 agent 的技能目录 + 全局规则 + 工作区（见安装 F 与「更新即铺满」一节）
+scripts/install-everywhere.ps1  铁律「更新即铺满」的执行工具：一次铺满本机所有 agent 的技能目录（`.codex`/`.qoder-cn`/`.claude`）+ 全局规则 + 工作区 `tools/`（含它自己）（见安装 F 与「更新即铺满」一节）
 references/doc-spec.md      规则全文：命名禁令、分工红线、产物链接、边界特例、为什么要有这条规矩
 references/agents-rule.md   bootstrap 追加进工作区 AGENTS.md 的规则块原文
 assets/README.md.tpl        使用者文档骨架
@@ -200,7 +200,8 @@ powershell -NoProfile -ExecutionPolicy Bypass -File <最新skill目录>\scripts\
 ```
 
 - **永远从"最新那份"里运行它**：`-Source` 缺省就是脚本自身所在的 skill 目录。`git pull` 后在真源克隆里直接跑；本地改完在改过的那份里直接跑。
-- 同一趟还会幂等刷新：各 agent 的全局规则块（`.codex/AGENTS.md`、`.claude/CLAUDE.md`）与每个已登记工作区的 `tools/` 副本。
+- 同一趟还会幂等刷新：各 agent 的全局规则块（`.codex/AGENTS.md`、`.claude/CLAUDE.md`）与每个已登记工作区的 `tools/` 副本——**包括 `install-everywhere.ps1` 自己**（2026-10-12 补：此前它不铺自己，真源更新了、工作区那份却永远停在旧版，而旧版 `-Source` 还硬编码着别的 agent 目录，从工作区跑就会拿错的源当权威）。
+- **已有规则块的工作区不会被自动更新**：`bootstrap.sh` 与本脚本都靠「任务双档规范」标题判重，只补不覆盖。改了条款，要**手工同步该工作区的 `AGENTS.md`**，否则那里的 agent 读到的还是旧版——这条本身就是 2026-10-12 补进 `references/agents-rule.md` 的（此前「更新即铺满」只在 `SKILL.md` 和本页，只读 `AGENTS.md` 的 agent 完全看不到）。
 - **pull 自动化（可选但推荐）**：在真源克隆里装 `post-merge` 钩子，pull 一合并就自动铺满——`.git/hooks/post-merge` 三行：
 
   ```sh
@@ -222,6 +223,12 @@ powershell -NoProfile -ExecutionPolicy Bypass -File <最新skill目录>\scripts\
 - README 全局刷新：安装决策表把 **F 提为 Windows 多 agent 首选**、补 Codex 明示行，新增 **G（全局规则块 + 每日看门狗）**——回答「规矩能不能不靠 agent 自觉」：能，把闸门挂给调度器。A–E 保留：F 只覆盖 Windows 且会改其他 agent 的全局文件，单 agent / 非 Windows / 最小安装仍走原路。
 - **新增铁律「更新即铺满」**（写入 `SKILL.md` 的 Propagation rule）：skill 无论本地改过还是 `git pull` 到更新，都必须立刻用 `install-everywhere.ps1` 覆盖本机所有 agent 的技能目录——只更新真源不铺满，其他 agent 下次会话就在跑旧规矩。配套改动：脚本 `-Source` 缺省改为**脚本自身所在的 skill 目录**（永远从最新那份里运行它）；真源克隆可装 `post-merge` 钩子让 pull 后自动铺满。
 - README 再刷新：「更新即铺满」从变更日志升级为独立章节（规则 + 命令 + `post-merge` 钩子配方），「跟进方式」与「目录结构」改为强制引用该节。
+- **自查出「铺满」自己的三个漏洞并修掉**（同日）：
+  1. `install-everywhere.ps1` 第③步不铺它自己 → 工作区 `tools/` 那份长期停在旧版（实测 `d466de…` vs 真源 `30a4af…`，且旧版 `-Source` 仍硬编码别的 agent 目录，从工作区跑会拿错源当权威）。已把它加进 step③ 的同步清单。
+  2. `.claude` 会被写入全局规则块 `CLAUDE.md`，却不在默认 `-AgentHomes` 里 → Claude 侧规则点名引用的 skill 根本没安装。已补进默认列表（本机实测新增 11 个文件）。
+  3. 「更新即铺满」只写在 `SKILL.md` 和本页，**`references/agents-rule.md`（即各工作区 `AGENTS.md` 的规则块原文）整条缺失** → 只读 `AGENTS.md` 的 agent 压根不知道要铺。已补「真源与更新即铺满」一节，并写明**已有规则块的工作区只补不覆盖，条款变了必须手工同步那一份**（本机 `D:\agent_workspace\AGENTS.md` 已同步）。
+- `SKILL.md` 的 Resources 节此前漏列 `install-everywhere.ps1`，已补；Propagation rule 增两条约束（铺满含其自身、工作区 `AGENTS.md` 不自动更新）。
+- **已知未做**：`install-everywhere.ps1` 里写死的全局规则块（`$globalBlock`，5 条要点）与 `references/agents-rule.md` 是两份独立文本，改后者不会自动带动前者；等下一次规则稳定后统一成"从 agents-rule.md 截取要点"。
 
 **2026-10-10**
 

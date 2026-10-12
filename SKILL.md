@@ -123,7 +123,8 @@ powershell -NoProfile -ExecutionPolicy Bypass -File <最新skill目录>\scripts\
 
 - `-Source` defaults to the skill directory the script runs from, so **always run the copy that holds the newest content** (the git clone after a pull; your edited copy after local edits).
 - Updating one copy without propagating is a rule violation: the other agents keep enforcing the OLD rules, and their next session silently diverges.
-- The same run also re-syncs the `tools/` copy of every workspace in its `-WorkspaceRoots` list; workspaces bootstrapped by hand need `bash scripts/bootstrap.sh --root <workspace-root> --force`.
+- The same run also re-syncs the `tools/` copy of every workspace in its `-WorkspaceRoots` list — including `install-everywhere.ps1` itself (added 2026-10-12; before that the workspace copy of the propagator silently went stale). Workspaces bootstrapped by hand need `bash scripts/bootstrap.sh --root <workspace-root> --force`.
+- **A workspace's existing `AGENTS.md` is NOT rewritten** — both installers dedupe on the `任务双档规范` heading and only append when it's absent. After changing rule text here, sync that workspace's `AGENTS.md` by hand, or agents reading it keep the old wording.
 `tools/` and `templates/` are infrastructure and are excluded from the check; a real task folder always is.
 
 ## Resources
@@ -131,6 +132,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File <最新skill目录>\scripts\
 - `scripts/init-task.sh` — create a task folder with both skeletons.
 - `scripts/check-docs.sh` — compliance gate (existence, sections, placeholders, empty scaffolds, freshness).
 - `scripts/bootstrap.sh` — install / re-sync the convention into a workspace root.
+- `scripts/install-everywhere.ps1` — the Windows propagator that executes the Propagation rule below: skill dirs of every agent + global rule files + every registered workspace. Run the copy from the newest source.
 - `assets/README.md.tpl`, `assets/CONTEXT.md.tpl` — section skeletons (bootstrap copies these into `tools/templates/`).
 - `references/doc-spec.md` — the complete written rule (read when writing or reviewing docs).
 - `references/agents-rule.md` — the exact block bootstrap appends to a workspace `AGENTS.md`.
