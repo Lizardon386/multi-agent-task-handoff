@@ -1,9 +1,11 @@
 ﻿# install-everywhere.ps1 — 把「任务双档规范」一键装到本机所有 agent 与工作区（幂等）
 # 用法: powershell -File install-everywhere.ps1 [-Source <skill目录>] [-WorkspaceRoots <根1,根2...>]
+# 铁律「更新即铺满」：skill 无论本地改过还是 git pull 到更新，都必须立刻运行本脚本。
+#         -Source 缺省 = 脚本自身所在的 skill 目录——永远从"最新那份"里运行它。
 # 做什么: ① 把 skill 同步进每个 agent 的技能目录  ② 给有全局指令文件的 agent 写规则块（缺才写）
 #         ③ 给每个工作区铺 tools/ + AGENTS.md 规则块（与 bootstrap.sh 同一标记「任务双档规范」）
 param(
-  [string]$Source = "~\.codex\skills\multi-agent-task-handoff",
+  [string]$Source = (Split-Path $PSScriptRoot -Parent),
   [string[]]$AgentHomes = @("~\.codex", "~/.qoder-cn"),
   [string[]]$WorkspaceRoots = @("D:\agent_workspace")
 )

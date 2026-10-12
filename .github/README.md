@@ -92,6 +92,8 @@ powershell -NoProfile -File <skill目录>\scripts\install-everywhere.ps1 `
 
 幂等、可重复跑，**只补不删**：已存在同名文件才按 MD5 比对更新，规则块靠「任务双档规范」标记判重（与 `bootstrap.sh` 同一把锁），所以不会追加出第二份。默认覆盖 `.codex` 与 `.qoder-cn` 两个 agent 家目录，`.codex/AGENTS.md`、`.claude/CLAUDE.md` 会被写入全局规则块——**不想改别的 agent 的全局指令文件就别跑它**，改用 `bootstrap.sh` 只铺工作区。
 
+`-Source` 缺省为**脚本自身所在的 skill 目录**——`git pull` 后在真源克隆里直接跑即可完成铺满，不用再手填路径。
+
 运行需加 `-ExecutionPolicy Bypass`（默认策略拦未签名脚本）。脚本含中文，**文件必须保持 UTF-8 带 BOM**：Windows PowerShell 5.1 把无 BOM 的中文按 GBK 误读，轻则「任务双档规范」判重失效、追加出重复规则块，重则直接语法报错——2026-10-12 实测踩过，脚本已内置防御（显式 UTF-8 读写），但二次编辑后请保持 BOM。
 
 ### G. 全局规则 + 每日看门狗：让规矩不依赖 agent 自觉
@@ -199,6 +201,7 @@ assets/CONTEXT.md.tpl       agent 交接档案骨架
 - 新增 `scripts/install-everywhere.ps1`（安装路径 F）。提交前修掉一处会坑其他 agent 的缺陷：递归复制没排除 `.git`，而真源目录本身就是 git 工作树，会把整个 `.git` 灌进另一个 agent 的技能目录。
 - `[链]` 的反引号裸写检查补上"目录/文件改名后遗留的死链"分支；文档内的行号锚点一律改写进**链接文字**，不留 `#L42`。
 - README 全局刷新：安装决策表把 **F 提为 Windows 多 agent 首选**、补 Codex 明示行，新增 **G（全局规则块 + 每日看门狗）**——回答「规矩能不能不靠 agent 自觉」：能，把闸门挂给调度器。A–E 保留：F 只覆盖 Windows 且会改其他 agent 的全局文件，单 agent / 非 Windows / 最小安装仍走原路。
+- **新增铁律「更新即铺满」**（写入 `SKILL.md` 的 Propagation rule）：skill 无论本地改过还是 `git pull` 到更新，都必须立刻用 `install-everywhere.ps1` 覆盖本机所有 agent 的技能目录——只更新真源不铺满，其他 agent 下次会话就在跑旧规矩。配套改动：脚本 `-Source` 缺省改为**脚本自身所在的 skill 目录**（永远从最新那份里运行它）；真源克隆可装 `post-merge` 钩子让 pull 后自动铺满。
 
 **2026-10-10**
 

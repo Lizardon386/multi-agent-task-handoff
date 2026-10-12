@@ -112,6 +112,18 @@ bash scripts/bootstrap.sh --root <workspace-root> --force
 ```
 
 Never fix a bug only in the workspace copy — it will be overwritten on the next sync.
+
+## Propagation rule (MANDATORY)
+
+Whenever this skill changes — whether you just edited it locally or `git pull` brought in new commits — immediately overwrite every local agent's skill copy with the newest content:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File <最新skill目录>\scripts\install-everywhere.ps1
+```
+
+- `-Source` defaults to the skill directory the script runs from, so **always run the copy that holds the newest content** (the git clone after a pull; your edited copy after local edits).
+- Updating one copy without propagating is a rule violation: the other agents keep enforcing the OLD rules, and their next session silently diverges.
+- The same run also re-syncs the `tools/` copy of every workspace in its `-WorkspaceRoots` list; workspaces bootstrapped by hand need `bash scripts/bootstrap.sh --root <workspace-root> --force`.
 `tools/` and `templates/` are infrastructure and are excluded from the check; a real task folder always is.
 
 ## Resources
