@@ -133,13 +133,31 @@ check_bare_refs() {
             }
             s = after
           }
+          # 改名遗留死链：archive/、inputs/ 前缀的反引号路径已不存在。
+          # 其他带路径引用（如 skill 的 references/x.md）指向工作区外，不判——与可达性豁免同理。
+          s2 = $0
+          while (match(s2, /`(archive|inputs)\/[^`:]*\.(md|txt)`/)) {
+            tok = substr(s2, RSTART, RLENGTH)
+            before = substr(s2, 1, RSTART-1)
+            after = substr(s2, RSTART+RLENGTH)
+            inner = substr(tok, 2, length(tok)-2)
+            if (before ~ /\[$/ && (after ~ /^\]\(/ || after ~ /^\]/)) {
+              # link display text, skip
+            } else if (system("[ -e \"" dir "/" inner "\" ]") != 0) {
+              printf "%d DEAD:%s\n", NR, inner
+            }
+            s2 = after
+          }
         }
       ' "$f" 2>/dev/null
     )"
     if [ -n "$hit" ]; then
       while IFS= read -r line; do
         [ -z "$line" ] && continue
-        echo "  [链] $(basename "$f") 反引号裸文件名应为 file:/// 链接: \`$line\`"
+        case "$line" in
+          *" DEAD:"*) echo "  [链] $(basename "$f") 反引号裸路径指向不存在的文件（改名遗留死链）: \`${line#* DEAD:}\`" ;;
+          *) echo "  [链] $(basename "$f") 反引号裸文件名应为 file:/// 链接: \`$line\`" ;;
+        esac
         fail=1
       done <<< "$hit"
     fi

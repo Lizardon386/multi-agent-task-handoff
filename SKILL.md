@@ -79,12 +79,13 @@ Any file artifact shown to the user must be a **clickable Markdown link** — ba
 
 - Forward slashes always, Windows too: `D:\x\y.js` → `file:///D:/x/y.js`.
 - Documents get forwarded and opened in arbitrary viewers; `file:///` is the only form that clicks everywhere, and the only form the gate validates.
+- In-document anchors (`§` section numbers, table-row ids such as `C4`) follow the same rule — the anchor goes **in the link text**: `[归属决策件.md · C4行](file:///D:/agent_workspace/dsp-hal-eval/归属决策件.md)`. An anchor left outside the link (a bare `C4 行` after it) is a violation.
 - `check-docs.sh` reports `[链]` and **fails** when a `README.md` lists artifacts with no such link, when any `file:///` link inside the workspace points at a file that no longer exists (links to paths outside the workspace root are skipped so the scripts stay portable to other machines), when a top-level deliverable `.md` mentions a workspace `.md`/`.txt` file as a bare backtick reference (`` `foo.md` ``) instead of a `file:///` link (dead-link's sibling: not clickable, easy to leave behind after a rename), or `[期]` when the two docs' `最近更新` dates disagree.
 
 **Chat replies** — pick by host capability:
 
 - Hosts that follow workspace-relative `#L` line anchors (verified: Claude Code's VSCode extension): `[spidevice.c:489](dsp-hal-eval/finalfile/codecs/ccd5001/spidevice.c#L489)`, ranges `#L217-L240` — one click lands on the line; the preferred form there.
-- Other hosts (e.g. Qoder's sidebar preview) or when unsure: keep the `file:///` form above.
+- Other hosts (e.g. Qoder's sidebar preview, Codex) or when unsure: keep the `file:///` form above, with the line number or in-document anchor in the link text.
 
 Why the split (decided 2026-10-10): a `file:///` link opens the file but cannot carry a line number — the user clicked one and landed at the top of the file. Chat replies therefore use anchor links on hosts that support jumping; documents stay on `file:///` because the gate only checks that form.
 
