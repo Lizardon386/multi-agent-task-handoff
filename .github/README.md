@@ -94,7 +94,7 @@ powershell -NoProfile -File <skill目录>\scripts\install-everywhere.ps1 `
 
 `-Source` 缺省为**脚本自身所在的 skill 目录**——`git pull` 后在真源克隆里直接跑即可完成铺满，不用再手填路径。
 
-运行需加 `-ExecutionPolicy Bypass`（默认策略拦未签名脚本）。脚本含中文，**文件必须保持 UTF-8 带 BOM**：Windows PowerShell 5.1 把无 BOM 的中文按 GBK 误读，轻则「任务双档规范」判重失效、追加出重复规则块，重则直接语法报错——2026-10-12 实测踩过，脚本已内置防御（显式 UTF-8 读写），但二次编辑后请保持 BOM。
+`install-everywhere.ps1` 同时是「更新即铺满」铁律的执行工具：skill 任何更新（本地改或 `git pull`）后都必须跑一次，详见下文专节。脚本含中文，**文件必须保持 UTF-8 带 BOM**：Windows PowerShell 5.1 把无 BOM 的中文按 GBK 误读，轻则「任务双档规范」判重失效、追加出重复规则块，重则直接语法报错——2026-10-12 实测踩过，脚本已内置防御（显式 UTF-8 读写），但二次编辑后请保持 BOM。
 
 ### G. 全局规则 + 每日看门狗：让规矩不依赖 agent 自觉
 
@@ -180,7 +180,7 @@ SKILL.md                    skill 入口：工作流、必备章节、产物链�
 scripts/init-task.sh        建任务目录 + 铺双档骨架
 scripts/check-docs.sh       合规闸门
 scripts/bootstrap.sh        把整套规矩装进任意工作区根（--force 可重同步副本）
-scripts/install-everywhere.ps1  Windows 一次铺满本机所有 agent 的技能目录 + 全局规则 + 工作区（见安装 F）
+scripts/install-everywhere.ps1  铁律「更新即铺满」的执行工具：一次铺满本机所有 agent 的技能目录 + 全局规则 + 工作区（见安装 F 与「更新即铺满」一节）
 references/doc-spec.md      规则全文：命名禁令、分工红线、产物链接、边界特例、为什么要有这条规矩
 references/agents-rule.md   bootstrap 追加进工作区 AGENTS.md 的规则块原文
 assets/README.md.tpl        使用者文档骨架
@@ -191,9 +191,28 @@ assets/CONTEXT.md.tpl       agent 交接档案骨架
 
 `SKILL.md` 是给 agent 执行用的；`references/doc-spec.md` 是要质疑或修订规矩时才读的全文。
 
+## 更新即铺满（铁律）
+
+skill 无论**本地改过**还是 **`git pull` 到更新**，都必须立刻把最新内容覆盖到本机所有 agent 的技能目录——只更新真源不铺满，其他 agent 下次会话就在跑旧规矩，等于规矩分叉。
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File <最新skill目录>\scripts\install-everywhere.ps1
+```
+
+- **永远从"最新那份"里运行它**：`-Source` 缺省就是脚本自身所在的 skill 目录。`git pull` 后在真源克隆里直接跑；本地改完在改过的那份里直接跑。
+- 同一趟还会幂等刷新：各 agent 的全局规则块（`.codex/AGENTS.md`、`.claude/CLAUDE.md`）与每个已登记工作区的 `tools/` 副本。
+- **pull 自动化（可选但推荐）**：在真源克隆里装 `post-merge` 钩子，pull 一合并就自动铺满——`.git/hooks/post-merge` 三行：
+
+  ```sh
+  #!/bin/sh
+  powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$(git rev-parse --show-toplevel)/scripts/install-everywhere.ps1"
+  ```
+
+条款原文以 `SKILL.md` 的「Propagation rule (MANDATORY)」为准；本节是给人看的操作版。
+
 ## 最近更新
 
-跟进方式：`git -C <skill目录> pull`；本机多 agent 时用安装 F 的 `install-everywhere.ps1` 一次铺满。
+跟进方式：`git -C <skill目录> pull` 后**必须**按上节「更新即铺满」跑一次 `install-everywhere.ps1`（或事先装好 `post-merge` 钩子，pull 完自动铺满）。
 
 **2026-10-12**
 
@@ -202,6 +221,7 @@ assets/CONTEXT.md.tpl       agent 交接档案骨架
 - `[链]` 的反引号裸写检查补上"目录/文件改名后遗留的死链"分支；文档内的行号锚点一律改写进**链接文字**，不留 `#L42`。
 - README 全局刷新：安装决策表把 **F 提为 Windows 多 agent 首选**、补 Codex 明示行，新增 **G（全局规则块 + 每日看门狗）**——回答「规矩能不能不靠 agent 自觉」：能，把闸门挂给调度器。A–E 保留：F 只覆盖 Windows 且会改其他 agent 的全局文件，单 agent / 非 Windows / 最小安装仍走原路。
 - **新增铁律「更新即铺满」**（写入 `SKILL.md` 的 Propagation rule）：skill 无论本地改过还是 `git pull` 到更新，都必须立刻用 `install-everywhere.ps1` 覆盖本机所有 agent 的技能目录——只更新真源不铺满，其他 agent 下次会话就在跑旧规矩。配套改动：脚本 `-Source` 缺省改为**脚本自身所在的 skill 目录**（永远从最新那份里运行它）；真源克隆可装 `post-merge` 钩子让 pull 后自动铺满。
+- README 再刷新：「更新即铺满」从变更日志升级为独立章节（规则 + 命令 + `post-merge` 钩子配方），「跟进方式」与「目录结构」改为强制引用该节。
 
 **2026-10-10**
 
