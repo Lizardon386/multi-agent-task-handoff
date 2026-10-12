@@ -24,6 +24,7 @@
 | 其他认 `SKILL.md` 格式的 agent | C |
 | 不加载 skill，但会自动读 `AGENTS.md` / `CLAUDE.md` 之类的规则文件 | D |
 | 什么机制都没有，只有个能跑 shell 的 agent，或纯人工 | E |
+| 本机同时装了多个 agent，想把规矩一次铺满 | F |
 
 ### A. Qoder
 
@@ -76,9 +77,20 @@ bash <skill目录>/scripts/bootstrap.sh --root <工作区根>
 
 2. **纯 prompt 投喂**——把 `references/doc-spec.md`（规则全文，含章节顺序、命名禁令、分工红线、**产物链接要求**、边界特例）整篇贴进系统提示或项目指令里。这份是自包含的，不依赖脚本也能执行，只是没有闸门兜底。
 
+### F. 本机装了多个 agent（Windows 一次铺满）
+
+一条命令把 skill 同步进每个 agent 的技能目录、给有全局指令文件约定的 agent 追加规则块、并给每个工作区铺 `tools/` + `AGENTS.md`：
+
+```powershell
+powershell -NoProfile -File <skill目录>\scripts\install-everywhere.ps1 `
+  -Source <真源skill目录> -WorkspaceRoots D:\agent_workspace
+```
+
+幂等、可重复跑，**只补不删**：已存在同名文件才按 MD5 比对更新，规则块靠「任务双档规范」标记判重（与 `bootstrap.sh` 同一把锁），所以不会追加出第二份。默认覆盖 `.codex` 与 `.qoder-cn` 两个 agent 家目录，`.codex/AGENTS.md`、`.claude/CLAUDE.md` 会被写入全局规则块——**不想改别的 agent 的全局指令文件就别跑它**，改用 `bootstrap.sh` 只铺工作区。
+
 ### 装完生效的是哪几条
 
-不管走 A–E 哪条，最终约束 agent 的都是同样五条（详见下一节「它强制了什么」）：
+不管走 A–F 哪条，最终约束 agent 的都是同样五条（详见下一节「它强制了什么」）：
 
 1. 每个任务目录同时有 `README.md`（面向使用者）和 `CONTEXT.md`（面向下一个 agent），六节顺序固定、不许删；
 2. `设计思路` 必须是「决策 / 理由 / 代价」三列表，只写结论不写代价视为没写；
@@ -152,6 +164,7 @@ SKILL.md                    skill 入口：工作流、必备章节、产物链�
 scripts/init-task.sh        建任务目录 + 铺双档骨架
 scripts/check-docs.sh       合规闸门
 scripts/bootstrap.sh        把整套规矩装进任意工作区根（--force 可重同步副本）
+scripts/install-everywhere.ps1  Windows 一次铺满本机所有 agent 的技能目录 + 全局规则 + 工作区（见安装 F）
 references/doc-spec.md      规则全文：命名禁令、分工红线、产物链接、边界特例、为什么要有这条规矩
 references/agents-rule.md   bootstrap 追加进工作区 AGENTS.md 的规则块原文
 assets/README.md.tpl        使用者文档骨架
@@ -161,6 +174,28 @@ assets/CONTEXT.md.tpl       agent 交接档案骨架
 ```
 
 `SKILL.md` 是给 agent 执行用的；`references/doc-spec.md` 是要质疑或修订规矩时才读的全文。
+
+## 最近更新
+
+跟进方式：`git -C <skill目录> pull`；本机多 agent 时用安装 F 的 `install-everywhere.ps1` 一次铺满。
+
+**2026-10-12**
+
+- **规矩的适用范围写进 `description` / `when_to_use`**：任意工作目录、每一次会话都生效，明确禁止以"当前目录不在 agent workspace"为理由跳过聊天链接规则与收工 `CONTEXT.md` 更新——实测确有 agent 这样绕过过。
+- 新增 `scripts/install-everywhere.ps1`（安装路径 F）。提交前修掉一处会坑其他 agent 的缺陷：递归复制没排除 `.git`，而真源目录本身就是 git 工作树，会把整个 `.git` 灌进另一个 agent 的技能目录。
+- `[链]` 的反引号裸写检查补上"目录/文件改名后遗留的死链"分支；文档内的行号锚点一律改写进**链接文字**，不留 `#L42`。
+
+**2026-10-10**
+
+- **`[链]` 由"仅告警"升级为失败项**，并新增 `[期]`（两档顶部「最近更新」必须一致）。起因是真实事故：agent 跑 `check-docs.sh | tail -2`，把告警行截掉当成全绿——**告警在没人逐行读输出时等于不存在**。从此文档里也写明"跑闸门不许加管道"。
+- `[链]` 增加**可达性校验**：链接指向的文件不存在直接判失败（改名不更新引用会被当场抓住）；指向工作区之外的链接跳过，保证脚本能发给没有 `D:` 盘的人。顺带修掉 Linux 绝对路径的漏报，并把闸门从 38s 优化回 9s。
+- 新增 `[名]`：顶层输出文档用纯 ASCII（英文）文件名判失败——读者是中文同事，文件要转发进群聊和飞书。
+- 顶部日期**只认 blockquote 那一行**，修掉 `[新]`/`[旧]`/`[期]` 在正文里随便写个日期就蒙过的静默漏检。
+- 产物链接改**双轨制**：文档内守 `file:///` 绝对路径，聊天回复在已验证支持跳行的宿主可用工作区相对 `#L` 锚点。
+
+**2026-10-09**
+
+- 首版：双档规范 + `init-task.sh` / `check-docs.sh` / `bootstrap.sh` 三脚本 + 两份模板；仓库落地页放 `.github/` 以保持 skill 根目录纯净。
 
 ## 依赖与注意事项
 
