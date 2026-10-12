@@ -19,12 +19,14 @@
 
 | 你的环境 | 走哪条 |
 |---|---|
+| Windows，本机装了多个 agent（最省事，一条命令铺满） | **F** |
+| Codex（桌面 App / CLI） | B（目标路径换成 `~/.codex/skills/`），并补 **G** |
 | Qoder | A |
 | Claude Code | B |
 | 其他认 `SKILL.md` 格式的 agent | C |
 | 不加载 skill，但会自动读 `AGENTS.md` / `CLAUDE.md` 之类的规则文件 | D |
 | 什么机制都没有，只有个能跑 shell 的 agent，或纯人工 | E |
-| 本机同时装了多个 agent，想把规矩一次铺满 | F |
+| 想让「收工跑闸门」不依赖 agent 自觉 | **G** |
 
 ### A. Qoder
 
@@ -47,6 +49,8 @@ git clone https://github.com/Lizardon386/multi-agent-task-handoff.git \
 项目级（只对该仓库生效，适合团队共享）：把上面的目标路径换成 `<项目>/.claude/skills/multi-agent-task-handoff`。
 
 Claude Code 按 `SKILL.md` 的 `description` 自动匹配调用，不需要斜杠命令；想强制触发就直接说「用 multi-agent-task-handoff skill」。
+
+Codex 同样认 SKILL.md：把上面的目标路径换成 `~/.codex/skills/multi-agent-task-handoff` 即可。Codex 另外还会**每次会话必读**全局 `~/.codex/AGENTS.md`——推荐把 G 的全局规则块一并装上。
 
 ### C. 其他支持 skill 机制的 agent
 
@@ -88,6 +92,14 @@ powershell -NoProfile -File <skill目录>\scripts\install-everywhere.ps1 `
 
 幂等、可重复跑，**只补不删**：已存在同名文件才按 MD5 比对更新，规则块靠「任务双档规范」标记判重（与 `bootstrap.sh` 同一把锁），所以不会追加出第二份。默认覆盖 `.codex` 与 `.qoder-cn` 两个 agent 家目录，`.codex/AGENTS.md`、`.claude/CLAUDE.md` 会被写入全局规则块——**不想改别的 agent 的全局指令文件就别跑它**，改用 `bootstrap.sh` 只铺工作区。
 
+运行需加 `-ExecutionPolicy Bypass`（默认策略拦未签名脚本）。脚本含中文，**文件必须保持 UTF-8 带 BOM**：Windows PowerShell 5.1 把无 BOM 的中文按 GBK 误读，轻则「任务双档规范」判重失效、追加出重复规则块，重则直接语法报错——2026-10-12 实测踩过，脚本已内置防御（显式 UTF-8 读写），但二次编辑后请保持 BOM。
+
+### G. 全局规则 + 每日看门狗：让规矩不依赖 agent 自觉
+
+skill 与 `AGENTS.md` 解决的是「agent 读不读得到」；读到了仍可能不执行——实测有 agent 以「当前目录不在 agent workspace」为由绕过聊天链接规则。两层补丁：
+
+1. **全局规则块（每次会话必读层）**：Codex 必读 `~/.codex/AGENTS.md`，Claude Code 对应 `~/.claude/CLAUDE.md`。走 F 会自动写入；手工装就把 `references/agents-rule.md` 的要点压成 5 条贴进去。规则块里点名「禁止以当前目录不在工作区为由跳过」，把这个借口预先封死。
+2. **定时巡检（终审权交给调度器）**：把 `check-docs.sh` 挂成每日任务，全绿则安静、转红才通知——闸门从「agent 收工时自觉跑」变成「调度器每天一定跑」。Codex 自动化（heartbeat/cron）直接给提示词：「跑 `check-docs.sh` 不加管道，全绿保持安静，转红用 `file:///` 链接报告违规」；Windows 任务计划 / Linux cron 同理，退出码非 0 即告警。
 ### 装完生效的是哪几条
 
 不管走 A–F 哪条，最终约束 agent 的都是同样五条（详见下一节「它强制了什么」）：
@@ -99,6 +111,8 @@ powershell -NoProfile -File <skill目录>\scripts\install-everywhere.ps1 `
 5. 收工前 `check-docs.sh` 退出码 0 才算本次会话结束。
 
 差别只在**由谁兜底**：A/B/C 是 agent 主动加载 skill；D/E 是规则落进 `AGENTS.md`、靠 agent 读到该文件被动生效，所以 D/E 建议把第 5 条的自检当成硬闸门来要求。
+
+补充：2026-10-12 起 `SKILL.md` 的 `description` 已改为**每一次会话、任意工作目录无条件触发**，并点名「当前目录不在 agent workspace」为无效借口。A/B/C 类 agent 只要装了 skill，聊天链接规则与收工 `CONTEXT.md` 更新即默认生效——不再有「换个目录就不算数」的缝隙。
 
 ### 装完验证一次
 
@@ -184,6 +198,7 @@ assets/CONTEXT.md.tpl       agent 交接档案骨架
 - **规矩的适用范围写进 `description` / `when_to_use`**：任意工作目录、每一次会话都生效，明确禁止以"当前目录不在 agent workspace"为理由跳过聊天链接规则与收工 `CONTEXT.md` 更新——实测确有 agent 这样绕过过。
 - 新增 `scripts/install-everywhere.ps1`（安装路径 F）。提交前修掉一处会坑其他 agent 的缺陷：递归复制没排除 `.git`，而真源目录本身就是 git 工作树，会把整个 `.git` 灌进另一个 agent 的技能目录。
 - `[链]` 的反引号裸写检查补上"目录/文件改名后遗留的死链"分支；文档内的行号锚点一律改写进**链接文字**，不留 `#L42`。
+- README 全局刷新：安装决策表把 **F 提为 Windows 多 agent 首选**、补 Codex 明示行，新增 **G（全局规则块 + 每日看门狗）**——回答「规矩能不能不靠 agent 自觉」：能，把闸门挂给调度器。A–E 保留：F 只覆盖 Windows 且会改其他 agent 的全局文件，单 agent / 非 Windows / 最小安装仍走原路。
 
 **2026-10-10**
 
@@ -200,6 +215,7 @@ assets/CONTEXT.md.tpl       agent 交接档案骨架
 ## 依赖与注意事项
 
 - 需要 bash + GNU coreutils。`check-docs.sh` 用了 `date -d`，**纯 cmd / PowerShell 下不可用**，Windows 请走 Git Bash。
+- `install-everywhere.ps1` 仅 Windows（PowerShell 5.1+），运行加 `-ExecutionPolicy Bypass`；脚本含中文，**保存必须 UTF-8 带 BOM**——5.1 对无 BOM 文件按 GBK 误读，会把规则块判重逻辑整段搞坏（2026-10-12 实测）。
 - 脚本不联网、不执行删除、不跑 git。它是脚手架与闸门，不是清理工具。
 - 文档与默认值里出现的 `D:/agent_workspace`、`C:/Users/…` 只是本机示例路径。非本机首次使用**必须显式传 `--root`**，否则 `check-docs.sh` 会静默检查一个不存在的目录。
 - 工作区里的 `tools/` 是**同步副本**，真源在本仓库。只改副本会在下次 `bootstrap.sh --force` 时被覆盖；改逻辑请改仓库再重同步。
