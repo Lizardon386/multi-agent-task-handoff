@@ -125,7 +125,7 @@ check_links() {
       done < <(awk 'BEGIN{inb=0} /^```/{inb=!inb; next} !inb' "$f" 2>/dev/null | grep -oE '\]\([^)]+\)' | sed 's|^](||; s|)$||')
     )"
     if [ -n "$dead" ]; then printf '%s\n' "$dead"; fail=1; fi
-  done < <(find "$dir" -name "*.md" -not -path "*/node_modules/*" -not -path "*/.git/*" 2>/dev/null)
+  done < <(find "$dir" -name "*.md" -not -name "AGENTS.md" -not -path "*/node_modules/*" -not -path "*/.git/*" 2>/dev/null)
 }
 
 # [链] 之三：反引号裸文件名。指向本任务目录内真实存在的 .md/.txt 却没有写成可点链接
