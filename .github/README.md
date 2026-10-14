@@ -104,13 +104,14 @@ skill 与 `AGENTS.md` 解决的是「agent 读不读得到」；读到了仍可�
 2. **定时巡检（终审权交给调度器）**：把 `check-docs.sh` 挂成每日任务，全绿则安静、转红才通知——闸门从「agent 收工时自觉跑」变成「调度器每天一定跑」。Codex 自动化（heartbeat/cron）直接给提示词：「跑 `check-docs.sh` 不加管道，全绿保持安静，转红用 `file:///` 链接报告违规」；Windows 任务计划 / Linux cron 同理，退出码非 0 即告警。
 ### 装完生效的是哪几条
 
-不管走 A–F 哪条，最终约束 agent 的都是同样五条（详见下一节「它强制了什么」）：
+不管走 A–F 哪条，最终约束 agent 的都是同样六条（详见下一节「它强制了什么」）：
 
 1. 每个任务目录同时有 `README.md`（面向使用者）和 `CONTEXT.md`（面向下一个 agent），六节顺序固定、不许删；
 2. `设计思路` 必须是「决策 / 理由 / 代价」三列表，只写结论不写代价视为没写；
 3. **向用户呈现的文件一律写成可点击链接**（本机文档用 `[名字](file:///绝对正斜杠路径)`，要推到 GitHub 的仓库 README 用相对链接），裸文件名和反引号路径点不开；
 4. **除三档固定名与 `AGENTS.md` 外的输出文档必须中文命名**（`设计总览.md` 而非 `design-overview.md`）；与三档职责重复的说明/进度文件仍然禁止；
-5. 收工前 `check-docs.sh` 退出码 0 才算本次会话结束。
+5. 收工前 `check-docs.sh` 退出码 0 才算本次会话结束；
+6. **输出前必须主动检查规则清单**（artifact-links / chinese-doc-naming / complete-deliverables 等），把每份输出当交付物而非草稿——这是 2026-10-14 新增的 MANDATORY 要求，防止 agent 写内容-first 跳过规则符合性检查。
 
 差别只在**由谁兜底**：A/B/C 是 agent 主动加载 skill；D/E 是规则落进 `AGENTS.md`、靠 agent 读到该文件被动生效，所以 D/E 建议把第 5 条的自检当成硬闸门来要求。
 
@@ -225,6 +226,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File <最新skill目录>\scripts\
 
 **2026-10-14**
 
+- **新增第 6 条强制规则：输出前必须主动检查规则清单（Pre-output rules check, MANDATORY）**。起因是真实事故：agent 写方案时用代码格式 `` `文件名` `` 代替 `file:///` 链接，被用户指出。根因不是"图快"，是把输出当草稿写、没做规则符合性检查、依赖用户挑错。新增条款要求 agent 在输出任何涉及文件引用的方案/计划/文档变更前，强制过 artifact-links / chinese-doc-naming / complete-deliverables / self-audit 四项检查。写入 `SKILL.md` 的新章节"Pre-output rules check (MANDATORY)"，并更新 `description` 的第 (3) 条。此规则与 `feedback-self-audit-with-evidence` 互补：self-audit 是 reactive（被问时才检查），pre-output 是 proactive（输出前主动检查）。
 - **规范从两档扩成三档：`README.md`（使用者说明）+ `DESIGN.md`（方案设计）+ `CONTEXT.md`（agent 交接）**。「设计思路」三列表从 README 搬到 DESIGN，README 只剩说明所需的五节。动因是同一件事的两次重复：3178 的 README 被批"太繁琐、加了很多无谓的东西"，而它推上 GitHub 后读者要的确实是"我怎么用"。归档判据一句话：**这条结论半年后还成立吗？** 成立进 DESIGN，不成立进 CONTEXT。闸门同步：`[缺]/[构]` 查三档、`[空]` 从只判 README 改成**三档任一表格留全空行都判**（原先它顺带抓住了 README 的空产物表，拆档后不许松开）、`[期]` 改成**三档日期必须同日**、`[名]` 豁免 `DESIGN.md`。规则块标题随之改成「任务三档规范」，**幂等标记同时接受旧标题**（正则 `任务[双三]档规范`），免得留着旧标题的工作区被追加第二份规则块。
 - **`[链]` 的链接形式放宽到「`file:///` 或仓库相对链接」，可达性同时收紧到两种形式都验**。起因是一个真实后果：任务目录推上 GitHub 后，README 里的 `file:///D:/...` 对读者全是死链，而闸门只认这个前缀——等于规矩在把文档往错的方向推。放宽只放在"产物节有没有可点的东西"这一条上，断链检测反而比旧版更强（相对链接按**文档自身目录**解析）。反向验证做过：一条断掉的相对链接当场报红；同一段 C++ lambda 写在 ```` ``` ```` 围栏里放行、不写围栏报红，证明放行是围栏在起作用而不是提取器没看见。
 - 顺带修掉一处假阳性：`[this](Status result)` 这类代码里的 `](...)` 会被当成链接（2026-10-14 在一份 C++ 架构文档上误报）。现在 `check_links` 先剥掉 ```` ``` ```` 围栏再提取。

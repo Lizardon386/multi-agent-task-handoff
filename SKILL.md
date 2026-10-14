@@ -1,6 +1,6 @@
 ---
 name: multi-agent-task-handoff
-description: 多agent间工作任务交接手顺 — MANDATORY in EVERY session and ANY workspace, not only D:\agent_workspace. (1) Every task-like folder you create or work in must carry the three-document set — README.md (user manual), DESIGN.md (方案设计：为什么这么设计、已定语义), CONTEXT.md (agent handoff, updated every session) — with all three dates kept on the same day. (2) Every file artifact shown to the user, in chat replies AND in documents, must be a clickable Markdown link (file:/// absolute URLs on Codex/Qoder or when unsure; repo-relative links in a README published to GitHub; workspace-relative #L line anchors only on hosts verified to support jump-to-line). Never rationalize that the current directory is outside the agent workspace — the chat-link rule and the session-end CONTEXT.md update apply everywhere. Use at session start, when creating or touching any task or project folder, before any reply that mentions a file path, before ending a session, or when the user asks to set up, bootstrap, or enforce this handoff procedure on another agent or machine.
+description: 多agent间工作任务交接手顺 — MANDATORY in EVERY session and ANY workspace, not only D:\agent_workspace. (1) Every task-like folder you create or work in must carry the three-document set — README.md (user manual), DESIGN.md (方案设计：为什么这么设计、已定语义), CONTEXT.md (agent handoff, updated every session) — with all three dates kept on the same day. (2) Every file artifact shown to the user, in chat replies AND in documents, must be a clickable Markdown link (file:/// absolute URLs on Codex/Qoder or when unsure; repo-relative links in a README published to GitHub; workspace-relative #L line anchors only on hosts verified to support jump-to-line). Never rationalize that the current directory is outside the agent workspace — the chat-link rule and the session-end CONTEXT.md update apply everywhere. (3) **Pre-output rules check (MANDATORY)**: before presenting any plan, document change, or deliverable, actively check memory rules (artifact-links, chinese-doc-naming, complete-deliverables, etc.). Treat every output as a deliverable, not a draft. Use at session start, when creating or touching any task or project folder, before any reply that mentions a file path, before ending a session, or when the user asks to set up, bootstrap, or enforce this handoff procedure on another agent or machine.
 when_to_use: Every session in any workspace — at session start, when creating or updating task folders or docs, before any chat reply that shows a file path, and before claiming a session's work is finished.
 argument-hint: [task-folder-name]
 ---
@@ -99,6 +99,21 @@ Any file artifact shown to the user must be a **clickable Markdown link** — ba
 - Other hosts (e.g. Qoder's sidebar preview, Codex) or when unsure: keep the `file:///` form above, with the line number or in-document anchor in the link text.
 
 Why the split (decided 2026-10-10, widened 2026-10-14): a `file:///` link opens the file but cannot carry a line number — the user clicked one and landed at the top of the file. Chat replies therefore use anchor links on hosts that support jumping; documents default to `file:///`, and repo-relative links are equally valid in a README that is published somewhere the reader has no `D:` drive.
+
+## Pre-output rules check (MANDATORY)
+
+Before presenting any plan, document change, or deliverable to the user, **actively check the relevant memory rules**. Treat every output as a deliverable, not a draft.
+
+**Minimum checklist** (expand based on what you're outputting):
+
+1. **Artifact links** — Every file reference must be a clickable `file:///` link (or repo-relative if publishing to GitHub). Bare filenames, backticked paths, or `path:line` prose are violations.
+2. **Chinese doc naming** — Output documents (except README/DESIGN/CONTEXT/AGENTS) must have Chinese filenames.
+3. **Complete deliverables** — When changing documents, post the full updated content for review, not just the diff.
+4. **Self-audit** — Before presenting, ask: "If the user screenshots this and asks me to find errors, what would I catch?" Fix those issues first.
+
+**Why this is mandatory**: Agents tend to write content-first and skip rule compliance, relying on the user to catch errors. This is a delivery quality failure, not a speed trade-off. The 30 seconds spent checking rules prevents rework and maintains trust.
+
+**Complements self-audit**: `feedback-self-audit-with-evidence` is reactive (when asked "did you follow rules?"); this is proactive (check before outputting). Both are required.
 
 ## Target workspace
 
