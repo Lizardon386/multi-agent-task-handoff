@@ -47,9 +47,9 @@ Order is fixed. Extra sections are allowed; these are not deletable.
 
 **`DESIGN.md` may be absent on purpose.** If the folder already carries a deliverable whose role *is* the design (`架构设计.md`, `XX实施方案.md` — the gate matches a whitelist of **compound** names, so `他人设计稿评审意见书.md` does not earn the exemption), the gate prints `[档] 方案设计已由交付文档「X.md」承担` and skips the four sections: two sources of truth for one design always drift. Missing both `DESIGN.md` and such a deliverable is `[缺]`, a failure.
 
-All three start with an H1 (`# <task-folder> · 使用说明` / `· 方案设计` / `· 会话上下文与进展`) and a blockquote carrying `> 最近更新：YYYY-MM-DD` — `[新]`/`[旧]`/`[期]` read **only that blockquote line**, so a date mentioned in body text never counts as the top date. `[期]` compares the three of them and fails when any differs.
+All three start with an H1 (`# <task-folder> · 使用说明` / `· 方案设计` / `· 会话上下文与进展`) and a blockquote carrying `> 最近更新：YYYY-MM-DD` — `[新]`/`[旧]`/`[期]` read **only that blockquote line**, so a date mentioned in body text never counts as the top date. `[期]` compares the three of them and fails when any differs. Since 2026-10-14 `[题]` **fails** when the H1 does not contain the task folder's name: the next agent identifies which task a document belongs to from that heading, and a manual check of it drifted in 2 of 8 folders. A Chinese title is fine — write `# 3178-battle-platform（3178 对战平台）· 使用说明`; a heading that is *only* an alias fails.
 
-`设计思路` — now in `DESIGN.md`, not in the manual — must be a three-column trade-off table: **决策 / 理由 / 代价**. A conclusion without its cost is not a design note; an empty row fails `[空]` on purpose, in all three documents.
+`设计思路` — now in `DESIGN.md`, not in the manual — must be a three-column trade-off table: **决策 / 理由 / 代价**. A conclusion without its cost is not a design note; an empty row fails `[空]` on purpose, in all three documents. In `DESIGN.md` the bar is higher since 2026-10-14: **any** blank cell in a three-column row of that section fails, because `| 用 A | 有理由 |  |` used to pass while dropping exactly the column that matters. Two-column tables elsewhere are left alone — a blank cell there is normal layout, not an unfilled scaffold.
 
 ## Naming
 
@@ -91,7 +91,7 @@ Any file artifact shown to the user must be a **clickable Markdown link** — ba
 - Forward slashes always, Windows too: `D:\x\y.js` → `file:///D:/x/y.js`.
 - Keep `file:///` as the default for local documents; since 2026-10-14 the gate accepts **both** forms and validates **both** for reachability.
 - In-document anchors (`§` section numbers, table-row ids such as `C4`) follow the same rule — the anchor goes **in the link text**: `[归属决策件.md · C4行](file:///D:/agent_workspace/dsp-hal-eval/归属决策件.md)`. An anchor left outside the link (a bare `C4 行` after it) is a violation.
-- `check-docs.sh` reports `[链]` and **fails** when a `README.md` lists artifacts with no clickable link at all, when any link inside the workspace points at a file that no longer exists (`file:///` targets outside the workspace root are skipped so the scripts stay portable to other machines; content inside ```` ``` ```` fences is not scanned — a C++ lambda like `[this](Status result)` reads like a link), when a top-level deliverable `.md` mentions a workspace `.md`/`.txt` file as a bare backtick reference (`` `foo.md` ``) instead of a link (dead-link's sibling: not clickable, easy to leave behind after a rename), or `[期]` when the two docs' `最近更新` dates disagree.
+- `check-docs.sh` reports `[链]` and **fails** when a `README.md` lists artifacts with no clickable link at all, when any link inside the workspace points at a file that no longer exists (`file:///` targets outside the workspace root are skipped so the scripts stay portable to other machines; content inside ```` ``` ```` fences **and inline `` `code` `` spans** is not scanned — a C++ lambda like `[this](Status result)` reads like a link, and the three documents of the script folder used backtick spans to describe that very counter-example, so the gate was flagging its own manual. Backtick delimiters are paired by **equal-length run**, not naively: ```` ```` ``` ```` `` needs it. A legitimate `` [`foo.md`](url) `` is unwrapped before stripping, so its reachability still gets checked. Writing such an example needs a code span wide enough to contain backticks (two of them): prose that spells an actual link shape `[text](url)` *is* a dead link and the gate says so. A "placeholder" carve-out was tried on 2026-10-14 and reverted the same day — it silently broke the fixture that proves span-stripping works rather than ignoring links) , when a top-level deliverable `.md` mentions a workspace `.md`/`.txt` file as a bare backtick reference (`` `foo.md` ``) instead of a link (dead-link's sibling: not clickable, easy to leave behind after a rename), or `[期]` when the two docs' `最近更新` dates disagree.
 
 **Chat replies** — pick by host capability:
 
@@ -117,11 +117,11 @@ Before presenting any plan, document change, or deliverable to the user, **activ
 
 ## Target workspace
 
-Root resolution, first match wins: `--root <dir>` → `$AGENT_WS_ROOT` → the `tools/` parent this script is installed in → `D:/agent_workspace`.
+Root resolution, first match wins: `--root <dir>` → `$AGENT_WS_ROOT` → the parent of the workspace copy folder this script is installed in (new name `multi-agent-task-handoff/`, legacy name `tools/` — both accepted, so workspaces laid down before 2026-10-14 still find their root) → `D:/agent_workspace`.
 
 ## Bootstrapping another agent or machine
 
-To install the convention (rules block in `AGENTS.md`, `tools/` scripts, templates) into a workspace root that lacks it:
+To install the convention (rules block in `AGENTS.md`, scripts and templates in the workspace copy folder) into a workspace root that lacks it:
 
 ```bash
 bash scripts/bootstrap.sh --root <workspace-root>
@@ -131,7 +131,7 @@ Idempotent: existing files are left untouched, and `AGENTS.md` gains the rule bl
 
 ## Source of truth
 
-This skill is the canonical implementation. A workspace's `tools/` folder holds a synced copy (which is why a session that never loads the skill still finds working scripts). After editing `scripts/` or `assets/` here, re-sync the workspace:
+This skill is the canonical implementation. A workspace keeps a synced copy in its **script folder** — `multi-agent-task-handoff/` since 2026-10-14, `tools/` for roots laid down earlier (which is why a session that never loads the skill still finds working scripts). Both names are accepted by every resolver; `bootstrap.sh` and `install-everywhere.ps1` reuse `tools/` when a root already has it, so one run never lays down two copies. After editing `scripts/` or `assets/` here, re-sync the workspace:
 
 ```bash
 bash scripts/bootstrap.sh --root <workspace-root> --force
@@ -149,9 +149,9 @@ powershell -NoProfile -ExecutionPolicy Bypass -File <最新skill目录>\scripts\
 
 - `-Source` defaults to the skill directory the script runs from, so **always run the copy that holds the newest content** (the git clone after a pull; your edited copy after local edits).
 - Updating one copy without propagating is a rule violation: the other agents keep enforcing the OLD rules, and their next session silently diverges.
-- The same run also re-syncs the `tools/` copy of every workspace in its `-WorkspaceRoots` list — including `install-everywhere.ps1` itself (added 2026-10-12; before that the workspace copy of the propagator silently went stale). Workspaces bootstrapped by hand need `bash scripts/bootstrap.sh --root <workspace-root> --force`.
+- The same run also re-syncs the script folder of every workspace in its `-WorkspaceRoots` list — including `install-everywhere.ps1` itself (added 2026-10-12; before that the workspace copy of the propagator silently went stale). Workspaces bootstrapped by hand need `bash scripts/bootstrap.sh --root <workspace-root> --force`.
 - **A workspace's existing `AGENTS.md` is NOT rewritten** — both installers dedupe on a heading match and only append when nothing matches. Since 2026-10-14 the marker is the regex `任务[双三]档规范`, so a workspace still carrying the old `任务双档规范` heading is recognized instead of getting a duplicated rule block. After changing rule text here, sync that workspace's `AGENTS.md` (and each agent's global rule file) by hand — the installers never rewrite an existing block.
-`tools/` and `templates/` are infrastructure and are excluded from the check; a real task folder always is.
+`templates/` is infrastructure and is excluded from the check. The script folder is excluded **only while it holds no `README.md`** — once it carries the three documents they are checked like a task folder's, which is how 2026-10-14 caught 20 links still pointing at the old `tools/` path.
 
 ## Resources
 
@@ -159,6 +159,6 @@ powershell -NoProfile -ExecutionPolicy Bypass -File <最新skill目录>\scripts\
 - `scripts/check-docs.sh` — compliance gate (existence, sections, placeholders, empty scaffolds, freshness).
 - `scripts/bootstrap.sh` — install / re-sync the convention into a workspace root.
 - `scripts/install-everywhere.ps1` — the Windows propagator that executes the Propagation rule below: skill dirs of every agent + global rule files + every registered workspace. Run the copy from the newest source.
-- `assets/README.md.tpl`, `assets/DESIGN.md.tpl`, `assets/CONTEXT.md.tpl` — section skeletons (bootstrap copies these into `tools/templates/`).
+- `assets/README.md.tpl`, `assets/DESIGN.md.tpl`, `assets/CONTEXT.md.tpl` — section skeletons (bootstrap copies these into `multi-agent-task-handoff/templates/`).
 - `references/doc-spec.md` — the complete written rule (read when writing or reviewing docs).
 - `references/agents-rule.md` — the exact block bootstrap appends to a workspace `AGENTS.md`.

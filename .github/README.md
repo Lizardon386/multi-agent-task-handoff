@@ -64,7 +64,7 @@ Codex 同样认 SKILL.md：把上面的目标路径换成 `~/.codex/skills/multi
 bash <skill目录>/scripts/bootstrap.sh --root <工作区根>
 ```
 
-它会铺好 `<工作区根>/tools/`（init + check 脚本）和 `tools/templates/`，并把规则章节追加进 `<工作区根>/AGENTS.md`。`AGENTS.md` 不存在就创建，已含规则块则不动（幂等，可重复跑）。
+它会铺好 `<工作区根>/multi-agent-task-handoff/`（init + check 脚本）和 `multi-agent-task-handoff/templates/`，并把规则章节追加进 `<工作区根>/AGENTS.md`。`AGENTS.md` 不存在就创建，已含规则块则不动（幂等，可重复跑）。
 
 如果你的 agent 读的不是 `AGENTS.md`（比如 `CLAUDE.md`、`.cursorrules`）：把 `references/agents-rule.md` 的内容整段粘进那个文件即可——那就是规则块的原文，与 `bootstrap.sh` 追加的完全一致。
 
@@ -75,7 +75,7 @@ bash <skill目录>/scripts/bootstrap.sh --root <工作区根>
 两条路：
 
 1. **让 agent 执行安装**——直接把这句话丢给它：
-   > 运行 `bash <skill目录>/scripts/bootstrap.sh --root <工作区根>`，然后每次改完产物后运行 `<工作区根>/tools/check-docs.sh`，退出码 0 才算本次任务结束。
+   > 运行 `bash <skill目录>/scripts/bootstrap.sh --root <工作区根>`，然后每次改完产物后运行 `<工作区根>/multi-agent-task-handoff/check-docs.sh`，退出码 0 才算本次任务结束。
 
    规则已经写进该工作区的 `AGENTS.md`，后续会话只要读得到就会被约束。
 
@@ -83,7 +83,7 @@ bash <skill目录>/scripts/bootstrap.sh --root <工作区根>
 
 ### F. 本机装了多个 agent（Windows 一次铺满）
 
-一条命令把 skill 同步进每个 agent 的技能目录、给有全局指令文件约定的 agent 追加规则块、并给每个工作区铺 `tools/` + `AGENTS.md`：
+一条命令把 skill 同步进每个 agent 的技能目录、给有全局指令文件约定的 agent 追加规则块、并给每个工作区铺脚本副本目录（新名 `multi-agent-task-handoff/`，旧名 `tools/`）+ `AGENTS.md`：
 
 ```powershell
 powershell -NoProfile -File <skill目录>\scripts\install-everywhere.ps1 `
@@ -120,8 +120,8 @@ skill 与 `AGENTS.md` 解决的是「agent 读不读得到」；读到了仍可�
 ### 装完验证一次
 
 ```bash
-bash <工作区根>/tools/check-docs.sh --root <工作区根>   # exit 0 说明闸门可用
-bash <工作区根>/tools/init-task.sh smoke-test          # 应报 [空] 不合规——拦空骨架是它的职责
+bash <工作区根>/multi-agent-task-handoff/check-docs.sh --root <工作区根>   # exit 0 说明闸门可用
+bash <工作区根>/multi-agent-task-handoff/init-task.sh smoke-test          # 应报 [空] 不合规——拦空骨架是它的职责
 rm -rf <工作区根>/smoke-test                           # 清掉测试目录
 ```
 
@@ -156,10 +156,10 @@ rm -rf <工作区根>/smoke-test                           # 清掉测试目录
 ## 日常用法
 
 ```bash
-bash tools/init-task.sh <任务名>              # 开新任务：建目录 + 铺三档骨架
-bash tools/check-docs.sh                      # 收工闸门：全量验收
-bash tools/check-docs.sh my-task              # 只查一个任务
-bash tools/check-docs.sh --root E:/other_ws   # 换工作区根（或 export AGENT_WS_ROOT=…）
+bash multi-agent-task-handoff/init-task.sh <任务名>              # 开新任务：建目录 + 铺三档骨架
+bash multi-agent-task-handoff/check-docs.sh                      # 收工闸门：全量验收
+bash multi-agent-task-handoff/check-docs.sh my-task              # 只查一个任务
+bash multi-agent-task-handoff/check-docs.sh --root E:/other_ws   # 换工作区根（或 export AGENT_WS_ROOT=…）
 ```
 
 `check-docs.sh` **退出码 0 才算本次会话收尾完成**。检查项前缀：
@@ -169,7 +169,8 @@ bash tools/check-docs.sh --root E:/other_ws   # 换工作区根（或 export AGE
 | `[缺]` | 三档文件不存在（README / DESIGN / CONTEXT） | 是 |
 | `[构]` | 缺章节 | 是 |
 | `[占]` | 模板占位符没替换 | 是 |
-| `[空]` | 骨架未填（三档任一表格留全空行、CONTEXT 空待办、缺日期） | 是 |
+| `[题]` | H1 标题不含任务目录名（中文名写成 `# 目录名（别名）· 使用说明` 就过） | **是**（2026-10-14 新增） |
+| `[空]` | 骨架未填（三档任一表格留全空行、CONTEXT 空待办、缺日期；DESIGN「设计思路」三列表**任一格留空**也算） | 是 |
 | `[新]` | 顶部缺「最近更新：YYYY-MM-DD」 | 是 |
 | `[链]` | 「产物与目录」没有可点击链接（`file:///` 或相对链接都算），**或**链接指向的文件不存在（两种形式都验），**或**顶层交付 `.md` 里用反引号裸写工作区 `.md`/`.txt`（改名遗留的不可点裸名） | **是**（2026-10-10 由告警升级） |
 | `[名]` | 顶层输出 `.md` 用了纯 ASCII（英文）文件名（四个固定名 `README` / `DESIGN` / `CONTEXT` / `AGENTS` 豁免） | **是** |
@@ -188,7 +189,7 @@ SKILL.md                    skill 入口：工作流、必备章节、产物链�
 scripts/init-task.sh        建任务目录 + 铺三档骨架
 scripts/check-docs.sh       合规闸门
 scripts/bootstrap.sh        把整套规矩装进任意工作区根（--force 可重同步副本）
-scripts/install-everywhere.ps1  铁律「更新即铺满」的执行工具：一次铺满本机所有 agent 的技能目录（`.codex`/`.qoder-cn`/`.claude`）+ 全局规则 + 工作区 `tools/`（含它自己）（见安装 F 与「更新即铺满」一节）
+scripts/install-everywhere.ps1  铁律「更新即铺满」的执行工具：一次铺满本机所有 agent 的技能目录（`.codex`/`.qoder-cn`/`.claude`）+ 全局规则 + 工作区脚本副本目录（含它自己）（见安装 F 与「更新即铺满」一节）
 references/doc-spec.md      规则全文：命名禁令、分工红线、产物链接、边界特例、为什么要有这条规矩
 references/agents-rule.md   bootstrap 追加进工作区 AGENTS.md 的规则块原文
 assets/README.md.tpl        使用者文档骨架
@@ -209,7 +210,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File <最新skill目录>\scripts\
 ```
 
 - **永远从"最新那份"里运行它**：`-Source` 缺省就是脚本自身所在的 skill 目录。`git pull` 后在真源克隆里直接跑；本地改完在改过的那份里直接跑。
-- 同一趟还会幂等刷新：各 agent 的全局规则块（`.codex/AGENTS.md`、`.claude/CLAUDE.md`）与每个已登记工作区的 `tools/` 副本——**包括 `install-everywhere.ps1` 自己**（2026-10-12 补：此前它不铺自己，真源更新了、工作区那份却永远停在旧版，而旧版 `-Source` 还硬编码着别的 agent 目录，从工作区跑就会拿错的源当权威）。
+- 同一趟还会幂等刷新：各 agent 的全局规则块（`.codex/AGENTS.md`、`.claude/CLAUDE.md`）与每个已登记工作区的脚本副本目录（旧名 `tools/`，新名 `multi-agent-task-handoff/`）——**包括 `install-everywhere.ps1` 自己**（2026-10-12 补：此前它不铺自己，真源更新了、工作区那份却永远停在旧版，而旧版 `-Source` 还硬编码着别的 agent 目录，从工作区跑就会拿错的源当权威）。
 - **已有规则块的工作区不会被自动更新**：`bootstrap.sh` 与本脚本都靠「任务[双三]档规范」标题正则判重，只补不覆盖。改了条款，要**手工同步该工作区的 `AGENTS.md`**，否则那里的 agent 读到的还是旧版——这条本身就是 2026-10-12 补进 `references/agents-rule.md` 的（此前「更新即铺满」只在 `SKILL.md` 和本页，只读 `AGENTS.md` 的 agent 完全看不到）。
 - **pull 自动化（可选但推荐）**：在真源克隆里装 `post-merge` 钩子，pull 一合并就自动铺满——`.git/hooks/post-merge` 三行：
 
@@ -225,6 +226,13 @@ powershell -NoProfile -ExecutionPolicy Bypass -File <最新skill目录>\scripts\
 跟进方式：`git -C <skill目录> pull` 后**必须**按上节「更新即铺满」跑一次 `install-everywhere.ps1`（或事先装好 `post-merge` 钩子，pull 完自动铺满）。
 
 **2026-10-14**
+
+- **工作区脚本副本目录改名 `multi-agent-task-handoff`，`tools` 继续接受；副本目录是否算任务目录改成按内容判**。起因是收工跑闸门发现 **exit 1、34 条 `[链]`**：`D:\agent_workspace\tools\` 已被改名成别的目录名，而 `bootstrap.sh`、`install-everywhere.ps1`、`check-docs.sh` 的 root 解析与跳过名单、以及工作区/全局 `AGENTS.md` 和落地页教的命令全写死 `tools/`——下次铺满会另造一个 `tools/`，改名那份变成没人认领的第三副本（"两份真源必然漂移"的翻版）。现在：四处解析器都认两个名字，`bootstrap.sh` 与 `install-everywhere.ps1` 遇到已有 `tools/` 的工作区沿用旧名（一次铺满不会铺出两份脚本），结尾提示打印真实路径而不是失效的 `bash tools/init-task.sh`。跳过名单改为**按内容判**：副本目录只有脚本时跳过（新工作区不该一跑就红），一旦铺了三档就照任务目录检查——正是这条抓出了 20 条指向旧路径的死链。旧名硬跳过是这些死链能活到今天的原因。
+- **新增 `[题]`（判失败）**：H1 必须含任务目录名，中文别名写成 `# 目录名（别名）· 使用说明`。原先这条全靠人工守，实测 8 个目录 2 个对不上（含本 skill 自己的工作区副本，标题一直还写着旧名）。
+- **`[空]` 加严第二层**：DESIGN「设计思路」的三列表**任一格留空**即失败。只判"整行三格全空"时 `| 用 A | 有理由 |  |` 是绿的，而漏的恰恰是最要紧的代价列。两列表照旧不判，避免误伤架构表。
+- **`[链]` 现在也剥行内 `` `code` ``**（此前只剥 ` ``` ` 围栏）：三份文档为了说明这条规则，用行内反引号举 `[this](Status result)` 这个反例，被闸门判红 4 条——**规则误伤了写规则的人**。反引号定界符按**等长 run 配对**，因为文档里存在 ```` ```` ``` ```` `` 这种"反引号套反引号"的写法，简单成对匹配会配错位、把 span 漏出去。``[`x.md`](url)`` 这类 display 名带反引号的合法链接先解开再验，可达性覆盖没有因此缩小；格式例子要写成代码段（**两个**反引号包住，单反引号包不住含反引号的例子），散文里裸写的链接形状 `[文字](链接)` 就是一条点不开的死链、照报——2026-10-14 曾给"占位符"开过豁免，结果当场打穿了证明 span 生效的那条反向对照（夹具 c8），已撤销。`AGENTS.md` 的可达性豁免由并行会话的 commit `7c09c5b` 引入（规则正文里的示例链接不是真路径），本轮保留它；两条修叠加之后 `dsp-hal-eval` 才转绿。
+- **去掉 GNU `date -d` 依赖**：过期天数改成纯 bash 的 civil→days 算法（与 `date -u` 对拍 14 组，含闰年、世纪年、`08`/`09` 这类零补齐日期）。对拍顺手抓出一个真 bug：`IFS=-` 拆出的 `08`/`09` 在 bash 算术里是非法八进制，不写 `10#` 时**八月、九月的日期会让 `[旧]` 判定直接报错**——今天恰好是 10 月，这条会一路绿到 8 月才炸。不做 PowerShell 版（`[空]/[档]/[链]` 全靠 grep/awk，两套逻辑必然漂移），也不挂 git hook（工作区不是 git 仓库；skill 仓库的 pre-commit 去检查别人的目录方向不对）。这两条待办按裁定关闭。
+- 15 项夹具断言全过（`--root` 隔离根，跑完即删），含三条关键反向对照：半填行报 / 两列表不报、别名标题放行 / 纯标题报、行内代码里的假链接放行 / **同一段不写反引号照报**。全量闸门 ~11s。
 
 - **新增第 6 条强制规则：输出前必须主动检查规则清单（Pre-output rules check, MANDATORY）**。起因是真实事故：agent 写方案时用代码格式 `` `文件名` `` 代替 `file:///` 链接，被用户指出。根因不是"图快"，是把输出当草稿写、没做规则符合性检查、依赖用户挑错。新增条款要求 agent 在输出任何涉及文件引用的方案/计划/文档变更前，强制过 artifact-links / chinese-doc-naming / complete-deliverables / self-audit 四项检查。写入 `SKILL.md` 的新章节"Pre-output rules check (MANDATORY)"，并更新 `description` 的第 (3) 条。此规则与 `feedback-self-audit-with-evidence` 互补：self-audit 是 reactive（被问时才检查），pre-output 是 proactive（输出前主动检查）。
 - **规范从两档扩成三档：`README.md`（使用者说明）+ `DESIGN.md`（方案设计）+ `CONTEXT.md`（agent 交接）**。「设计思路」三列表从 README 搬到 DESIGN，README 只剩说明所需的五节。动因是同一件事的两次重复：3178 的 README 被批"太繁琐、加了很多无谓的东西"，而它推上 GitHub 后读者要的确实是"我怎么用"。归档判据一句话：**这条结论半年后还成立吗？** 成立进 DESIGN，不成立进 CONTEXT。闸门同步：`[缺]/[构]` 查三档、`[空]` 从只判 README 改成**三档任一表格留全空行都判**（原先它顺带抓住了 README 的空产物表，拆档后不许松开）、`[期]` 改成**三档日期必须同日**、`[名]` 豁免 `DESIGN.md`。规则块标题随之改成「任务三档规范」，**幂等标记同时接受旧标题**（正则 `任务[双三]档规范`），免得留着旧标题的工作区被追加第二份规则块。
@@ -261,11 +269,11 @@ powershell -NoProfile -ExecutionPolicy Bypass -File <最新skill目录>\scripts\
 
 ## 依赖与注意事项
 
-- 需要 bash + GNU coreutils。`check-docs.sh` 用了 `date -d`，**纯 cmd / PowerShell 下不可用**，Windows 请走 Git Bash。
+- 需要 bash（Git Bash / Linux / macOS 均可）。2026-10-14 起 `check-docs.sh` **不再依赖 GNU `date -d`**——过期天数改用纯 bash 的 civil→days 算法，BSD/macOS 的 `date` 也能跑。整个脚本仍是 bash，**纯 cmd / PowerShell 下没有对应实现**（刻意不做：两套判定逻辑必然漂移），Windows 请走 Git Bash。
 - `install-everywhere.ps1` 仅 Windows（PowerShell 5.1+），运行加 `-ExecutionPolicy Bypass`；脚本含中文，**保存必须 UTF-8 带 BOM**——5.1 对无 BOM 文件按 GBK 误读，会把规则块判重逻辑整段搞坏（2026-10-12 实测）。
 - 脚本不联网、不执行删除、不跑 git。它是脚手架与闸门，不是清理工具。
 - 文档与默认值里出现的 `D:/agent_workspace`、`C:/Users/…` 只是本机示例路径。非本机首次使用**必须显式传 `--root`**，否则 `check-docs.sh` 会静默检查一个不存在的目录。
-- 工作区里的 `tools/` 是**同步副本**，真源在本仓库。只改副本会在下次 `bootstrap.sh --force` 时被覆盖；改逻辑请改仓库再重同步。
+- 工作区脚本副本目录（新名 `multi-agent-task-handoff/`，旧名 `tools/`）是**同步副本**，真源在本仓库。只改副本会在下次 `bootstrap.sh --force` 时被覆盖；改逻辑请改仓库再重同步。两套名字都被 root 解析与跳过逻辑接受，`bootstrap.sh` 遇到已有 `tools/` 的工作区沿用旧名，不会一次铺出两份脚本。
 - 工作区 `AGENTS.md` 里的规则块标题是 `bootstrap.sh` 与 `install-everywhere.ps1` 的幂等标记。2026-10-14 规范从两档扩成三档、标题改成「任务三档规范」，**标记同时接受旧标题**（正则 `任务[双三]档规范`）——否则留着旧标题的工作区再跑一次铺满就会追加出第二份规则块。新建工作区拿到的是新标题。
 
 ## 这份说明为什么在 `.github/` 而不是仓库根

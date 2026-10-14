@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
 # bootstrap.sh — 把「任务三档规范」装进一个工作区根目录（换机器 / 换 agent / 新工作区时用）
 # 用法：bash bootstrap.sh --root <工作区根> [--force]
-# 做三件事：1) 复制 init-task.sh / check-docs.sh 到 <root>/tools/
-#           2) 复制三份模板到 <root>/tools/templates/
+# 做三件事：1) 复制 init-task.sh / check-docs.sh 到工作区脚本副本目录
+#           2) 复制三份模板到 <副本目录>/templates/
 #           3) 若 <root>/AGENTS.md 没有「任务三档规范」章节，则追加规则全文（不存在则创建）
+# 副本目录 2026-10-14 起叫 multi-agent-task-handoff；工作区里已有旧名 tools/ 时继续用旧名。
 set -euo pipefail
 
 SELF_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -22,7 +23,15 @@ done
 
 [ -n "$ROOT" ] || { echo "用法: bash bootstrap.sh --root <工作区根>" >&2; exit 1; }
 [ -d "$ROOT" ] || { echo "[错误] 目录不存在: $ROOT" >&2; exit 1; }
-mkdir -p "$ROOT/tools/templates"
+# 副本目录名解析：工作区里已存在旧名 tools/ 且还没有新名时沿用 tools/——否则一次 bootstrap
+# 就铺出两份脚本，而"哪份是真副本"没人说得清（2026-10-14 本目录正是因为没人认领而改名成了
+# multi-agent-task-handoff，全套文档教的 bash tools/init-task.sh 当场失效）。
+if [ -d "$ROOT/tools" ] && [ ! -d "$ROOT/multi-agent-task-handoff" ]; then
+  TOOLS_DIR="$ROOT/tools"
+else
+  TOOLS_DIR="$ROOT/multi-agent-task-handoff"
+fi
+mkdir -p "$TOOLS_DIR/templates"
 
 installed=0
 copy_to() {  # $1=src $2=dst
@@ -34,10 +43,10 @@ copy_to() {  # $1=src $2=dst
 }
 
 for s in init-task.sh check-docs.sh; do
-  copy_to "$SKILL_DIR/scripts/$s" "$ROOT/tools/$s"
+  copy_to "$SKILL_DIR/scripts/$s" "$TOOLS_DIR/$s"
 done
 for t in README.md.tpl DESIGN.md.tpl CONTEXT.md.tpl; do
-  copy_to "$SKILL_DIR/assets/$t" "$ROOT/tools/templates/$t"
+  copy_to "$SKILL_DIR/assets/$t" "$TOOLS_DIR/templates/$t"
 done
 
 # 去重标记同时接受旧标题「任务双档规范」：2026-10-14 规范从两档扩成三档、标题改成「任务三档规范」，
@@ -54,4 +63,4 @@ fi
 
 echo
 echo "完成。root = $ROOT"
-echo "下一步：bash \"$ROOT/tools/init-task.sh\" <任务名> 建任务；bash \"$ROOT/tools/check-docs.sh\" 自检。"
+echo "下一步：bash \"$TOOLS_DIR/init-task.sh\" <任务名> 建任务；bash \"$TOOLS_DIR/check-docs.sh\" 自检。"

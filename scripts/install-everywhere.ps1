@@ -3,7 +3,8 @@
 # 铁律「更新即铺满」：skill 无论本地改过还是 git pull 到更新，都必须立刻运行本脚本。
 #         -Source 缺省 = 脚本自身所在的 skill 目录——永远从"最新那份"里运行它。
 # 做什么: ① 把 skill 同步进每个 agent 的技能目录  ② 给有全局指令文件的 agent 写规则块（缺才写）
-#         ③ 给每个工作区铺 tools/ + AGENTS.md 规则块（与 bootstrap.sh 同一去重标记，兼容旧标题）
+#         ③ 给每个工作区铺脚本副本目录 + AGENTS.md 规则块（与 bootstrap.sh 同一去重标记，兼容旧标题）
+#         副本目录 2026-10-14 起叫 multi-agent-task-handoff；工作区里已有旧名 tools/ 时沿用旧名。
 param(
   [string]$Source = (Split-Path $PSScriptRoot -Parent),
   [string[]]$AgentHomes = @("~\.codex", "~/.qoder-cn", "~\.claude"),
@@ -44,7 +45,7 @@ $globalBlock = @"
 1. 会话开始即按 skill ``multi-agent-task-handoff`` 的规范工作。
 2. 链接强制（无条件）：聊天回复中的任何文件产物路径一律写成可点击 Markdown 链接（不确定的宿主用 ``file:///`` 绝对路径，行号写进链接文字）；禁止裸文件名、反引号路径。
 3. 在任何工作区新建任务/项目目录时，立即铺 ``README.md``（使用者说明）+ ``DESIGN.md``（方案设计）+ ``CONTEXT.md``（agent 交接）三档骨架；收工前更新 CONTEXT.md 的「当前状态」「变更记录」，三档「最近更新」同日且一致。git 仓库源码跟随仓库自身规范。
-4. 工作区存在 ``tools/check-docs.sh`` 时，收工前必跑、退出码 0 才算完成；跑闸门不加管道。
+4. 工作区脚本副本目录（新名 ``multi-agent-task-handoff``，旧名 ``tools``）里存在 ``check-docs.sh`` 时，收工前必跑、退出码 0 才算完成；跑闸门不加管道。
 5. 细节以 skill 的 ``references/agents-rule.md`` 为唯一权威。
 "@
 $globalFiles = @{ "~\.codex" = "AGENTS.md"; "~\.claude" = "CLAUDE.md" }
@@ -56,10 +57,14 @@ foreach ($agentHome in $globalFiles.Keys) {
   $report += "全局规则已写入: $gf"
 }
 
-# ③ 工作区铺 tools/ + AGENTS.md 规则块（与 bootstrap.sh 等价、同标记）
+# ③ 工作区铺脚本副本目录 + AGENTS.md 规则块（与 bootstrap.sh 等价、同标记）
 foreach ($root in $WorkspaceRoots) {
   if (-not (Test-Path $root)) { $report += "跳过（工作区不存在）: $root"; continue }
-  $tools = Join-Path $root "tools"
+  # 副本目录名解析与 bootstrap.sh 保持一致：已有旧名 tools/ 且还没有新名时沿用 tools/，
+  # 否则一次铺满会铺出两份脚本、"哪份是真副本"没人认领（2026-10-14 本目录就是这么丢的）。
+  $tools = Join-Path $root "multi-agent-task-handoff"
+  $legacy = Join-Path $root "tools"
+  if ((Test-Path $legacy) -and -not (Test-Path $tools)) { $tools = $legacy }
   New-Item -ItemType Directory -Path (Join-Path $tools "templates") -Force | Out-Null
   foreach ($s in @("init-task.sh", "check-docs.sh", "bootstrap.sh", "install-everywhere.ps1")) {
     $src = Join-Path $Source "scripts\$s"; $dst = Join-Path $tools $s
@@ -72,9 +77,9 @@ foreach ($root in $WorkspaceRoots) {
     Copy-Item $t.FullName $dst -Force
   }
   $wf = Join-Path $root "AGENTS.md"
-  if ((Test-Path $wf) -and ([System.IO.File]::ReadAllText($wf) -match $marker)) { $report += "工作区规则已存在，跳过: $wf（tools/ 已同步）"; continue }
+  if ((Test-Path $wf) -and ([System.IO.File]::ReadAllText($wf) -match $marker)) { $report += "工作区规则已存在，跳过: $wf（副本目录已同步: $tools）"; continue }
   [System.IO.File]::AppendAllText($wf, ("`n" + [System.IO.File]::ReadAllText((Join-Path $Source "references\agents-rule.md"))), (New-Object System.Text.UTF8Encoding($false)))
-  $report += "工作区规则已写入: $wf（tools/ 已同步）"
+  $report += "工作区规则已写入: $wf（副本目录已同步: $tools）"
 }
 
 $report | ForEach-Object { Write-Host $_ }
