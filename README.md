@@ -133,6 +133,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File D:\agent_workspace\multi-age
 - `-Source` 缺省 = 脚本所在 `scripts\` 的上一级 = 真源根，所以**从工作树里那份启动即正确**。
 - 同一趟幂等刷新：各 agent 技能目录、各 agent 的全局规则块（`.codex\AGENTS.md`、`.claude\CLAUDE.md`）、每个已登记工作区的脚本副本目录（含 `install-everywhere.ps1` 自己）。**副本目录就是真源时跳过自铺**，否则会把扁平脚本铺到工作树根、与 `scripts/` 正主并存两份。
 - **已有规则块的工作区不会被自动更新**：`bootstrap.sh` 与本脚本都靠标题正则 `任务[双三]档规范` 判重、只补不覆盖。改了条款要**手工同步那份 `AGENTS.md`**，否则那里的 agent 读到的还是旧版。
+- **默认只补不删**：仓库里删掉的文件在各副本里会留着（2026-10-14 合并落地页时就留下三份幽灵 `.github/README.md`，内容还是旧规矩，而铺满输出照样全绿）。要清就加 `-Prune`——**先把待删清单打进输出，再删**；只想看清单用 `-Prune -DryRun`。作用域严格限定在本脚本自己铺的两个子树：技能目录下的 skill 子树按真源镜像比对，工作区脚本副本目录按「4 份脚本 + templates/」比对；真源目录本身拒绝执行，也不碰 `AGENTS.md`、全局规则文件与任务目录。**副作用要说明白：工作区那个脚本副本目录归安装器所有，别往里放自己的笔记。**
 - 可选但推荐：装 `post-merge` 钩子，pull 完自动铺满——`.git/hooks/post-merge` 三行：
 
   ```sh

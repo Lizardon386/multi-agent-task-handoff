@@ -140,7 +140,7 @@ README 与 DESIGN 拆开是 2026-10-14 定的：取舍三列表留在说明书�
   powershell -NoProfile -ExecutionPolicy Bypass -File D:\agent_workspace\multi-agent-task-handoff\scripts\install-everywhere.ps1
   ```
 
-  `-Source` 缺省 = 脚本所在 `scripts\` 的上一级 = 真源工作树，所以**必须从工作树里那份启动**（从下游扁平副本启动会把整个工作区当成 skill 源）。同一趟会幂等刷新：各 agent 的技能目录、各 agent 的全局规则块、每个已登记工作区的脚本副本（含 `install-everywhere.ps1` 自己，2026-10-12 起——之前它不铺自己，导致工作区那份长期停在旧版）；**副本目录就是真源本身时跳过**，免得往工作树上铺出第二份扁平脚本。
+  `-Source` 缺省 = 脚本所在 `scripts\` 的上一级 = 真源工作树，所以**必须从工作树里那份启动**（从下游扁平副本启动会把整个工作区当成 skill 源）。同一趟会幂等刷新：各 agent 的技能目录、各 agent 的全局规则块、每个已登记工作区的脚本副本（含 `install-everywhere.ps1` 自己，2026-10-12 起——之前它不铺自己，导致工作区那份长期停在旧版）；**副本目录就是真源本身时跳过**，免得往工作树上铺出第二份扁平脚本。**默认只补不删**：仓库里删掉的文件在各副本里会留着（幽灵副本带着旧规矩，而铺满输出照样全绿），需要清理时加 `-Prune`——先把待删清单打进输出、再删；`-Prune -DryRun` 只列不删。作用域仅限本脚本自己铺的两个子树（技能目录下的 skill 子树、工作区脚本副本目录），不碰任务目录与 `AGENTS.md`；反过来说，**工作区那个脚本副本目录归安装器所有，别往里放自己的笔记**。
 - 只铺单个工作区时用 `bash scripts/bootstrap.sh --root <工作区根>`（`--force` 覆盖脚本副本）。
 - **不要只在下游副本里修 bug**：下次铺满会被覆盖，改动一律提到工作树。
 - **已有规则块的工作区不会被自动更新**：bootstrap 与 install-everywhere 都靠规则块标题判重（2026-10-14 起是正则 `任务[双三]档规范`，兼容拆分前的旧标题），只补不覆盖。skill 改了条款，必须**手工同步一次该工作区的 `AGENTS.md` 和各 agent 的全局规则块**（`.codex\AGENTS.md`、`.claude\CLAUDE.md`），否则那里的 agent 读到的还是旧版。
