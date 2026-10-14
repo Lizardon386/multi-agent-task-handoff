@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # bootstrap.sh — 把「任务三档规范」装进一个工作区根目录（换机器 / 换 agent / 新工作区时用）
 # 用法：bash bootstrap.sh --root <工作区根> [--force]
-# 做三件事：1) 复制 init-task.sh / check-docs.sh 到工作区脚本副本目录
+# 做三件事：1) 复制五份脚本到工作区脚本副本目录（清单须与 install-everywhere.ps1 一致）
 #           2) 复制三份模板到 <副本目录>/templates/
 #           3) 若 <root>/AGENTS.md 没有「任务三档规范」章节，则追加规则全文（不存在则创建）
 # 副本目录 2026-10-14 起叫 multi-agent-task-handoff；工作区里已有旧名 tools/ 时继续用旧名。
@@ -53,7 +53,9 @@ copy_to() {  # $1=src $2=dst
 }
 
 if [ "$SKIP_SYNC" = 0 ]; then
-  for s in init-task.sh check-docs.sh; do
+  # 清单必须与 install-everywhere.ps1 第③步、以及它的 Get-CopyExpectedSet **完全一致**：
+  # 三处各写一份文件名，少写一个就会被 -Prune 当成"副本里多出来的文件"删掉。
+  for s in init-task.sh check-docs.sh bootstrap.sh install-everywhere.ps1 selftest.sh muttest.sh; do
     copy_to "$SKILL_DIR/scripts/$s" "$TOOLS_DIR/$s"
   done
   for t in README.md.tpl DESIGN.md.tpl CONTEXT.md.tpl; do

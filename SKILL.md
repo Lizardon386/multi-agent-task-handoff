@@ -30,6 +30,8 @@ The convention exists because sessions are volatile: without a handoff file the 
    ```
 3. **Work.**
 4. **Before ending the session**, update the three files, then verify:
+   (Changing the gate itself is a different job: run `scripts/selftest.sh` — 47 fixture assertions — and
+   `scripts/muttest.sh` — 18 deliberate regressions proving those assertions bite — before committing.)
    ```bash
    bash scripts/check-docs.sh            # all folders; append a name to check one
    ```
@@ -168,6 +170,8 @@ powershell -NoProfile -ExecutionPolicy Bypass -File D:\agent_workspace\multi-age
 - `scripts/init-task.sh` — create a task folder with the three skeletons.
 - `scripts/check-docs.sh` — compliance gate (existence, sections, placeholders, empty scaffolds, freshness).
 - `scripts/bootstrap.sh` — install / re-sync the convention into a workspace root.
+- `scripts/selftest.sh` — 47 fixture assertions over an isolated temp root; run before and after any gate change.
+- `scripts/muttest.sh` — breaks the gate 18 different ways and checks that `selftest.sh` goes red each time.
 - `scripts/install-everywhere.ps1` — the Windows propagator that executes the Propagation rule below: skill dirs of every agent + global rule files + every registered workspace. Run the copy from the newest source.
 - `assets/README.md.tpl`, `assets/DESIGN.md.tpl`, `assets/CONTEXT.md.tpl` — section skeletons (bootstrap copies these into `multi-agent-task-handoff/templates/`).
 - `references/doc-spec.md` — the complete written rule (read when writing or reviewing docs).

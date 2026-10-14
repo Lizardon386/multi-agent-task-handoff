@@ -40,7 +40,7 @@ function Get-MirrorExpectedSet([string]$src) {
 # 否则会把整份扁平副本当成"多余文件"删光。这里显式列出本脚本铺过什么。
 function Get-CopyExpectedSet([string]$src) {
   $set = @{}
-  foreach ($s in @("init-task.sh", "check-docs.sh", "bootstrap.sh", "install-everywhere.ps1")) { $set[$s] = $true }
+  foreach ($s in @("init-task.sh", "check-docs.sh", "bootstrap.sh", "install-everywhere.ps1", "selftest.sh", "muttest.sh")) { $set[$s] = $true }
   $assets = Join-Path $src "assets"
   if (Test-Path $assets) {
     Get-ChildItem $assets -File | ForEach-Object { $set["templates\$($_.Name)".ToLowerInvariant()] = $true }
@@ -123,7 +123,7 @@ foreach ($root in $WorkspaceRoots) {
     $report += "副本目录即真源，跳过脚本/模板同步: $tools"
   } else {
     New-Item -ItemType Directory -Path (Join-Path $tools "templates") -Force | Out-Null
-    foreach ($s in @("init-task.sh", "check-docs.sh", "bootstrap.sh", "install-everywhere.ps1")) {
+    foreach ($s in @("init-task.sh", "check-docs.sh", "bootstrap.sh", "install-everywhere.ps1", "selftest.sh", "muttest.sh")) {
       $src = Join-Path $Source "scripts\$s"; $dst = Join-Path $tools $s
       if ((Test-Path $dst) -and (Get-FileHash $src -Algorithm MD5).Hash -eq (Get-FileHash $dst -Algorithm MD5).Hash) { continue }
       Copy-Item $src $dst -Force

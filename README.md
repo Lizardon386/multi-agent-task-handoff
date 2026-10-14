@@ -102,6 +102,8 @@ STALE_DAYS=7 bash multi-agent-task-handoff/check-docs.sh         # 收紧"过期
 
 **跑闸门不要加管道**（`| tail`、`| grep`）——只看结尾那句 `OK` 会把违规行截掉，这是真实发生过的自审失真。
 
+**改闸门判定**的验收线是三条：`bash scripts/selftest.sh` 全绿 → `bash scripts/muttest.sh` 全部被抓到 → 真工作区输出与基线**逐字节相同**。第三条是"只改性能没改语义"的硬证据。
+
 ### 检查项前缀与严重度
 
 | 前缀 | 含义 | 是否导致失败 |
@@ -155,6 +157,8 @@ powershell -NoProfile -ExecutionPolicy Bypass -File D:\agent_workspace\multi-age
 | [references/doc-spec.md](references/doc-spec.md) | 规则全文：命名禁令、分工红线、产物链接、边界特例 |
 | [references/agents-rule.md](references/agents-rule.md) | bootstrap 追加进各工作区 `AGENTS.md` 的规则块原文 |
 | [assets/README.md.tpl](assets/README.md.tpl) · [assets/DESIGN.md.tpl](assets/DESIGN.md.tpl) · [assets/CONTEXT.md.tpl](assets/CONTEXT.md.tpl) | 三档骨架模板 |
+| [scripts/selftest.sh](scripts/selftest.sh) | **闸门夹具自检**：47 条断言，在隔离临时根上造夹具、闸门只跑一次、按目录切段断言。改判定前后都要跑 |
+| [scripts/muttest.sh](scripts/muttest.sh) | 变异测试：把闸门逐条改坏 18 处，确认 selftest 每条都会红——防的是"断言静默消失"那种假绿灯 |
 | [README.md](README.md) | 本文件：仓库落地页 + 本目录三档之一（2026-10-14 起合并，不再有第二份 `.github/README.md`） |
 | [DESIGN.md](DESIGN.md) | 本目录方案设计：工具自己的取舍表、脚本之间的接缝、动不得的契约 |
 | [CONTEXT.md](CONTEXT.md) | 本目录交接档案：进度、待办、踩坑，**以及对外的「发布更新记录」** |
@@ -165,6 +169,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File D:\agent_workspace\multi-age
 - 需要 bash（Git Bash / Linux / macOS 均可）。`check-docs.sh` **不依赖 GNU `date -d`**（2026-10-14 起改用纯 bash 的 civil→days 算法），但整个脚本仍是 bash——**纯 cmd / PowerShell 下没有对应实现**，这是刻意的：`[空]/[档]/[链]` 全靠 grep/awk，两套判定逻辑必然漂移。Windows 请走 Git Bash。
 - `install-everywhere.ps1` 仅 Windows（PowerShell 5.1+），运行加 `-ExecutionPolicy Bypass`；脚本含中文，**保存必须 UTF-8 带 BOM**，否则 5.1 按 GBK 误读、判重失效会追加出重复规则块。它的输出是 GBK，接 `| iconv -f GBK -t UTF-8` 才读得懂。
 - 脚本不联网、不执行删除、不跑 git——它是脚手架与闸门，不是清理工具。
+- **闸门性能是功能的一部分**：Windows 起一个子进程 ≈25ms，现在每个任务目录只起 4 次进程（三档判定一次 awk、链接提取一次、裸名候选一次、`find` 一次），真工作区全量 ≈0.9 秒。2026-10-14 之前是 10.7 秒，更早 38 秒那版直接被人绕过——慢的闸门等于没有闸门。
 - 文档与默认值里出现的 `D:/agent_workspace`、`C:/Users/…` 只是本机示例路径。非本机首次使用**必须显式传 `--root`**，否则 `check-docs.sh` 会静默检查一个不存在的目录。
 - 闸门只校验**结构与是否留空**，不判断内容质量：正确的标题配空话照样通过。这是刻意的弱校验（取舍见 [DESIGN.md](DESIGN.md) 的表）。
 - **闸门绿不等于链接点得开**：`[链]` 对 `file:///` 与相对路径都接受、都验本机可达，所以文档里写满 `file:///` 照样 exit 0、在预览里却点不开——选形式这件事它帮不上。

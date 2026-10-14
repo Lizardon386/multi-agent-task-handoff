@@ -46,6 +46,13 @@
 
 ## 变更记录
 
+- 2026-10-14 Qoder（本会话，**闸门性能优化 + 夹具落地**，接 d8d34e7f 的交接）：
+  ① 收下 `scripts/selftest.sh`（29 条断言）并扩到 **47 条**：新增 `[旧]` 告警、`days_from_civil` 与 `date -u` 的 12 组对拍、两列表边界（gap2col）与三列表半填（gaphalf）一对、未闭合反引号只报一次（spanopen，靠 `assert_count` 才钉得住）、等长 run 配对（spanrun）、代码段里的例子不验（quotecase）、`SKILL.md` 两条豁免（skillcopy）、正文日期不算顶部日期（nobodydate/holderbody）、副本目录按内容判的正反两面（multi-agent-task-handoff / tools）。再加一个**断言条数哨兵**（`EXPECT_ASSERTS`）——`10#` 那个变异让日期对拍中途崩掉时，断言数从 38 掉到 37 而 exit 仍是 0，正是这个哨兵把它揪出来的。
+  ② 新增 `scripts/muttest.sh`：**18 个变异**逐条把闸门改坏，确认 selftest 每条都会红。它当场戳穿三个"看着有、其实不咬"的断言缺口（`substr` 长度回归、`prodlines>0` 条件、`SKILL.md` 豁免），也戳穿我自己两处错（夹具目录名写成 `toolsonly` 根本不是副本目录名；`gap2col` 的行插到了最后一节、等于没测）。**muttest 全部被抓到之前不提交。**
+  ③ 性能：每目录进程数从上百次压到 **4 次**（三档判定一次 awk、链接一次、裸名一次、find 一次，存在性全走 bash 原生）。真工作区 **10.7s → 0.886s**，selftest 整轮 **36.5s → 6.4s**。合并过程中出过三个 bug（数组下标差一、`order` 传了带 `.md` 的标签、flag 键把空值写成 1），**全部是被"与基线逐字节比对"当场抓住的**，不是靠读代码——这条比对因此是验收线的一部分，不是可选项。
+  ④ 删掉 `unwrap_links`：实测它对真链接是多余的（span 剥完剩 `](目标)` 照样抽到），对"两个反引号包住的格式例子"反而有害（把例子从代码里拽出来当链接验，本目录 6 条 `url` 假阳性就是这么造的）。删完输出仍与基线逐字节一致，quotecase 夹具钉住它别回来。
+  ⑤ `selftest.sh` / `muttest.sh` 已加进 `bootstrap.sh` 与 `install-everywhere.ps1` 的同步清单（**三处清单必须一致**，否则 `-Prune` 会把少列的那个当残留删掉）；实测 bootstrap 铺完再跑 install-everywhere -Prune 报"无残留"，种一个 ghost 又能被抓到。
+
 - 2026-10-14 Qoder（本会话，**真源搬进本目录 + 纠正产物链接规矩**）：
   ① **`.git` 从 `~/.qoder-cn/skills/multi-agent-task-handoff\` 移到本目录**，本目录成为 skill 仓库的 git 工作树；用 `git checkout -- .` 落地仓库布局（`SKILL.md`/`scripts/`/`assets/`/`references/`/`.github/`），删掉此前铺在这里的 4 份扁平脚本与 `templates/`（**删前逐一 md5 比对确认与 `scripts/`、`assets/` 字节一致**）。三档交接文档按用户裁定**一起提交**（曾打算 `.gitignore` 排除，用户说可以提交，故未加 `.gitignore`）。核对过 GitHub 渲染优先级是 `.github` > 根目录 > `docs`（官方文档原话），根 README 不会盖掉落地页——我先前那句"会被盖掉"是记反了，已纠正。
   ② 配套脚本改动：`bootstrap.sh` 与 `install-everywhere.ps1` 加"**副本目录 == 真源则跳过自铺**"守卫（否则会把扁平脚本铺到工作树根、与 `scripts/` 正主并存两份）；`check-docs.sh`/`init-task.sh` 的 root 解析新增仓库布局一层，并显式排除 `…/skills/…`、`….codex…`、`….claude…`（否则会把 `~/.qoder-cn\skills` 当工作区根去检查）；`-Source` 缺省因此变成"脚本所在 `scripts\` 的上一级"，从工作树跑即正确——搬布局前那个"不能从工作区副本启动"的陷阱**方向反了过来**。
