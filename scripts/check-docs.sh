@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# check-docs.sh — 校验每个任务目录的 README.md / CONTEXT.md 双档是否齐全且结构合规
+# check-docs.sh — 校验每个任务目录的 README.md / DESIGN.md / CONTEXT.md 三档是否齐全且结构合规
 # 用法：bash check-docs.sh [--root <工作区根>] [<任务目录名>]
 # 退出码：0 全部合规；1 有缺项（agent 收工自查闸门）
 set -uo pipefail
@@ -22,8 +22,16 @@ fi
 ROOT="${ROOT:-D:/agent_workspace}"
 
 STALE_DAYS="${STALE_DAYS:-30}"
-README_SECTIONS="一句话说明|设计思路|快速开始|使用说明|产物与目录|限制与注意事项"
+# 三档分工：README=使用者说明书，DESIGN=方案设计（为什么这么设计、定死的语义），CONTEXT=agent 交接。
+# 2026-10-14 把「设计思路」从 README 拆到 DESIGN：说明书里塞取舍表会把真正的使用步骤埋掉。
+README_SECTIONS="一句话说明|快速开始|使用说明|产物与目录|限制与注意事项"
+DESIGN_SECTIONS="问题与目标|设计思路|架构与关键接缝|已定语义与边界"
 CONTEXT_SECTIONS="背景与目标|当前状态|计划|关键约束与注意事项|变更记录|给下一个"
+# DESIGN.md 可以省：目录里已经有承担「方案设计」职责的交付文档（如 架构设计.md、XX实施方案.md）时，
+# 再单立一份 DESIGN 就是制造两个真源。2026-10-14 用户定的这条。
+# 名单刻意只收**复合名**——单收"设计"或"方案"会让「他人设计稿评审意见书.md」「问题清单.md」
+# 这类根本不是设计档的文件蒙混过关，等于静默豁免。命中哪个会打印在 [档] 行里，让人看得见。
+DESIGN_ALT_RE="架构设计|方案设计|设计方案|技术设计|设计总览|实施方案|实施架构|设计规范"
 
 fail=0
 
@@ -43,7 +51,7 @@ top_date() {
     | head -1 | grep -oE "[0-9]{4}-[0-9]{2}-[0-9]{2}"
 }
 
-# 顶层「其他输出文档」必须中文命名。README/CONTEXT/AGENTS 是规范固定名，_ 前缀是机器
+# 顶层「其他输出文档」必须中文命名。README/CONTEXT/DESIGN/AGENTS 是规范固定名，_ 前缀是机器
 # 产物（如 _ref-*），非 .md 文件（.docx/.pdf 常需与对方系统里的原件同名）一律豁免。
 # 只用 LC_ALL=C 判「含非 ASCII 字节」，不依赖 grep -P（收件方的 grep 未必编译了 PCRE）。
 check_names() {
@@ -51,10 +59,10 @@ check_names() {
   for f in "$dir"*.md; do
     [ -f "$f" ] || continue
     b=$(basename "$f")
-    case "$b" in README.md|CONTEXT.md|AGENTS.md) continue ;; esac
+    case "$b" in README.md|CONTEXT.md|DESIGN.md|AGENTS.md) continue ;; esac
     case "$b" in _*) continue ;; esac
     if ! LC_ALL=C grep -q '[^ -~]' <<< "$b"; then
-      echo "  [名] $b 顶层输出文档必须用中文命名（双档与 _ 前缀机器产物除外）"
+      echo "  [名] $b 顶层输出文档必须用中文命名（三档与 AGENTS、_ 前缀机器产物除外）"
       fail=1
     fi
   done
@@ -129,7 +137,7 @@ check_bare_refs() {
   while IFS= read -r f; do
     [ -f "$f" ] || continue
     bn="$(basename "$f")"
-    case "$bn" in README.md|CONTEXT.md|AGENTS.md) continue ;; esac
+    case "$bn" in README.md|CONTEXT.md|DESIGN.md|AGENTS.md) continue ;; esac
     hit="$(
       awk -v file="$f" -v dir="$dir" '
         /^```/ { fence = !fence; next }
@@ -180,6 +188,31 @@ check_bare_refs() {
   done < <(find "$dir" -maxdepth 1 -name "*.md" 2>/dev/null)
 }
 
+# DESIGN 档可以有两种存在形式：单独立档的 DESIGN.md，或目录里本来就有的方案设计类交付文档
+# （dsp-hal-eval 的「架构设计.md」就是后者）。后者存在时不再要求前者——同一件事维持两份真源
+# 必然失同步。命中的文件名会打印在 [档] 行里，豁免是可见的，不是静默的。
+check_design() {
+  local dir="$1" f b hits=""
+  if [ -f "$dir/DESIGN.md" ]; then
+    check_doc "$dir/DESIGN.md" "$DESIGN_SECTIONS" DESIGN
+    return
+  fi
+  # 命中多个时**全部列出来**：只报第一个是 ls 的顺序决定的，下一个 agent 会看到
+  # 「实施方案.md 承担设计」而实际该看的是「架构设计.md」——偶然性要消掉。
+  for f in "$dir"*.md; do
+    [ -f "$f" ] || continue
+    b="$(basename "$f")"
+    case "$b" in README.md|CONTEXT.md|DESIGN.md|AGENTS.md) continue ;; esac
+    LC_ALL=C grep -qE "$DESIGN_ALT_RE" <<< "$b" && hits="${hits:+$hits、}$b"
+  done
+  if [ -n "$hits" ]; then
+    echo "  [档] 方案设计已由交付文档「$hits」承担，不再单立 DESIGN.md（不计失败；该档按交付物自己的规范写，顶部日期不参与 [期] 比对）"
+    return
+  fi
+  echo "  [缺] DESIGN.md 不存在，目录里也没有承担方案设计职责的交付文档（如「架构设计.md」「XX实施方案.md」）"
+  fail=1
+}
+
 check_doc() {
   local p="$1" secs="$2" label="$3" miss
   if [ ! -f "$p" ]; then
@@ -193,8 +226,15 @@ check_doc() {
   if grep -qE "^> 最近更新：(YYYY-MM-DD|)$" "$p"; then
     echo "  [占] $label.md 顶部「最近更新」未填"; fail=1
   fi
-  if [ "$label" = README ] && grep -qE "^\|[[:space:]]*\|[[:space:]]*\|[[:space:]]*\|$" "$p"; then
-    echo "  [空] README.md 设计思路表还是空行，取舍没写"; fail=1
+  # 表格里留全空行 = 骨架没填。原来只判 README，2026-10-14 拆出 DESIGN 后改成三档都判：
+  # 只判 DESIGN 会让 README 里空着的「产物与目录」表失去这条覆盖（它原先正是被这条抓住的）。
+  if grep -qE "^\|[[:space:]]*\|[[:space:]]*\|[[:space:]]*\|$" "$p"; then
+    if [ "$label" = DESIGN ]; then
+      echo "  [空] DESIGN.md 「设计思路」三列表还是空行，取舍没写"
+    else
+      echo "  [空] $label.md 表格里还有空行，骨架没填"
+    fi
+    fail=1
   fi
   if [ "$label" = README ]; then
     local sect
@@ -228,23 +268,26 @@ for taskdir in "$ROOT"/*/; do
   [ -n "$ONLY" ] && [ "$name" != "$ONLY" ] && continue
   echo "== $name"
   check_doc "$taskdir/README.md"  "$README_SECTIONS"  README
+  check_design "$taskdir"
   check_doc "$taskdir/CONTEXT.md" "$CONTEXT_SECTIONS" CONTEXT
   check_names "$taskdir"
   check_links "$taskdir"
   check_bare_refs "$taskdir"
-  # 两档顶部「最近更新」必须同日：一边改了另一边没跟上，说明有一侧在说谎
+  # 三档顶部「最近更新」必须同日：任何一档改了别的没跟上，说明有一档在说谎
   rd="$(top_date "$taskdir/README.md")"
+  dd="$(top_date "$taskdir/DESIGN.md")"
   ctxd="$(top_date "$taskdir/CONTEXT.md")"
-  if [ -n "$rd" ] && [ -n "$ctxd" ] && [ "$rd" != "$ctxd" ]; then
-    echo "  [期] 两档「最近更新」不一致：README=$rd CONTEXT=$ctxd — 有一侧改动没同步（必须同日）"
+  ndiff=$(printf '%s\n' "$rd" "$dd" "$ctxd" | grep -v '^$' | sort -u | wc -l)
+  if [ "$ndiff" -gt 1 ]; then
+    echo "  [期] 三档「最近更新」不一致：README=$rd DESIGN=$dd CONTEXT=$ctxd — 有一档改动没同步（必须同日）"
     fail=1
   fi
 done
 
 echo
 if [ "$fail" = 0 ]; then
-  echo "OK: 双档齐全且结构合规（root: $ROOT）"
+  echo "OK: 三档（README / DESIGN / CONTEXT）齐全且结构合规（root: $ROOT）"
 else
-  echo "不合规见上。规则见 $ROOT/AGENTS.md「任务双档规范」；新任务用 bash tools/init-task.sh <任务名>"
+  echo "不合规见上。规则见 $ROOT/AGENTS.md「任务三档规范」；新任务用 bash tools/init-task.sh <任务名>"
 fi
 exit $fail

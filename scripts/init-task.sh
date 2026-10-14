@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# init-task.sh — 创建任务目录并铺好 README.md / CONTEXT.md 双档骨架
+# init-task.sh — 创建任务目录并铺好 README.md / DESIGN.md / CONTEXT.md 三档骨架
 # 用法：bash init-task.sh [--root <工作区根>] <任务目录名>
 set -euo pipefail
 
@@ -32,7 +32,7 @@ TASK="$ROOT/$NAME"
 mkdir -p "$TASK"
 TODAY=$(date +%Y-%m-%d)
 
-for doc in README CONTEXT; do
+for doc in README DESIGN CONTEXT; do
   dst="$TASK/$doc.md"
   if [ -e "$dst" ]; then echo "已存在，跳过: $doc.md"; continue; fi
   sed "s/<任务目录名>/$NAME/g; s/YYYY-MM-DD/$TODAY/g" "$TPL/$doc.md.tpl" > "$dst"
@@ -40,4 +40,4 @@ for doc in README CONTEXT; do
 done
 
 echo
-echo "骨架已铺好（空取舍表/空待办会被 check-docs.sh 判不合规）。下一步：填「设计思路」的决策/理由/代价与「背景与目标」。"
+echo "骨架已铺好（空取舍表/空待办会被 check-docs.sh 判不合规）。下一步：填 DESIGN.md 的「设计思路」决策/理由/代价，与 README.md 的使用说明、CONTEXT.md 的「背景与目标」。"
