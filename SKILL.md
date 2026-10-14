@@ -70,24 +70,28 @@ Full spec, including naming bans and edge cases: `references/doc-spec.md`.
 
 Any file artifact shown to the user must be a **clickable Markdown link** — bare filenames, backticked paths, and `path:line` prose make the user hunt for the file himself. Two tracks, picked by where the link lives:
 
-**Workspace `.md` documents** (`产物与目录` in `README.md`, status / change-log lines in `CONTEXT.md`, artifact references inside deliverables) — always a `file:///` absolute URL, line number in the link **text**, never a `#L42` fragment:
+**Workspace `.md` documents** (`产物与目录` in `README.md`, status / change-log lines in `CONTEXT.md`, artifact references inside deliverables) — always a clickable link, line number in the link **text**, never a `#L42` fragment. Pick the form by whether the document leaves this machine:
+
+- Local-only document (default): a `file:///` absolute URL.
+- A repo `README.md` that will be pushed to GitHub or shared: a **repo-relative** link — `file:///D:/...` is a dead link on everyone else's machine.
 
 ```markdown
 [game.js](file:///D:/agent_workspace/uno-webgame/game.js)
 [game.js:42](file:///D:/agent_workspace/uno-webgame/game.js)
+[game.js](packages/client/src/game.js)
 ```
 
 - Forward slashes always, Windows too: `D:\x\y.js` → `file:///D:/x/y.js`.
-- Documents get forwarded and opened in arbitrary viewers; `file:///` is the only form that clicks everywhere, and the only form the gate validates.
+- Keep `file:///` as the default for local documents; since 2026-10-14 the gate accepts **both** forms and validates **both** for reachability.
 - In-document anchors (`§` section numbers, table-row ids such as `C4`) follow the same rule — the anchor goes **in the link text**: `[归属决策件.md · C4行](file:///D:/agent_workspace/dsp-hal-eval/归属决策件.md)`. An anchor left outside the link (a bare `C4 行` after it) is a violation.
-- `check-docs.sh` reports `[链]` and **fails** when a `README.md` lists artifacts with no such link, when any `file:///` link inside the workspace points at a file that no longer exists (links to paths outside the workspace root are skipped so the scripts stay portable to other machines), when a top-level deliverable `.md` mentions a workspace `.md`/`.txt` file as a bare backtick reference (`` `foo.md` ``) instead of a `file:///` link (dead-link's sibling: not clickable, easy to leave behind after a rename), or `[期]` when the two docs' `最近更新` dates disagree.
+- `check-docs.sh` reports `[链]` and **fails** when a `README.md` lists artifacts with no clickable link at all, when any link inside the workspace points at a file that no longer exists (`file:///` targets outside the workspace root are skipped so the scripts stay portable to other machines; content inside ```` ``` ```` fences is not scanned — a C++ lambda like `[this](Status result)` reads like a link), when a top-level deliverable `.md` mentions a workspace `.md`/`.txt` file as a bare backtick reference (`` `foo.md` ``) instead of a link (dead-link's sibling: not clickable, easy to leave behind after a rename), or `[期]` when the two docs' `最近更新` dates disagree.
 
 **Chat replies** — pick by host capability:
 
 - Hosts that follow workspace-relative `#L` line anchors (verified: Claude Code's VSCode extension): `[spidevice.c:489](dsp-hal-eval/finalfile/codecs/ccd5001/spidevice.c#L489)`, ranges `#L217-L240` — one click lands on the line; the preferred form there.
 - Other hosts (e.g. Qoder's sidebar preview, Codex) or when unsure: keep the `file:///` form above, with the line number or in-document anchor in the link text.
 
-Why the split (decided 2026-10-10): a `file:///` link opens the file but cannot carry a line number — the user clicked one and landed at the top of the file. Chat replies therefore use anchor links on hosts that support jumping; documents stay on `file:///` because the gate only checks that form.
+Why the split (decided 2026-10-10, widened 2026-10-14): a `file:///` link opens the file but cannot carry a line number — the user clicked one and landed at the top of the file. Chat replies therefore use anchor links on hosts that support jumping; documents default to `file:///`, and repo-relative links are equally valid in a README that is published somewhere the reader has no `D:` drive.
 
 ## Target workspace
 

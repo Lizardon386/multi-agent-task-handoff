@@ -83,10 +83,13 @@ _norm() {  # $1=路径  $2=lc 则小写（仅用于比较）
 }
 canon() { _norm "$1" lc; printf '%s' "$NORM"; }
 
-# [链] 之二：链接可达性。只校验指向本工作区内部的 file:/// 目标——脚本会发给别的机器，
-# 对方没有 D: 盘，指向外部的链接一律放过才不会全线误报。
+# [链] 之二：链接可达性。两类都验：
+#   · file:/// 目标——只在指向本工作区内部时校验（脚本会发给别的机器，对方没有 D: 盘）。
+#   · 相对链接——按文档自身目录解析。2026-10-14 起因：任务推到 GitHub 后 README 里的
+#     file:///D:/... 对别人全是死链，相对链接才是公开仓库的正确写法；既然要鼓励它，
+#     就必须同样保证它可达，否则"改闸门"等于"放水"。
 check_links() {
-  local dir="$1" f dead raw u rootc
+  local dir="$1" f dead raw u rootc rel
   rootc="$(canon "$ROOT")"
   while IFS= read -r f; do
     [ -f "$f" ] || continue
@@ -94,18 +97,31 @@ check_links() {
       while IFS= read -r raw; do
         u="${raw%%#*}"
         case "$u" in *%*) u=$(printf '%b' "${u//%/\\x}");; esac   # 只在真需要时解码
-        _norm "$u" lc
-        case "$NORM" in "$rootc"/*) : ;; *) continue ;; esac
-        _norm "$u"
-        [ -e "$NORM" ] || printf '  [链] %s 链接指向不存在的文件: %s\n' "$(basename "$f")" "$raw"
-      done < <(grep -oE '\]\(file:///[^)]+\)' "$f" 2>/dev/null | sed 's|^](||; s|)$||')
+        case "$u" in
+          file:///*)
+            _norm "$u" lc
+            case "$NORM" in "$rootc"/*) : ;; *) continue ;; esac
+            _norm "$u"
+            [ -e "$NORM" ] || printf '  [链] %s 链接指向不存在的文件: %s\n' "$(basename "$f")" "$raw"
+            ;;
+          http://*|https://*|mailto:*|//*) : ;;
+          "") : ;;
+          *)
+            rel="${f%/*}/${u}"
+            [ -e "$rel" ] || printf '  [链] %s 相对链接指向不存在的文件: %s\n' "$(basename "$f")" "$raw"
+            ;;
+        esac
+      # 先剥掉 ``` 围栏内的内容：代码示例里的 C++ lambda `[this](Status result)` 会被
+      # `](...)` 误认成链接（2026-10-14 在 dsp-hal-eval/架构设计.md 上假报过一次）。
+      # 代价是围栏里的真链接也不验了——产物链接本就不该写在代码块里。
+      done < <(awk 'BEGIN{inb=0} /^```/{inb=!inb; next} !inb' "$f" 2>/dev/null | grep -oE '\]\([^)]+\)' | sed 's|^](||; s|)$||')
     )"
     if [ -n "$dead" ]; then printf '%s\n' "$dead"; fail=1; fi
   done < <(find "$dir" -name "*.md" -not -path "*/node_modules/*" -not -path "*/.git/*" 2>/dev/null)
 }
 
-# [链] 之三：反引号裸文件名。指向本任务目录内真实存在的 .md/.txt 却没有写成 file:/// 链接
-# 的行——用户点不开，是死链的姊妹问题（2026-10-10 dsp-hal-eval 改名后 README「产物与目录」
+# [链] 之三：反引号裸文件名。指向本任务目录内真实存在的 .md/.txt 却没有写成可点链接
+# （file:/// 或相对链接）的行——用户点不开，是死链的姊妹问题（2026-10-10 dsp-hal-eval 改名后 README「产物与目录」
 # 的 archive 条目就踩了这个）。已在 markdown 链接 display text（`` [`x.md`](...) ``）里的
 # 不算违规。fenced code block 里的不算违规。
 check_bare_refs() {
@@ -156,7 +172,7 @@ check_bare_refs() {
         [ -z "$line" ] && continue
         case "$line" in
           *" DEAD:"*) echo "  [链] $(basename "$f") 反引号裸路径指向不存在的文件（改名遗留死链）: \`${line#* DEAD:}\`" ;;
-          *) echo "  [链] $(basename "$f") 反引号裸文件名应为 file:/// 链接: \`$line\`" ;;
+          *) echo "  [链] $(basename "$f") 反引号裸文件名应写成可点击链接（file:/// 或相对链接）: \`$line\`" ;;
         esac
         fail=1
       done <<< "$hit"
@@ -185,8 +201,10 @@ check_doc() {
     # 先剥掉 HTML 注释：模板在注释和表头里写了 file:/// 示例，不剥的话空表格也会"命中链接"，
     # 变成假绿灯。
     sect=$(awk '/^## +.*产物与目录/{f=1;next} /^## /{f=0} f' "$p" | sed '/<!--/,/-->/d')
-    if [ -n "$sect" ] && ! printf '%s' "$sect" | grep -q 'file:///'; then
-      echo "  [链] $label.md 「产物与目录」没有可点击的 file:/// 链接，用户点不开"
+    # 2026-10-14：接受 file:/// 或相对链接。README 会被推到 GitHub 给别人看，那里 file:///D:/...
+    # 全是死链；"能不能点开"由上面的 check_links 统一验可达，这里只要求"有可点的链接"。
+    if [ -n "$sect" ] && ! printf '%s' "$sect" | grep -qE '\]\([^)]+\)'; then
+      echo "  [链] $label.md 「产物与目录」没有任何可点击链接（file:/// 或相对链接都算），全是裸路径"
       fail=1
     fi
   fi
