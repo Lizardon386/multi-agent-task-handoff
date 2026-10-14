@@ -1,6 +1,6 @@
 ---
 name: multi-agent-task-handoff
-description: 多agent间工作任务交接手顺 — MANDATORY in EVERY session and ANY workspace, not only D:\agent_workspace. (1) Every task-like folder you create or work in must carry the three-document set — README.md (user manual), DESIGN.md (方案设计：为什么这么设计、已定语义), CONTEXT.md (agent handoff, updated every session) — with all three dates kept on the same day. (2) Every file artifact shown to the user, in chat replies AND in documents, must be a clickable Markdown link (file:/// absolute URLs on Codex/Qoder or when unsure; repo-relative links in a README published to GitHub; workspace-relative #L line anchors only on hosts verified to support jump-to-line). Never rationalize that the current directory is outside the agent workspace — the chat-link rule and the session-end CONTEXT.md update apply everywhere. (3) **Pre-output rules check (MANDATORY)**: before presenting any plan, document change, or deliverable, actively check memory rules (artifact-links, chinese-doc-naming, complete-deliverables, etc.). Treat every output as a deliverable, not a draft. Use at session start, when creating or touching any task or project folder, before any reply that mentions a file path, before ending a session, or when the user asks to set up, bootstrap, or enforce this handoff procedure on another agent or machine.
+description: 多agent间工作任务交接手顺 — MANDATORY in EVERY session and ANY workspace, not only D:\agent_workspace. (1) Every task-like folder you create or work in must carry the three-document set — README.md (user manual), DESIGN.md (方案设计：为什么这么设计、已定语义), CONTEXT.md (agent handoff, updated every session) — with all three dates kept on the same day. (2) Every file artifact shown to the user, in chat replies AND in documents, must be a clickable Markdown link, and the form depends on the SURFACE: inside .md documents use paths RELATIVE to that document's own directory (a file:/// URL does not resolve in markdown preview panes — verified on both VSCode and Qoder previews 2026-10-14); in chat replies use file:/// for the Qoder/Codex sidebar, or workspace-relative #L line anchors only on hosts verified to support jump-to-line. Never rationalize that the current directory is outside the agent workspace — the chat-link rule and the session-end CONTEXT.md update apply everywhere. (3) **Pre-output rules check (MANDATORY)**: before presenting any plan, document change, or deliverable, actively check memory rules (artifact-links, chinese-doc-naming, complete-deliverables, etc.). Treat every output as a deliverable, not a draft. Use at session start, when creating or touching any task or project folder, before any reply that mentions a file path, before ending a session, or when the user asks to set up, bootstrap, or enforce this handoff procedure on another agent or machine.
 when_to_use: Every session in any workspace — at session start, when creating or updating task folders or docs, before any chat reply that shows a file path, and before claiming a session's work is finished.
 argument-hint: [task-folder-name]
 ---
@@ -75,30 +75,35 @@ Full spec, including naming bans and edge cases: `references/doc-spec.md`.
 
 ## Artifact links (required)
 
-Any file artifact shown to the user must be a **clickable Markdown link** — bare filenames, backticked paths, and `path:line` prose make the user hunt for the file himself. Two tracks, picked by where the link lives:
+Any file artifact shown to the user must be a **clickable Markdown link** — bare filenames, backticked paths, and `path:line` prose make the user hunt for the file himself. **Two surfaces, two rules** — they resolve links differently, so picking by surface is the whole rule (decided 2026-10-14 after a `file:///`-first rule turned out to be wrong; see "Why the split" below).
 
-**Workspace `.md` documents** (`产物与目录` in `README.md`, status / change-log lines in `CONTEXT.md`, artifact references inside deliverables) — always a clickable link, line number in the link **text**, never a `#L42` fragment. Pick the form by whether the document leaves this machine:
+**Inside `.md` documents** (`产物与目录` in `README.md`, status / change-log lines in `CONTEXT.md`, artifact references inside deliverables) — **always a path relative to the document's own directory**, line number or in-document anchor written into the **link text**, never a `#L42` fragment:
 
-- Local-only document (default): a `file:///` absolute URL.
-- A repo `README.md` that will be pushed to GitHub or shared: a **repo-relative** link — `file:///D:/...` is a dead link on everyone else's machine.
+- Target below the document: `coding/dspcontrol-hal/core/DspControlCore.h` → `[DspControlCore.h](coding/dspcontrol-hal/core/DspControlCore.h)`.
+- Target above the document (workspace root files, sibling tasks): write `../`, e.g. `[AGENTS.md](../AGENTS.md)`.
+- A README that gets pushed to GitHub uses the **same** relative form — GitHub resolves it too, so one form covers both readers.
+- Do **not** use `file:///` inside documents: the preview panes resolve `href` relative to the document, and an absolute `file://` URL either fails to render as a link at all (Qoder's document preview) or reports "文件不存在" (VSCode's preview).
 
 ```markdown
-[game.js](file:///D:/agent_workspace/uno-webgame/game.js)
-[game.js:42](file:///D:/agent_workspace/uno-webgame/game.js)
+[DspControlCore.h](coding/dspcontrol-hal/core/DspControlCore.h)
+[DspControlCore.h:88](coding/dspcontrol-hal/core/DspControlCore.h)
+[AGENTS.md · 命名节](../AGENTS.md)
 [game.js](packages/client/src/game.js)
 ```
 
-- Forward slashes always, Windows too: `D:\x\y.js` → `file:///D:/x/y.js`.
-- Keep `file:///` as the default for local documents; since 2026-10-14 the gate accepts **both** forms and validates **both** for reachability.
-- In-document anchors (`§` section numbers, table-row ids such as `C4`) follow the same rule — the anchor goes **in the link text**: `[归属决策件.md · C4行](file:///D:/agent_workspace/dsp-hal-eval/归属决策件.md)`. An anchor left outside the link (a bare `C4 行` after it) is a violation.
-- `check-docs.sh` reports `[链]` and **fails** when a `README.md` lists artifacts with no clickable link at all, when any link inside the workspace points at a file that no longer exists (`file:///` targets outside the workspace root are skipped so the scripts stay portable to other machines; content inside ```` ``` ```` fences **and inline `` `code` `` spans** is not scanned — a C++ lambda like `[this](Status result)` reads like a link, and the three documents of the script folder used backtick spans to describe that very counter-example, so the gate was flagging its own manual. Backtick delimiters are paired by **equal-length run**, not naively: ```` ```` ``` ```` `` needs it. A legitimate `` [`foo.md`](url) `` is unwrapped before stripping, so its reachability still gets checked. Writing such an example needs a code span wide enough to contain backticks (two of them): prose that spells an actual link shape `[text](url)` *is* a dead link and the gate says so. A "placeholder" carve-out was tried on 2026-10-14 and reverted the same day — it silently broke the fixture that proves span-stripping works rather than ignoring links) , when a top-level deliverable `.md` mentions a workspace `.md`/`.txt` file as a bare backtick reference (`` `foo.md` ``) instead of a link (dead-link's sibling: not clickable, easy to leave behind after a rename), or `[期]` when the two docs' `最近更新` dates disagree.
+- Forward slashes in every form, Windows too: `D:\x\y.js` → `x/y.js` (relative) or `file:///D:/x/y.js` (chat only).
+- `check-docs.sh` accepts **both** forms and validates **both** for reachability, so a document full of `file:///` is not red — it is silently unclickable in preview, which is exactly why the rule had to change rather than the gate.
+- In-document anchors (`§` section numbers, table-row ids such as `C4`) follow the same rule — the anchor goes **in the link text**: `[归属决策件.md · C4行](信息收集/过时信息归档文档/归属决策件.md)`. An anchor left outside the link (a bare `C4 行` after it) is a violation.
+- Never escape the brackets: `\[text\](target)` renders as literal text and cannot be clicked. Keep `[` and `]` bare.
+- Never end link **text** with a Windows path that carries a trailing backslash — `D:\ws\dir\]` escapes the `]` and the whole link fails to parse. Use forward slashes or drop the trailing separator.
+- `check-docs.sh` reports `[链]` and **fails** when a `README.md` lists artifacts with no clickable link at all, when any link inside the workspace points at a file that no longer exists (`file:///` targets outside the workspace root are skipped so the scripts stay portable to other machines; content inside ```` ``` ```` fences **and inline `` `code` `` spans** is not scanned — a C++ lambda like `[this](Status result)` reads like a link, and the three documents of the script folder used backtick spans to describe that very counter-example, so the gate was flagging its own manual. Backtick delimiters are paired by **equal-length run**, not naively: ```` ```` ``` ```` `` needs it. A legitimate display-name-in-backticks link is unwrapped before stripping, so its reachability still gets checked. Quoting such an example needs a code span wide enough to hold backticks (two of them) — and even then a nested example can shift the pairing, so the safe move in prose is to describe the shape in words instead of writing it. A link shape written bare in prose *is* a dead link and the gate says so: a "placeholder" carve-out was tried on 2026-10-14 and reverted the same day because it silently broke the fixture that proves span-stripping works rather than ignoring links) , when a top-level deliverable `.md` mentions a workspace `.md`/`.txt` file as a bare backtick reference (`` `foo.md` ``) instead of a link (dead-link's sibling: not clickable, easy to leave behind after a rename), or `[期]` when the two docs' `最近更新` dates disagree.
 
-**Chat replies** — pick by host capability:
+**Chat replies** — pick by host capability (this is the chat surface, nothing here applies to what you write into `.md` files):
 
 - Hosts that follow workspace-relative `#L` line anchors (verified: Claude Code's VSCode extension): `[spidevice.c:489](dsp-hal-eval/finalfile/codecs/ccd5001/spidevice.c#L489)`, ranges `#L217-L240` — one click lands on the line; the preferred form there.
-- Other hosts (e.g. Qoder's sidebar preview, Codex) or when unsure: keep the `file:///` form above, with the line number or in-document anchor in the link text.
+- Other hosts (e.g. Qoder's chat sidebar, Codex) or when unsure: a `file:///` absolute link, with the line number or in-document anchor written into the link text.
 
-Why the split (decided 2026-10-10, widened 2026-10-14): a `file:///` link opens the file but cannot carry a line number — the user clicked one and landed at the top of the file. Chat replies therefore use anchor links on hosts that support jumping; documents default to `file:///`, and repo-relative links are equally valid in a README that is published somewhere the reader has no `D:` drive.
+Why the split (corrected 2026-10-14): the two surfaces resolve `href` **oppositely**. A chat sidebar needs an absolute `file:///` to open anything; a markdown preview pane resolves relative to the document and does not accept a `file://` scheme — it either refuses to render the link (Qoder document preview) or reports "文件不存在" for a file that is there (VSCode preview). The old rule ("local documents prefer `file:///`") was generalized from a 2026-09-09 test that only exercised the chat sidebar, and it produced documents whose links nobody could click; a second session measured both panes on 2026-10-14 and converted 175 links in `dsp-hal-eval` to relative. Line numbers still cannot ride on a `file:///` link, which is the separate reason chat replies use `#L` anchors where the host supports them.
 
 ## Pre-output rules check (MANDATORY)
 
@@ -106,7 +111,7 @@ Before presenting any plan, document change, or deliverable to the user, **activ
 
 **Minimum checklist** (expand based on what you're outputting):
 
-1. **Artifact links** — Every file reference must be a clickable `file:///` link (or repo-relative if publishing to GitHub). Bare filenames, backticked paths, or `path:line` prose are violations.
+1. **Artifact links** — Every file reference must be a clickable Markdown link, in the form the *surface* resolves: relative to the document inside `.md` files, `file:///` (or `相对路径#L` on hosts that jump to line) in chat replies. Bare filenames, backticked paths, and `path:line` prose are violations; so is a `file:///` link inside a document.
 2. **Chinese doc naming** — Output documents (except README/DESIGN/CONTEXT/AGENTS) must have Chinese filenames.
 3. **Complete deliverables** — When changing documents, post the full updated content for review, not just the diff.
 4. **Self-audit** — Before presenting, ask: "If the user screenshots this and asks me to find errors, what would I catch?" Fix those issues first.
@@ -117,7 +122,7 @@ Before presenting any plan, document change, or deliverable to the user, **activ
 
 ## Target workspace
 
-Root resolution, first match wins: `--root <dir>` → `$AGENT_WS_ROOT` → the parent of the workspace copy folder this script is installed in (new name `multi-agent-task-handoff/`, legacy name `tools/` — both accepted, so workspaces laid down before 2026-10-14 still find their root) → `D:/agent_workspace`.
+Root resolution, first match wins: `--root <dir>` → `$AGENT_WS_ROOT` → the workspace root inferred from where this script sits (downstream flat copy: `<root>/multi-agent-task-handoff/` or legacy `<root>/tools/`; source worktree layout: `<root>/multi-agent-task-handoff/scripts/`) → `D:/agent_workspace`. A copy living under an agent's install path (`…/skills/…`, `….codex…`, `….claude…`) is **never** treated as a workspace root — that would make `~/.qoder-cn\skills` the workspace.
 
 ## Bootstrapping another agent or machine
 
@@ -131,25 +136,29 @@ Idempotent: existing files are left untouched, and `AGENTS.md` gains the rule bl
 
 ## Source of truth
 
-This skill is the canonical implementation. A workspace keeps a synced copy in its **script folder** — `multi-agent-task-handoff/` since 2026-10-14, `tools/` for roots laid down earlier (which is why a session that never loads the skill still finds working scripts). Both names are accepted by every resolver; `bootstrap.sh` and `install-everywhere.ps1` reuse `tools/` when a root already has it, so one run never lays down two copies. After editing `scripts/` or `assets/` here, re-sync the workspace:
+**The git worktree is the canonical implementation** — on this machine `D:\agent_workspace\multi-agent-task-handoff\`, holding the published layout (`SKILL.md` + `scripts/` + `assets/` + `references/` + `.github/README.md`). Edit skill logic **there**, then `git commit` + `git push`, then propagate with `install-everywhere.ps1`. Since 2026-10-14 the agents' skill folders (`~/.qoder-cn`, `~/.codex`, `~/.claude`) are **downstream copies**: editing there gets overwritten on the next propagation, and `git` isn't even present there anymore (the `.git` directory moved to the worktree with this change).
+
+The three handoff documents at the worktree root — `README.md`, `DESIGN.md`, `CONTEXT.md` — are this workspace's own context and are **gitignored**: they describe `D:` paths and session progress, so publishing them would ship machine-specific notes to people who just cloned a skill.
+
+Downstream workspaces keep a flat synced copy in their **script folder** (`multi-agent-task-handoff/`, legacy `tools/`); both names are accepted by every resolver, and `bootstrap.sh` reuses `tools/` where it already exists so one run never lays down two copies. `bootstrap.sh --root <dir>` detects that the target folder **is** the source and skips syncing in that case:
 
 ```bash
-bash scripts/bootstrap.sh --root <workspace-root> --force
+bash scripts/bootstrap.sh --root <workspace-root> [--force]
 ```
 
-Never fix a bug only in the workspace copy — it will be overwritten on the next sync.
+Never fix a bug only in a downstream copy — it will be overwritten on the next sync.
 
 ## Propagation rule (MANDATORY)
 
-Whenever this skill changes — whether you just edited it locally or `git pull` brought in new commits — immediately overwrite every local agent's skill copy with the newest content:
+Whenever this skill changes — whether you just edited the worktree or `git pull` brought in new commits — immediately overwrite every local agent's skill copy with the newest content. Run the propagator **from the worktree**:
 
 ```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File <最新skill目录>\scripts\install-everywhere.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File D:\agent_workspace\multi-agent-task-handoff\scripts\install-everywhere.ps1
 ```
 
-- `-Source` defaults to the skill directory the script runs from, so **always run the copy that holds the newest content** (the git clone after a pull; your edited copy after local edits).
+- `-Source` defaults to the parent of the `scripts\` folder the script runs from, i.e. the worktree — which is why the layout matters: running it from a downstream flat copy used to point `-Source` at the whole workspace.
 - Updating one copy without propagating is a rule violation: the other agents keep enforcing the OLD rules, and their next session silently diverges.
-- The same run also re-syncs the script folder of every workspace in its `-WorkspaceRoots` list — including `install-everywhere.ps1` itself (added 2026-10-12; before that the workspace copy of the propagator silently went stale). Workspaces bootstrapped by hand need `bash scripts/bootstrap.sh --root <workspace-root> --force`.
+- The same run also re-syncs the script folder of every workspace in its `-WorkspaceRoots` list — including `install-everywhere.ps1` itself (added 2026-10-12; before that the workspace copy of the propagator silently went stale) — **except** when that folder is the source, which it skips instead of flattening scripts into it. Workspaces bootstrapped by hand need `bash scripts/bootstrap.sh --root <workspace-root> --force`.
 - **A workspace's existing `AGENTS.md` is NOT rewritten** — both installers dedupe on a heading match and only append when nothing matches. Since 2026-10-14 the marker is the regex `任务[双三]档规范`, so a workspace still carrying the old `任务双档规范` heading is recognized instead of getting a duplicated rule block. After changing rule text here, sync that workspace's `AGENTS.md` (and each agent's global rule file) by hand — the installers never rewrite an existing block.
 `templates/` is infrastructure and is excluded from the check. The script folder is excluded **only while it holds no `README.md`** — once it carries the three documents they are checked like a task folder's, which is how 2026-10-14 caught 20 links still pointing at the old `tools/` path.
 

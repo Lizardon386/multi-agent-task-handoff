@@ -31,7 +31,17 @@ if [ -d "$ROOT/tools" ] && [ ! -d "$ROOT/multi-agent-task-handoff" ]; then
 else
   TOOLS_DIR="$ROOT/multi-agent-task-handoff"
 fi
-mkdir -p "$TOOLS_DIR/templates"
+
+# 真源自己就是那个"副本目录"时不铺自己：2026-10-14 起 skill 仓库的工作树放在
+# D:\agent_workspace\multi-agent-task-handoff\（布局是 scripts/ + assets/），
+# 往它根目录铺扁平脚本会造出 scripts/check-docs.sh 与 check-docs.sh 两份真源。
+SKIP_SYNC=0
+if [ "$(cd "$TOOLS_DIR" 2>/dev/null && pwd)" = "$SKILL_DIR" ]; then
+  SKIP_SYNC=1
+  echo "副本目录即真源（$TOOLS_DIR），跳过脚本/模板同步——在这里改完直接 commit + push + 铺满"
+else
+  mkdir -p "$TOOLS_DIR/templates"
+fi
 
 installed=0
 copy_to() {  # $1=src $2=dst
@@ -42,12 +52,14 @@ copy_to() {  # $1=src $2=dst
   fi
 }
 
-for s in init-task.sh check-docs.sh; do
-  copy_to "$SKILL_DIR/scripts/$s" "$TOOLS_DIR/$s"
-done
-for t in README.md.tpl DESIGN.md.tpl CONTEXT.md.tpl; do
-  copy_to "$SKILL_DIR/assets/$t" "$TOOLS_DIR/templates/$t"
-done
+if [ "$SKIP_SYNC" = 0 ]; then
+  for s in init-task.sh check-docs.sh; do
+    copy_to "$SKILL_DIR/scripts/$s" "$TOOLS_DIR/$s"
+  done
+  for t in README.md.tpl DESIGN.md.tpl CONTEXT.md.tpl; do
+    copy_to "$SKILL_DIR/assets/$t" "$TOOLS_DIR/templates/$t"
+  done
+fi
 
 # 去重标记同时接受旧标题「任务双档规范」：2026-10-14 规范从两档扩成三档、标题改成「任务三档规范」，
 # 但 bootstrap 与 install-everywhere 都是"缺才写、有就不动"，老工作区里留的是旧标题——
@@ -63,4 +75,5 @@ fi
 
 echo
 echo "完成。root = $ROOT"
-echo "下一步：bash \"$TOOLS_DIR/init-task.sh\" <任务名> 建任务；bash \"$TOOLS_DIR/check-docs.sh\" 自检。"
+if [ "$SKIP_SYNC" = 1 ]; then GATE="$TOOLS_DIR/scripts"; else GATE="$TOOLS_DIR"; fi
+echo "下一步：bash \"$GATE/init-task.sh\" <任务名> 建任务；bash \"$GATE/check-docs.sh\" 自检。"

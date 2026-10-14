@@ -76,39 +76,42 @@ README 与 DESIGN 拆开是 2026-10-14 定的：取舍三列表留在说明书�
 
 ### 产物链接（强制）
 
-任何向用户呈现的文件产物都必须写成**可点击的 Markdown 链接**，不接受裸文件名 / 反引号路径 / 纯文本 `D:\...`。格式按链接所在位置分两套：
+任何向用户呈现的文件产物都必须写成**可点击的 Markdown 链接**，不接受裸文件名 / 反引号路径 / 纯文本 `D:\...`。**按"链接出现在哪个面"分两套**——这两个面解析 `href` 的逻辑相反，用错面就点不开：
 
-**场景一 · 工作区内的 `.md` 文档**（README 的「产物与目录」、CONTEXT 的「当前状态」与「变更记录」、交付物正文里的产物引用）——写成可点击链接，行号写在链接**文字**里，不用 `#L42` 锚点。形式按这份文档会不会离开本机分两种：
+**场景一 · 文档内链接**（写进 `.md` 的：README 的「产物与目录」、CONTEXT 的「当前状态」与「变更记录」、交付物正文里的产物引用）——一律写**相对该文档自身目录**的路径；行号与文档内锚点写进链接**文字**，不用 `#L42`。
 
-- 只在本机看（默认）：`file:///D:/...` 绝对链接。
-- 要推到 GitHub / 发给别人的仓库 README：**仓库相对链接** `[game.js](packages/client/src/game.js)`——`file:///D:/...` 在别人机器上是死链。
+- 目标在文档下方：`[DspControlCore.h:88](coding/dspcontrol-hal/core/DspControlCore.h)`
+- 目标在上方或兄弟任务：`[AGENTS.md](../AGENTS.md)`
+- 会推 GitHub / 发给别人的 README **同样用相对路径**——GitHub 也解析相对链接，一份写法两种读者通吃；`file:///D:/...` 在别人机器上更是死链。
+- **文档里不要写 `file:///`**：预览面板把 `href` 按"相对文档所在目录"解析，`file://` scheme 不在它的绝对地址白名单里——VSCode 预览报「文件不存在」（文件其实在），Qoder 文档预览干脆不渲染成链接。
 
 ```markdown
-[game.js](file:///D:/agent_workspace/uno-webgame/game.js)
-[game.js:42](file:///D:/agent_workspace/uno-webgame/game.js)
+[DspControlCore.h](coding/dspcontrol-hal/core/DspControlCore.h)
+[DspControlCore.h:88](coding/dspcontrol-hal/core/DspControlCore.h)
+[AGENTS.md](../AGENTS.md)
 [game.js](packages/client/src/game.js)
 ```
 
-- 协议固定 `file:///`（三斜杠），路径一律正斜杠；`D:\x\y.js` → `file:///D:/x/y.js`。
-- 本机文档仍首选 `file:///`（它在任意查看器里点得开）；`[链]` 从 2026-10-14 起**两种形式都接受、也都验可达**。
-- 指向文档内位置（§ 节号、表内行号如 C4）时，锚点与行号同样处理，写进链接文字：`[归属决策件.md · C4行](file:///D:/agent_workspace/dsp-hal-eval/归属决策件.md)`；锚点留在链接外（链接后跟裸的 `C4 行`）视同违规——链接文字必须自己说清点进去看哪。
+- 路径一律正斜杠；相对路径以**当前这份 .md 自己所在目录**为基准，不是工作区根。
+- 闸门 `[链]` **两种形式都接受、也都验可达**（2026-10-14），所以满篇 `file:///` 的文档**不会报错**——它只是点不开。这条得靠写的人守，别指望闸门拦。
+- 指向文档内位置（§ 节号、表内行号如 C4）时，锚点同样写进链接文字：`[归属决策件.md · C4行](信息收集/过时信息归档文档/归属决策件.md)`；锚点留在链接外（链接后跟裸的 `C4 行`）视同违规——链接文字必须自己说清点进去看哪。
 - 自检会对「产物与目录」里**没有任何可点击链接**的 README 报 `[链]` 并**判失败**（2026-10-10 由告警升级：告警曾被 `| tail -2` 截掉，等于没有）。
-- 反例（点不开）：`` `game.js` ``、裸写 `D:\...\game.js`。
+- 反例（都点不开）：`` `game.js` ``、裸写 `D:\...\game.js`、文档里写 `file:///D:/...`、把方括号转义成 `\[文字\](目标)`（渲染成字面文本）、链接文字以 `\` 结尾（`\]` 会被当转义，整条链接解析失败）。
 
-**场景二 · 聊天回复**——按宿主能力二选一：
+**场景二 · 聊天回复**——按宿主能力二选一（这是聊天面，与上面写进文档的规矩互不适用）：
 
 - 宿主支持「工作区根相对路径 + `#L` 行锚点」点击跳行（Claude Code 的 VSCode 扩展已验证）：`[spidevice.c:489](dsp-hal-eval/finalfile/codecs/ccd5001/spidevice.c#L489)`，行范围 `#L217-L240`，点开直接跳到该行——这种宿主里指代码位置的首选。
-- 其他宿主（Qoder 侧边栏、Codex 等）或不确定时：沿用场景一的 `file:///`，行号与文档内锚点都写进链接文字。
+- 其他宿主（Qoder 聊天侧边栏、Codex 等）或不确定时：用 `file:///` 绝对链接（**只有聊天侧边栏认它**），行号与文档内锚点写进链接文字。
 
-依据（2026-10-10 实测拍板）：`file:///` 链接只负责打开文件、带不了行号——用户点击后文件开在顶部，得再 `Ctrl+G` 手动跳行。聊天场景在支持跳行的宿主里改用锚点格式；文档场景默认 `file:///`，2026-10-14 起闸门同时接受仓库相对链接。
+依据（2026-10-14 纠正）：旧口径"本机文档首选 `file:///`"来自 2026-10-09 一次**只测了聊天侧边栏**的实测，被外推到了文档面。用户在 markdown 预览面板复测后结论相反：`file:///` 在 VSCode 预览报文件不存在、在 Qoder 文档预览不渲染成链接，改相对路径后两个面都能跳。两个渲染面解析逻辑不同，不能从一个外推到另一个；`dsp-hal-eval` 已按新口径把 175 条链接改成相对。另：`file:///` 本来也带不了行号（点开落在文件顶部），这是聊天面在支持跳行的宿主改用 `#L` 的独立理由。
 
 ### 会话节奏（每个 agent 都执行）
 
 1. **进目录先读**：`CONTEXT.md` → `README.md` → `DESIGN.md`，再动文件。不要凭目录列表猜意图。
-2. **开新任务即建档**：`bash multi-agent-task-handoff/init-task.sh <任务名>` 铺**三档**骨架，不许"会话结束再补"。
+2. **开新任务即建档**：`bash multi-agent-task-handoff/scripts/init-task.sh <任务名>` 铺**三档**骨架，不许"会话结束再补"。
 3. **收工必更新**：改了产物 → README 的「产物与目录」；设计变了 → DESIGN 相应节；有新结论/改动/踩坑 → 更新 CONTEXT 并在「变更记录」留一行。
 4. **三档同步日期**：三档顶部「最近更新」与实际改动同日，且**三档彼此必须一致**——任何一档改了别的没跟上，就说明有一档在说谎。日期必须写在紧跟 H1 的 blockquote 行上（`> 最近更新：YYYY-MM-DD`），`[新]`/`[旧]`/`[期]` 只认这一行；正文里再写「最近更新：某日期」不算数，也不会被误当成顶部日期。
-5. **自查闸门（强制）**：`bash multi-agent-task-handoff/check-docs.sh` 退出码 0 才算本次会话收尾完成。`STALE_DAYS=7 bash multi-agent-task-handoff/check-docs.sh` 可收紧过期告警（默认 30 天，只告警不失败）。
+5. **自查闸门（强制）**：`bash multi-agent-task-handoff/scripts/check-docs.sh` 退出码 0 才算本次会话收尾完成。`STALE_DAYS=7 bash multi-agent-task-handoff/scripts/check-docs.sh` 可收紧过期告警（默认 30 天，只告警不失败）。
    检查项前缀与严重度：
 
    | 前缀 | 含义 | 后果 |
@@ -129,17 +132,17 @@ README 与 DESIGN 拆开是 2026-10-14 定的：取舍三列表留在说明书�
 
 ### 真源与「更新即铺满」（铁律）
 
-本规范的**唯一真源是用户级 skill `multi-agent-task-handoff`**；工作区脚本副本目录（新名 `multi-agent-task-handoff/`，旧名 `tools/`）里的脚本只是同步副本。
+本规范的**唯一真源是 skill 仓库的 git 工作树**——本机是 `D:\agent_workspace\multi-agent-task-handoff\`（布局：`SKILL.md` + `scripts/` + `assets/` + `references/` + `.github/`）。各 agent 的技能目录（`~\.qoder-cn\skills\`、`~\.codex\skills\`、`~\.claude\skills\`）与其它工作区的脚本副本目录（新名 `multi-agent-task-handoff/`，旧名 `tools/`）**都是下游副本**，改了会在下次铺满时被覆盖。
 
-- skill 任何变更——不管是本地改的还是 `git pull` 拉进来的——**必须立刻铺满本机**，否则其他 agent 下次会话仍在跑旧规矩，等于规矩分叉：
+- 改完真源：先 `git commit` + `git push`（真源即发布源），再**立刻铺满本机**，否则其他 agent 下次会话仍在跑旧规矩，等于规矩分叉：
 
   ```powershell
-  powershell -NoProfile -ExecutionPolicy Bypass -File <最新skill目录>\scripts\install-everywhere.ps1
+  powershell -NoProfile -ExecutionPolicy Bypass -File D:\agent_workspace\multi-agent-task-handoff\scripts\install-everywhere.ps1
   ```
 
-  `-Source` 缺省 = **脚本自身所在的 skill 目录**，所以永远从最新那份里运行它。同一趟会幂等刷新：各 agent 的技能目录、各 agent 的全局规则块、每个已登记工作区的 `tools/` 副本（含 `install-everywhere.ps1` 自己，2026-10-12 起——之前它不铺自己，导致工作区那份长期停在旧版）。
-- 只铺单个工作区时用 `bash multi-agent-task-handoff/bootstrap.sh --root <工作区根>`（`--force` 覆盖脚本副本）。
-- **不要只在本工作区副本里修 bug**：下次铺满会被覆盖，改动一律提到 skill。
+  `-Source` 缺省 = 脚本所在 `scripts\` 的上一级 = 真源工作树，所以**必须从工作树里那份启动**（从下游扁平副本启动会把整个工作区当成 skill 源）。同一趟会幂等刷新：各 agent 的技能目录、各 agent 的全局规则块、每个已登记工作区的脚本副本（含 `install-everywhere.ps1` 自己，2026-10-12 起——之前它不铺自己，导致工作区那份长期停在旧版）；**副本目录就是真源本身时跳过**，免得往工作树上铺出第二份扁平脚本。
+- 只铺单个工作区时用 `bash scripts/bootstrap.sh --root <工作区根>`（`--force` 覆盖脚本副本）。
+- **不要只在下游副本里修 bug**：下次铺满会被覆盖，改动一律提到工作树。
 - **已有规则块的工作区不会被自动更新**：bootstrap 与 install-everywhere 都靠规则块标题判重（2026-10-14 起是正则 `任务[双三]档规范`，兼容拆分前的旧标题），只补不覆盖。skill 改了条款，必须**手工同步一次该工作区的 `AGENTS.md` 和各 agent 的全局规则块**（`.codex\AGENTS.md`、`.claude\CLAUDE.md`），否则那里的 agent 读到的还是旧版。
 
 ### 边界与特例

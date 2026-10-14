@@ -18,16 +18,25 @@ done
 [ -n "$NAME" ] || { echo "用法: bash init-task.sh [--root <工作区根>] <任务目录名>" >&2; exit 1; }
 
 if [ -z "$ROOT" ]; then
-  # 副本目录 2026-10-14 起叫 multi-agent-task-handoff，旧名 tools 继续认（老工作区铺的是 tools/）
-  case "$(basename "$SELF_DIR")" in tools|multi-agent-task-handoff) ROOT="$(cd "$SELF_DIR/.." && pwd)" ;; esac
+  # 布局判定与 check-docs.sh 一致：扁平副本在 <root>/<副本目录>/，仓库与工作副本在 <root>/<副本目录>/scripts/，
+  # 而 …/skills/… 与 …\.codex\…\.claude\ 下的那份是 agent 的安装目录，不是工作区。
+  case "$(basename "$SELF_DIR")" in
+    tools|multi-agent-task-handoff) ROOT="$(cd "$SELF_DIR/.." && pwd)" ;;
+    scripts)
+      case "$SELF_DIR" in */skills/*|*/.codex/*|*/.claude/*) : ;;
+        *) case "$(basename "$(dirname "$SELF_DIR")")" in
+             tools|multi-agent-task-handoff) ROOT="$(cd "$SELF_DIR/../.." && pwd)" ;;
+           esac ;;
+      esac ;;
+  esac
 fi
 ROOT="${ROOT:-D:/agent_workspace}"
 
 TPL=""
-for c in "$ROOT/multi-agent-task-handoff/templates" "$ROOT/tools/templates" "$SELF_DIR/../assets"; do
+for c in "$SELF_DIR/../assets" "$ROOT/multi-agent-task-handoff/templates" "$ROOT/tools/templates"; do
   [ -f "$c/README.md.tpl" ] && { TPL="$c"; break; }
 done
-[ -n "$TPL" ] || { echo "[错误] 找不到模板目录（副本目录下的 templates/ 或 skill 的 assets/）" >&2; exit 1; }
+[ -n "$TPL" ] || { echo "[错误] 找不到模板目录（skill 的 assets/ 或副本目录下的 templates/）" >&2; exit 1; }
 
 TASK="$ROOT/$NAME"
 mkdir -p "$TASK"

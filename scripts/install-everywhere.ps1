@@ -1,7 +1,9 @@
 ﻿# install-everywhere.ps1 — 把「任务三档规范」一键装到本机所有 agent 与工作区（幂等）
 # 用法: powershell -File install-everywhere.ps1 [-Source <skill目录>] [-WorkspaceRoots <根1,根2...>]
 # 铁律「更新即铺满」：skill 无论本地改过还是 git pull 到更新，都必须立刻运行本脚本。
-#         -Source 缺省 = 脚本自身所在的 skill 目录——永远从"最新那份"里运行它。
+#         -Source 缺省 = 脚本所在的 scripts\ 目录的上一级 = skill 根目录，所以从真源工作树
+#         （D:\agent_workspace\multi-agent-task-handoff\scripts\）里跑它就是对的。
+#         2026-10-14 前真源住在 agent 的 skills 目录里；现在那里只是下游副本，别再从那儿改。
 # 做什么: ① 把 skill 同步进每个 agent 的技能目录  ② 给有全局指令文件的 agent 写规则块（缺才写）
 #         ③ 给每个工作区铺脚本副本目录 + AGENTS.md 规则块（与 bootstrap.sh 同一去重标记，兼容旧标题）
 #         副本目录 2026-10-14 起叫 multi-agent-task-handoff；工作区里已有旧名 tools/ 时沿用旧名。
@@ -65,21 +67,27 @@ foreach ($root in $WorkspaceRoots) {
   $tools = Join-Path $root "multi-agent-task-handoff"
   $legacy = Join-Path $root "tools"
   if ((Test-Path $legacy) -and -not (Test-Path $tools)) { $tools = $legacy }
-  New-Item -ItemType Directory -Path (Join-Path $tools "templates") -Force | Out-Null
-  foreach ($s in @("init-task.sh", "check-docs.sh", "bootstrap.sh", "install-everywhere.ps1")) {
-    $src = Join-Path $Source "scripts\$s"; $dst = Join-Path $tools $s
-    if ((Test-Path $dst) -and (Get-FileHash $src -Algorithm MD5).Hash -eq (Get-FileHash $dst -Algorithm MD5).Hash) { continue }
-    Copy-Item $src $dst -Force
-  }
-  foreach ($t in Get-ChildItem (Join-Path $Source "assets") -File) {
-    $dst = Join-Path $tools "templates\$($t.Name)"
-    if ((Test-Path $dst) -and (Get-FileHash $t.FullName -Algorithm MD5).Hash -eq (Get-FileHash $dst -Algorithm MD5).Hash) { continue }
-    Copy-Item $t.FullName $dst -Force
+  # 真源自己就住在这个副本目录里时不铺自己：2026-10-14 起 D:\agent_workspace\multi-agent-task-handoff
+  # 是 skill 仓库的 git 工作树（布局 scripts/ + assets/），往它根上铺扁平脚本会造出两份真源。
+  if ((Test-Path $tools) -and ((Resolve-Path $tools).Path -eq (Resolve-Path $Source).Path)) {
+    $report += "副本目录即真源，跳过脚本/模板同步: $tools"
+  } else {
+    New-Item -ItemType Directory -Path (Join-Path $tools "templates") -Force | Out-Null
+    foreach ($s in @("init-task.sh", "check-docs.sh", "bootstrap.sh", "install-everywhere.ps1")) {
+      $src = Join-Path $Source "scripts\$s"; $dst = Join-Path $tools $s
+      if ((Test-Path $dst) -and (Get-FileHash $src -Algorithm MD5).Hash -eq (Get-FileHash $dst -Algorithm MD5).Hash) { continue }
+      Copy-Item $src $dst -Force
+    }
+    foreach ($t in Get-ChildItem (Join-Path $Source "assets") -File) {
+      $dst = Join-Path $tools "templates\$($t.Name)"
+      if ((Test-Path $dst) -and (Get-FileHash $t.FullName -Algorithm MD5).Hash -eq (Get-FileHash $dst -Algorithm MD5).Hash) { continue }
+      Copy-Item $t.FullName $dst -Force
+    }
   }
   $wf = Join-Path $root "AGENTS.md"
-  if ((Test-Path $wf) -and ([System.IO.File]::ReadAllText($wf) -match $marker)) { $report += "工作区规则已存在，跳过: $wf（副本目录已同步: $tools）"; continue }
+  if ((Test-Path $wf) -and ([System.IO.File]::ReadAllText($wf) -match $marker)) { $report += "工作区规则已存在，跳过: $wf（副本目录: $tools）"; continue }
   [System.IO.File]::AppendAllText($wf, ("`n" + [System.IO.File]::ReadAllText((Join-Path $Source "references\agents-rule.md"))), (New-Object System.Text.UTF8Encoding($false)))
-  $report += "工作区规则已写入: $wf（副本目录已同步: $tools）"
+  $report += "工作区规则已写入: $wf（副本目录: $tools）"
 }
 
 $report | ForEach-Object { Write-Host $_ }

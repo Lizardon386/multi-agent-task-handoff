@@ -20,7 +20,19 @@ done
 # 还是 tools/（如 D:/agent_workspace/dsp-hal-eval/tools），只认新名会让它们认不出自己的根、
 # 退到硬编码默认值上——与 AGENTS.md 幂等标记 `任务[双三]档规范` 同一手法：两个名字都接受。
 if [ -z "$ROOT" ]; then
-  case "$(basename "$SELF_DIR")" in tools|multi-agent-task-handoff) ROOT="$(cd "$SELF_DIR/.." && pwd)" ;; esac
+  # 三种布局都要认：① 下游扁平副本 <root>/tools/check-docs.sh 或 <root>/multi-agent-task-handoff/…
+  # ② skill 仓库/工作副本布局 <root>/multi-agent-task-handoff/scripts/check-docs.sh
+  # ③ agent 的技能安装目录 …/skills/multi-agent-task-handoff/scripts/ —— 那**不是**工作区，
+  #    误判会把 ~/.qoder-cn\skills 当成工作区根去检查。
+  case "$(basename "$SELF_DIR")" in
+    tools|multi-agent-task-handoff) ROOT="$(cd "$SELF_DIR/.." && pwd)" ;;
+    scripts)
+      case "$SELF_DIR" in */skills/*|*/.codex/*|*/.claude/*) : ;;
+        *) case "$(basename "$(dirname "$SELF_DIR")")" in
+             tools|multi-agent-task-handoff) ROOT="$(cd "$SELF_DIR/../.." && pwd)" ;;
+           esac ;;
+      esac ;;
+  esac
 fi
 ROOT="${ROOT:-D:/agent_workspace}"
 
@@ -28,6 +40,8 @@ ROOT="${ROOT:-D:/agent_workspace}"
 if [ -d "$ROOT/multi-agent-task-handoff" ]; then COPY_DIR="multi-agent-task-handoff"
 elif [ -d "$ROOT/tools" ]; then COPY_DIR="tools"
 else COPY_DIR="multi-agent-task-handoff"; fi
+# 真源工作树用的是仓库布局（脚本在 scripts/ 下），下游副本才是扁平的。
+[ -f "$ROOT/$COPY_DIR/scripts/init-task.sh" ] && COPY_DIR="$COPY_DIR/scripts"
 
 STALE_DAYS="${STALE_DAYS:-30}"
 # 三档分工：README=使用者说明书，DESIGN=方案设计（为什么这么设计、定死的语义），CONTEXT=agent 交接。
@@ -82,16 +96,20 @@ TODAY_DAYS=$DAYS
 
 # 顶层「其他输出文档」必须中文命名。README/CONTEXT/DESIGN/AGENTS 是规范固定名，_ 前缀是机器
 # 产物（如 _ref-*），非 .md 文件（.docx/.pdf 常需与对方系统里的原件同名）一律豁免。
+# SKILL.md 同列豁免：它是 skill 加载器强制的文件名（改成中文就加载不到），且内容是规范原文、
+# 必然反复点名 README.md/DESIGN.md/CONTEXT.md——2026-10-14 skill 仓库的工作树搬进
+# D:\agent_workspace\multi-agent-task-handoff\ 后，它第一次被当成交付文档查，[名] 加 35 条
+# 反引号裸名一起冒出来，全是这个原因。与 AGENTS.md 早就拿到的豁免同理，不是新开的口子。
 # 只用 LC_ALL=C 判「含非 ASCII 字节」，不依赖 grep -P（收件方的 grep 未必编译了 PCRE）。
 check_names() {
   local dir="$1" f b
   for f in "$dir"*.md; do
     [ -f "$f" ] || continue
     b=$(basename "$f")
-    case "$b" in README.md|CONTEXT.md|DESIGN.md|AGENTS.md) continue ;; esac
+    case "$b" in README.md|CONTEXT.md|DESIGN.md|AGENTS.md|SKILL.md) continue ;; esac
     case "$b" in _*) continue ;; esac
     if ! LC_ALL=C grep -q '[^ -~]' <<< "$b"; then
-      echo "  [名] $b 顶层输出文档必须用中文命名（三档与 AGENTS、_ 前缀机器产物除外）"
+      echo "  [名] $b 顶层输出文档必须用中文命名（三档与 AGENTS、SKILL、_ 前缀机器产物除外）"
       fail=1
     fi
   done
@@ -139,13 +157,13 @@ check_links() {
             _norm "$u" lc
             case "$NORM" in "$rootc"/*) : ;; *) continue ;; esac
             _norm "$u"
-            [ -e "$NORM" ] || printf '  [链] %s 链接指向不存在的文件: %s\n' "$(basename "$f")" "$raw"
+            [ -e "$NORM" ] || printf '  [链] %s 链接指向不存在的文件: %s\n' "${f#"$dir"}" "$raw"
             ;;
           http://*|https://*|mailto:*|//*) : ;;
           "") : ;;
           *)
             rel="${f%/*}/${u}"
-            [ -e "$rel" ] || printf '  [链] %s 相对链接指向不存在的文件: %s\n' "$(basename "$f")" "$raw"
+            [ -e "$rel" ] || printf '  [链] %s 相对链接指向不存在的文件: %s\n' "${f#"$dir"}" "$raw"
             ;;
         esac
       # 先剥掉 ``` 围栏内的内容：代码示例里的 C++ lambda `[this](Status result)` 会被
@@ -218,7 +236,7 @@ check_bare_refs() {
   while IFS= read -r f; do
     [ -f "$f" ] || continue
     bn="$(basename "$f")"
-    case "$bn" in README.md|CONTEXT.md|DESIGN.md|AGENTS.md) continue ;; esac
+    case "$bn" in README.md|CONTEXT.md|DESIGN.md|AGENTS.md|SKILL.md) continue ;; esac
     hit="$(
       awk -v file="$f" -v dir="$dir" '
         /^```/ { fence = !fence; next }
@@ -260,8 +278,8 @@ check_bare_refs() {
       while IFS= read -r line; do
         [ -z "$line" ] && continue
         case "$line" in
-          *" DEAD:"*) echo "  [链] $(basename "$f") 反引号裸路径指向不存在的文件（改名遗留死链）: \`${line#* DEAD:}\`" ;;
-          *) echo "  [链] $(basename "$f") 反引号裸文件名应写成可点击链接（file:/// 或相对链接）: \`$line\`" ;;
+          *" DEAD:"*) echo "  [链] ${f#"$dir"} 反引号裸路径指向不存在的文件（改名遗留死链）: \`${line#* DEAD:}\`" ;;
+          *) echo "  [链] ${f#"$dir"} 反引号裸文件名应写成可点击链接（file:/// 或相对链接）: \`$line\`" ;;
         esac
         fail=1
       done <<< "$hit"
@@ -283,7 +301,7 @@ check_design() {
   for f in "$dir"*.md; do
     [ -f "$f" ] || continue
     b="$(basename "$f")"
-    case "$b" in README.md|CONTEXT.md|DESIGN.md|AGENTS.md) continue ;; esac
+    case "$b" in README.md|CONTEXT.md|DESIGN.md|AGENTS.md|SKILL.md) continue ;; esac
     LC_ALL=C grep -qE "$DESIGN_ALT_RE" <<< "$b" && hits="${hits:+$hits、}$b"
   done
   if [ -n "$hits" ]; then
