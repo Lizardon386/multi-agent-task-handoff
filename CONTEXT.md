@@ -51,7 +51,7 @@
   ③ **产物链接规矩纠正**（来自 dsp-hal-eval 会话 `d85b18c2` 的交接）：文档内一律**相对该文档自身目录**，`file:///` 只留给聊天面。旧口径"本机文档首选 `file:///`"是 2026-10-09 一次只测了聊天侧边栏的实测被外推的结果；用户在 markdown 预览面板复测：`file:///D:/...` 在 VSCode 预览报「文件不存在」（文件其实在）、在 Qoder 文档预览不渲染成链接，改相对后两个面都能跳。改动面：`SKILL.md`（frontmatter description + Artifact links 节 + Pre-output 清单）、`references/doc-spec.md`、`references/agents-rule.md`（各工作区 AGENTS.md 规则块原文）、`.github/README.md`、四份 `assets/*.tpl`。**闸门功能不动**——两种形式它都接受也都验可达，所以在 `doc-spec` 里补了一句"闸门绿不等于链接点得开"。反例清单加两条实测细节：`\[文字\](目标)` 转义方括号渲染成字面文本；链接文字以 `\` 结尾会把 `]` 转义、整条链接解析失败（本会话就被用户截图抓过一次）。
   ④ 本目录三档自己的 30 条 `file:///` 链接全部转成相对路径（历史「变更记录」行里那两条引用旧规矩的原文照留，是当时事实）。
   ⑤ **待手工同步**（installers 对已有规则块只补不覆盖）：`D:\agent_workspace\AGENTS.md` 与 `dsp-hal-eval\AGENTS.md` 里"本机文档首选 `file:///`"那句。
-  ⑥ README 合并（根 README 与 `.github/README.md` 内容重复约七成）按用户裁定**下一个提交单独做**：合并成根 README、删 `.github/README.md`，对外 changelog 全部挪进 CONTEXT，README 引用 CONTEXT 时提一句。
+  ⑥ README 合并（根 README 与 `.github/README.md` 内容重复约七成）按用户裁定单独一个提交做，**已完成**：合并成根 README、删 `.github/README.md`，对外 changelog 全部挪进 CONTEXT，README 引用 CONTEXT 时提一句。
 
 - 2026-10-14 Qoder（本会话，**副本目录改名 + 4 条待办落地 + 1 个真 bug**）：起手跑闸门发现 **exit 1、34 条 `[链]`**，与上一条会话记的"全量 exit 0"矛盾——`D:\agent_workspace\tools\` 已被改名成 `multi-agent-task-handoff\`（本目录），而写死旧名的地方遍布四处脚本与全套文档。用户定调「保住新名，改全套约定」，并批准 5 条待办全做。
   **改名落地（真源在 skill，本目录只是副本）**：`check-docs.sh` root 解析认 `tools|multi-agent-task-handoff`、结尾提示打印真实路径；`init-task.sh` 模板查找加新名；`bootstrap.sh` 与 `install-everywhere.ps1` 的副本目录解析统一为「已有旧名 `tools/` 且还没有新名 → 沿用旧名，否则用新名」，**否则下次铺满会另造一个 `tools/`，本目录变成没人认领的第三副本**；跳过名单改成**按内容判**（副本目录有 `README.md` 就照任务目录查——旧版无条件跳过 `tools` 正是这 20 条死链能活下来的原因，新装工作区又不该一跑就红）。
@@ -90,3 +90,56 @@
 ## 给下一个 agent 的追加区
 
 （后续会话请在此追加一行 `- YYYY-MM-DD <来源>：<结论/改动/遗留问题>`，或直接更新上面各节）
+
+## 发布更新记录（对外 changelog）
+
+> 2026-10-14 起这一节从仓库落地页（原 `.github/README.md`）挪到这里：按三档分工，历史记录归 CONTEXT；落地页只剩 [README.md](README.md) 一份。跟进方式永远是：`git pull` → 跑 `scripts/install-everywhere.ps1` 铺满。
+
+跟进方式：`git -C D:/agent_workspace/multi-agent-task-handoff pull` 后**必须**按「更新即铺满」跑一次 `scripts/install-everywhere.ps1`（本机已装 `post-merge` 钩子，pull 完自动铺满）。
+
+**2026-10-14**
+
+- **两份 README 合并成根 `README.md` 一份**，删掉 `.github/README.md`。落地页与本目录三档之一的 README 重复约七成（都在讲"这是什么 + 三档规矩 + 前缀表 + 命令"），而且已经漂过：一份写"真源在 skill 目录"、另一份写"clone 到 skills 目录即装"——同一件事两个说法，正是本仓库最反对的两份真源。合并后根 README 兼任仓库首页与三档说明书，「最近更新」这类历史全部挪进本文件的「发布更新记录」节（按三档分工，历史归 CONTEXT），落地页里引用它。GitHub 首页渲染优先级是 `.github` > 根目录 > `docs`，`.github/README.md` 删掉后首页自然落到根 README。
+
+- **纠正产物链接规矩：文档内一律相对路径，`file:///` 只留给聊天面**。旧规矩"本机文档首选 `file:///`"来自 2026-10-09 一次**只测了 Qoder 聊天侧边栏**的实测，被外推到了文档面。用户在 markdown 预览面板复测后结论相反：`file:///D:/...` 在 **VSCode 预览**报「文件不存在」（文件其实在）、在 **Qoder 文档预览**干脆不渲染成链接，改成相对该文档自身目录的路径后两个面都能跳。根因是预览器按"相对文档所在目录"解析 `href`，`file://` scheme 不在其绝对地址白名单里，会被当相对路径拼进工作区根。**两个渲染面解析逻辑相反，不能从一个外推到另一个。** 闸门**功能不动**（两种形式都接受、都验可达），因为这不是可达性问题而是形式问题——同步在 `doc-spec` 里写明"闸门绿不等于链接点得开"。改动面：`SKILL.md` 的 frontmatter description + 「Artifact links」节 + Pre-output 清单第 1 条、`references/doc-spec.md`、`references/agents-rule.md`（各工作区 `AGENTS.md` 规则块原文，**已装工作区不会被自动更新，需手工同步**）、本页。另补两条实测细节进反例清单：方括号被转义成 `\[文字\](目标)` 渲染成字面文本点不开；链接文字以 `\` 结尾会把 `]` 转义、整条链接解析失败。
+- **真源从 agent 的 skills 目录搬进工作区**：`.git` 移到 `D:\agent_workspace\multi-agent-task-handoff\`，该目录从此是 skill 仓库的 git 工作树（布局 `SKILL.md` + `scripts/` + `assets/` + `references/` + `.github/`），`~/.qoder-cn`、`~/.codex`、`~/.claude` 下的技能目录**降级为下游副本**。配套改动：`bootstrap.sh` 与 `install-everywhere.ps1` 检测到"副本目录就是真源"时跳过自铺（否则会把扁平脚本铺到工作树根上，造出两份真源）；`check-docs.sh` / `init-task.sh` 的 root 解析新增仓库布局一层（`<root>/multi-agent-task-handoff/scripts/`），且明确 `…/skills/…`、`….codex…`、`….claude…` 下的脚本**不**反推工作区根；`-Source` 缺省因此变成"脚本所在 `scripts\` 的上一级"，从工作树里跑即正确。本目录的三档交接文档按用户裁定**一起提交**（GitHub 渲染优先级 `.github` > 根目录 > `docs`，落地页不受影响）。
+
+- **工作区脚本副本目录改名 `multi-agent-task-handoff`，`tools` 继续接受；副本目录是否算任务目录改成按内容判**。起因是收工跑闸门发现 **exit 1、34 条 `[链]`**：`D:\agent_workspace\tools\` 已被改名成别的目录名，而 `bootstrap.sh`、`install-everywhere.ps1`、`check-docs.sh` 的 root 解析与跳过名单、以及工作区/全局 `AGENTS.md` 和落地页教的命令全写死 `tools/`——下次铺满会另造一个 `tools/`，改名那份变成没人认领的第三副本（"两份真源必然漂移"的翻版）。现在：四处解析器都认两个名字，`bootstrap.sh` 与 `install-everywhere.ps1` 遇到已有 `tools/` 的工作区沿用旧名（一次铺满不会铺出两份脚本），结尾提示打印真实路径而不是失效的 `bash tools/init-task.sh`。跳过名单改为**按内容判**：副本目录只有脚本时跳过（新工作区不该一跑就红），一旦铺了三档就照任务目录检查——正是这条抓出了 20 条指向旧路径的死链。旧名硬跳过是这些死链能活到今天的原因。
+- **新增 `[题]`（判失败）**：H1 必须含任务目录名，中文别名写成 `# 目录名（别名）· 使用说明`。原先这条全靠人工守，实测 8 个目录 2 个对不上（含本 skill 自己的工作区副本，标题一直还写着旧名）。
+- **`[空]` 加严第二层**：DESIGN「设计思路」的三列表**任一格留空**即失败。只判"整行三格全空"时 `| 用 A | 有理由 |  |` 是绿的，而漏的恰恰是最要紧的代价列。两列表照旧不判，避免误伤架构表。
+- **`[链]` 现在也剥行内 `` `code` ``**（此前只剥 ` ``` ` 围栏）：三份文档为了说明这条规则，用行内反引号举 `[this](Status result)` 这个反例，被闸门判红 4 条——**规则误伤了写规则的人**。反引号定界符按**等长 run 配对**，因为文档里存在 ```` ```` ``` ```` `` 这种"反引号套反引号"的写法，简单成对匹配会配错位、把 span 漏出去。display 名带反引号的合法链接先解开再验（这种例子在散文里只用文字描述，真写出来会和 span 剥离互相干扰），可达性覆盖没有因此缩小；格式例子要写成代码段（**两个**反引号包住，单反引号包不住含反引号的例子），散文里裸写的链接形状 `[文字](链接)` 就是一条点不开的死链、照报——2026-10-14 曾给"占位符"开过豁免，结果当场打穿了证明 span 生效的那条反向对照（夹具 c8），已撤销。`AGENTS.md` 的可达性豁免由并行会话的 commit `7c09c5b` 引入（规则正文里的示例链接不是真路径），本轮保留它；两条修叠加之后 `dsp-hal-eval` 才转绿。
+- **去掉 GNU `date -d` 依赖**：过期天数改成纯 bash 的 civil→days 算法（与 `date -u` 对拍 14 组，含闰年、世纪年、`08`/`09` 这类零补齐日期）。对拍顺手抓出一个真 bug：`IFS=-` 拆出的 `08`/`09` 在 bash 算术里是非法八进制，不写 `10#` 时**八月、九月的日期会让 `[旧]` 判定直接报错**——今天恰好是 10 月，这条会一路绿到 8 月才炸。不做 PowerShell 版（`[空]/[档]/[链]` 全靠 grep/awk，两套逻辑必然漂移），也不挂 git hook（工作区不是 git 仓库；skill 仓库的 pre-commit 去检查别人的目录方向不对）。这两条待办按裁定关闭。
+- 15 项夹具断言全过（`--root` 隔离根，跑完即删），含三条关键反向对照：半填行报 / 两列表不报、别名标题放行 / 纯标题报、行内代码里的假链接放行 / **同一段不写反引号照报**。全量闸门 ~11s。
+
+- **新增第 6 条强制规则：输出前必须主动检查规则清单（Pre-output rules check, MANDATORY）**。起因是真实事故：agent 写方案时用代码格式 `` `文件名` `` 代替 `file:///` 链接，被用户指出。根因不是"图快"，是把输出当草稿写、没做规则符合性检查、依赖用户挑错。新增条款要求 agent 在输出任何涉及文件引用的方案/计划/文档变更前，强制过 artifact-links / chinese-doc-naming / complete-deliverables / self-audit 四项检查。写入 `SKILL.md` 的新章节"Pre-output rules check (MANDATORY)"，并更新 `description` 的第 (3) 条。此规则与 `feedback-self-audit-with-evidence` 互补：self-audit 是 reactive（被问时才检查），pre-output 是 proactive（输出前主动检查）。
+- **规范从两档扩成三档：`README.md`（使用者说明）+ `DESIGN.md`（方案设计）+ `CONTEXT.md`（agent 交接）**。「设计思路」三列表从 README 搬到 DESIGN，README 只剩说明所需的五节。动因是同一件事的两次重复：3178 的 README 被批"太繁琐、加了很多无谓的东西"，而它推上 GitHub 后读者要的确实是"我怎么用"。归档判据一句话：**这条结论半年后还成立吗？** 成立进 DESIGN，不成立进 CONTEXT。闸门同步：`[缺]/[构]` 查三档、`[空]` 从只判 README 改成**三档任一表格留全空行都判**（原先它顺带抓住了 README 的空产物表，拆档后不许松开）、`[期]` 改成**三档日期必须同日**、`[名]` 豁免 `DESIGN.md`。规则块标题随之改成「任务三档规范」，**幂等标记同时接受旧标题**（正则 `任务[双三]档规范`），免得留着旧标题的工作区被追加第二份规则块。
+- **`[链]` 的链接形式放宽到「`file:///` 或仓库相对链接」，可达性同时收紧到两种形式都验**。起因是一个真实后果：任务目录推上 GitHub 后，README 里的 `file:///D:/...` 对读者全是死链，而闸门只认这个前缀——等于规矩在把文档往错的方向推。放宽只放在"产物节有没有可点的东西"这一条上，断链检测反而比旧版更强（相对链接按**文档自身目录**解析）。反向验证做过：一条断掉的相对链接当场报红；同一段 C++ lambda 写在 ```` ``` ```` 围栏里放行、不写围栏报红，证明放行是围栏在起作用而不是提取器没看见。
+- 顺带修掉一处假阳性：`[this](Status result)` 这类代码里的 `](...)` 会被当成链接（2026-10-14 在一份 C++ 架构文档上误报）。现在 `check_links` 先剥掉 ```` ``` ```` 围栏再提取。
+- **一条流程错误，值得所有 agent 记**：这次改动我先落在了 `D:\agent_workspace\tools\check-docs.sh` 上——那是 `install-everywhere.ps1` 第 ③ 步的**下游副本**，真源是 skill 的 `scripts/check-docs.sh`。谁之后跑一次铺满，我的改动就会被旧版原地覆盖。规矩本来就写在门上（"skill 一改必跑 install-everywhere.ps1"），方向却是反的：**改闸门要改 skill 里那份，再铺满**。
+
+**2026-10-12**
+
+- **规矩的适用范围写进 `description` / `when_to_use`**：任意工作目录、每一次会话都生效，明确禁止以"当前目录不在 agent workspace"为理由跳过聊天链接规则与收工 `CONTEXT.md` 更新——实测确有 agent 这样绕过过。
+- 新增 `scripts/install-everywhere.ps1`（安装路径 F）。提交前修掉一处会坑其他 agent 的缺陷：递归复制没排除 `.git`，而真源目录本身就是 git 工作树，会把整个 `.git` 灌进另一个 agent 的技能目录。
+- `[链]` 的反引号裸写检查补上"目录/文件改名后遗留的死链"分支；文档内的行号锚点一律改写进**链接文字**，不留 `#L42`。
+- README 全局刷新：安装决策表把 **F 提为 Windows 多 agent 首选**、补 Codex 明示行，新增 **G（全局规则块 + 每日看门狗）**——回答「规矩能不能不靠 agent 自觉」：能，把闸门挂给调度器。A–E 保留：F 只覆盖 Windows 且会改其他 agent 的全局文件，单 agent / 非 Windows / 最小安装仍走原路。
+- **新增铁律「更新即铺满」**（写入 `SKILL.md` 的 Propagation rule）：skill 无论本地改过还是 `git pull` 到更新，都必须立刻用 `install-everywhere.ps1` 覆盖本机所有 agent 的技能目录——只更新真源不铺满，其他 agent 下次会话就在跑旧规矩。配套改动：脚本 `-Source` 缺省改为**脚本自身所在的 skill 目录**（永远从最新那份里运行它）；真源克隆可装 `post-merge` 钩子让 pull 后自动铺满。
+- README 再刷新：「更新即铺满」从变更日志升级为独立章节（规则 + 命令 + `post-merge` 钩子配方），「跟进方式」与「目录结构」改为强制引用该节。
+- **自查出「铺满」自己的三个漏洞并修掉**（同日）：
+  1. `install-everywhere.ps1` 第③步不铺它自己 → 工作区 `tools/` 那份长期停在旧版（实测 `d466de…` vs 真源 `30a4af…`，且旧版 `-Source` 仍硬编码别的 agent 目录，从工作区跑会拿错源当权威）。已把它加进 step③ 的同步清单。
+  2. `.claude` 会被写入全局规则块 `CLAUDE.md`，却不在默认 `-AgentHomes` 里 → Claude 侧规则点名引用的 skill 根本没安装。已补进默认列表（本机实测新增 11 个文件）。
+  3. 「更新即铺满」只写在 `SKILL.md` 和本页，**`references/agents-rule.md`（即各工作区 `AGENTS.md` 的规则块原文）整条缺失** → 只读 `AGENTS.md` 的 agent 压根不知道要铺。已补「真源与更新即铺满」一节，并写明**已有规则块的工作区只补不覆盖，条款变了必须手工同步那一份**（本机 `D:\agent_workspace\AGENTS.md` 已同步）。
+- `SKILL.md` 的 Resources 节此前漏列 `install-everywhere.ps1`，已补；Propagation rule 增两条约束（铺满含其自身、工作区 `AGENTS.md` 不自动更新）。
+- **已知未做**：`install-everywhere.ps1` 里写死的全局规则块（`$globalBlock`，5 条要点）与 `references/agents-rule.md` 是两份独立文本，改后者不会自动带动前者；等下一次规则稳定后统一成"从 agents-rule.md 截取要点"。
+
+**2026-10-10**
+
+- **`[链]` 由"仅告警"升级为失败项**，并新增 `[期]`（两档顶部「最近更新」必须一致）。起因是真实事故：agent 跑 `check-docs.sh | tail -2`，把告警行截掉当成全绿——**告警在没人逐行读输出时等于不存在**。从此文档里也写明"跑闸门不许加管道"。
+- `[链]` 增加**可达性校验**：链接指向的文件不存在直接判失败（改名不更新引用会被当场抓住）；指向工作区之外的链接跳过，保证脚本能发给没有 `D:` 盘的人。顺带修掉 Linux 绝对路径的漏报，并把闸门从 38s 优化回 9s。
+- 新增 `[名]`：顶层输出文档用纯 ASCII（英文）文件名判失败——读者是中文同事，文件要转发进群聊和飞书。
+- 顶部日期**只认 blockquote 那一行**，修掉 `[新]`/`[旧]`/`[期]` 在正文里随便写个日期就蒙过的静默漏检。
+- 产物链接改**双轨制**：文档内守 `file:///` 绝对路径，聊天回复在已验证支持跳行的宿主可用工作区相对 `#L` 锚点。
+
+**2026-10-09**
+
+- 首版：双档规范 + `init-task.sh` / `check-docs.sh` / `bootstrap.sh` 三脚本 + 两份模板；仓库落地页放 `.github/` 以保持 skill 根目录纯净。

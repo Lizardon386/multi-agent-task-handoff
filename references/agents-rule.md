@@ -132,7 +132,7 @@ README 与 DESIGN 拆开是 2026-10-14 定的：取舍三列表留在说明书�
 
 ### 真源与「更新即铺满」（铁律）
 
-本规范的**唯一真源是 skill 仓库的 git 工作树**——本机是 `D:\agent_workspace\multi-agent-task-handoff\`（布局：`SKILL.md` + `scripts/` + `assets/` + `references/` + `.github/`）。各 agent 的技能目录（`~\.qoder-cn\skills\`、`~\.codex\skills\`、`~\.claude\skills\`）与其它工作区的脚本副本目录（新名 `multi-agent-task-handoff/`，旧名 `tools/`）**都是下游副本**，改了会在下次铺满时被覆盖。
+本规范的**唯一真源是 skill 仓库的 git 工作树**——本机是 `D:\agent_workspace\multi-agent-task-handoff\`（布局：`SKILL.md` + `scripts/` + `assets/` + `references/`；仓库落地页就是根 `README.md`，2026-10-14 起不再有 `.github/README.md` 那份重复）。各 agent 的技能目录（`~\.qoder-cn\skills\`、`~\.codex\skills\`、`~\.claude\skills\`）与其它工作区的脚本副本目录（新名 `multi-agent-task-handoff/`，旧名 `tools/`）**都是下游副本**，改了会在下次铺满时被覆盖。
 
 - 改完真源：先 `git commit` + `git push`（真源即发布源），再**立刻铺满本机**，否则其他 agent 下次会话仍在跑旧规矩，等于规矩分叉：
 
