@@ -3,7 +3,7 @@
 > 给「一个根目录下按任务建子目录」的 agent 工作区，强制一套**可自检**的任务交接规矩：每个任务目录同时维护 `README.md`（使用者）、`DESIGN.md`（方案评审者）、`CONTEXT.md`（下一个 agent）三档，外加骨架生成、合规闸门、以及把整套规矩装到任意工作区的一条命令。
 > 标识 `multi-agent-task-handoff`，Qoder / Claude Code / Codex 的用户级 Skill。
 > **本目录同时是这个仓库的 git 工作树（真源）**——`D:\agent_workspace\multi-agent-task-handoff\`；`~\.qoder-cn\skills\`、`~\.codex\skills\`、`~\.claude\skills\` 三处是下游副本。
-> 设计取舍见 [DESIGN.md](DESIGN.md)，进度与**对外更新记录**见 [CONTEXT.md](CONTEXT.md)，工作区规矩全文见 [../AGENTS.md](../AGENTS.md)。
+> 设计取舍见 [DESIGN.md](DESIGN.md)，进度与**对外更新记录**见 [CONTEXT.md](CONTEXT.md)，工作区规矩原文见 [references/agents-rule.md](references/agents-rule.md)（本机 `D:\agent_workspace\AGENTS.md` 是它的入口版，不在仓库内，所以不给链接）。
 > 最近更新：2026-10-15
 
 ## 一句话说明
@@ -134,7 +134,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File D:\agent_workspace\multi-age
 
 - `-Source` 缺省 = 脚本所在 `scripts\` 的上一级 = 真源根，所以**从工作树里那份启动即正确**。
 - 同一趟幂等刷新：各 agent 技能目录、各 agent 的全局规则块（`.codex\AGENTS.md`、`.claude\CLAUDE.md`）、每个已登记工作区的脚本副本目录（含 `install-everywhere.ps1` 自己）。**副本目录就是真源时跳过自铺**，否则会把扁平脚本铺到工作树根、与 `scripts/` 正主并存两份。
-- **已有规则块的工作区不会被自动更新**：`bootstrap.sh` 与本脚本都靠标题正则 `任务[双三]档规范` 判重、只补不覆盖。改了条款要**手工同步那份 `AGENTS.md`**，否则那里的 agent 读到的还是旧版。
+- **已有规则块的工作区不会被自动更新**：`bootstrap.sh` 与本脚本都靠标题正则 `任务[双三]档规范` 判重、只补不覆盖。改了条款要**手工同步那份 `AGENTS.md`**，否则那里的 agent 读到的还是旧版。**本机 `D:\agent_workspace\AGENTS.md` 已改成"入口版"**（2026-10-15，149 行 → 32 行）：只留工作区本地政策 + 指向 skill 的指针 + 三条最容易出事的硬要求，不再复述细则，因此**对它没有同步义务了**——但那行标题是幂等锚，动它就等于让铺满追加第二份规则块。装了 skill、agent 会读 `SKILL.md` 的工作区都可以这么降级；不加载 skill 的工作区仍需整份规则块，那正是 `bootstrap.sh` 的默认产物。
 - **默认只补不删**：仓库里删掉的文件在各副本里会留着（2026-10-14 合并落地页时就留下三份幽灵 `.github/README.md`，内容还是旧规矩，而铺满输出照样全绿）。要清就加 `-Prune`——**先把待删清单打进输出，再删**；只想看清单用 `-Prune -DryRun`。手动跑的那趟默认不带 prune（省略开关就只补），本机的钩子已经带上了，见下条。作用域严格限定在本脚本自己铺的两个子树：技能目录下的 skill 子树按真源镜像比对，工作区脚本副本目录按「6 份脚本 + templates/」比对；真源目录本身拒绝执行，也不碰 `AGENTS.md`、全局规则文件与任务目录。**副作用要说明白：工作区那个脚本副本目录归安装器所有，别往里放自己的笔记。**
 - 推荐：装 `post-merge` 钩子，pull 完自动铺满。**钩子带 `-Prune`**——钩子那趟是无人值守的，不带 prune 就等于「删文件后要清残留」这一步永远没人做（2026-10-14 合并落地页后那三份幽灵 `.github/README.md`，正是靠手动补跑才清掉的）。`.git/hooks/post-merge` 四行：
 
@@ -182,7 +182,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File D:\agent_workspace\multi-age
 | [README.md](README.md) | 本文件：仓库落地页 + 本目录三档之一（2026-10-14 起合并，不再有第二份 `.github/README.md`） |
 | [DESIGN.md](DESIGN.md) | 本目录方案设计：工具自己的取舍表、脚本之间的接缝、动不得的契约 |
 | [CONTEXT.md](CONTEXT.md) | 本目录交接档案：进度、待办、踩坑，**以及对外的「发布更新记录」** |
-| [../AGENTS.md](../AGENTS.md) | 工作区规矩全文（含本地注解，不由安装器覆盖） |
+| `D:\agent_workspace\AGENTS.md`（本机文件，在仓库之外，故不给链接） | 工作区入口：本地政策 + 指针，2026-10-15 起不再复述细则。它标题里的「任务三档规范」是安装器的**幂等锚**，删掉那四个字会让下次铺满在本文件末尾追加第二份规则块 |
 
 ## 限制与注意事项
 
