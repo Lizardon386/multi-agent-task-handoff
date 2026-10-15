@@ -188,7 +188,8 @@ powershell -NoProfile -ExecutionPolicy Bypass -File D:\agent_workspace\multi-age
 
 - 需要 bash（Git Bash / Linux / macOS 均可）。`check-docs.sh` **不依赖 GNU `date -d`**（2026-10-14 起改用纯 bash 的 civil→days 算法），但整个脚本仍是 bash——**纯 cmd / PowerShell 下没有对应实现**，这是刻意的：`[空]/[档]/[链]` 全靠 grep/awk，两套判定逻辑必然漂移。Windows 请走 Git Bash。
 - `install-everywhere.ps1` 仅 Windows（PowerShell 5.1+），运行加 `-ExecutionPolicy Bypass`；脚本含中文，**保存必须 UTF-8 带 BOM**，否则 5.1 按 GBK 误读、判重失效会追加出重复规则块。它的输出是 GBK，接 `| iconv -f GBK -t UTF-8` 才读得懂。
-- 脚本不联网、不执行删除、不跑 git——它是脚手架与闸门，不是清理工具。
+- **只有闸门不碰删除**：`check-docs.sh` 不联网、不执行删除、不跑 git——它是验收工具，不是清理工具。会删的是另外两个，且各自范围窄：`install-everywhere.ps1 -Prune` 只删两个受管子树里的残留文件（先列清单），`watchdog.sh` 只删**它自己写的**待处理件。
+- **Git Bash 里钩子与铺满的输出会有一半乱码**：PowerShell 按 GBK 写、`sh` 的 `echo` 是 UTF-8，同一条流两种编码，整体 `| iconv -f GBK -t UTF-8` 就把 UTF-8 那半弄花（反之亦然）。不改脚本的 `OutputEncoding`——它会连带影响 cmd 那边，而这两行都只是状态播报，不是判定结果；**要看的关键内容（prune 的待删清单、闸门违规行）来自 PowerShell 侧，`iconv` 之后是干净的**。
 - **闸门性能是功能的一部分**：Windows 起一个子进程 ≈25ms，现在每个任务目录只起 4 次进程（三档判定一次 awk、链接提取一次、裸名候选一次、`find` 一次），真工作区全量 ≈0.9 秒。2026-10-14 之前是 10.7 秒，更早 38 秒那版直接被人绕过——慢的闸门等于没有闸门。
 - 文档与默认值里出现的 `D:/agent_workspace`、`C:/Users/…` 只是本机示例路径。非本机首次使用**必须显式传 `--root`**，否则 `check-docs.sh` 会静默检查一个不存在的目录。
 - 闸门只校验**结构与是否留空**，不判断内容质量：正确的标题配空话照样通过。这是刻意的弱校验（取舍见 [DESIGN.md](DESIGN.md) 的表）。
