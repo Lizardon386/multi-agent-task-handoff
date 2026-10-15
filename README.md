@@ -151,12 +151,16 @@ powershell -NoProfile -ExecutionPolicy Bypass -File D:\agent_workspace\multi-age
   - 两个钩子文件都在 `.git/hooks/` 下，**不被 git 跟踪**：换机器要照上面重建，且必须保持 LF 行尾（带回车的 `sh` 在 Git Bash 下直接语法报错）。看门狗脚本本身随仓库走，注册一次即可（PowerShell，只在登录状态下跑，好让待处理件看得见）：
 
   ```powershell
-  $a = New-ScheduledTaskAction -Execute 'D:\software\Git\bin\bash.exe' -Argument '-c "bash /d/agent_workspace/multi-agent-task-handoff/scripts/watchdog.sh"'
+  $cp = '~/.qoder-cn/skills/multi-agent-task-handoff,~\.codex\skills\multi-agent-task-handoff,~\.claude\skills\multi-agent-task-handoff'
+  $a = New-ScheduledTaskAction -Execute 'D:\software\Git\bin\bash.exe' `
+    -Argument ('-c "bash /d/agent_workspace/multi-agent-task-handoff/scripts/watchdog.sh --copies ''{0}''"' -f $cp)
   Register-ScheduledTask -TaskName 'multi-agent-handoff-drift' -Action $a `
     -Trigger (New-ScheduledTaskTrigger -Daily -At 10:10) `
     -Settings (New-ScheduledTaskSettingsSet -StartWhenAvailable -MultipleInstances IgnoreNew) `
-    -Description 'skill 铺满漂移看门狗：副本 vs 工作树 + 收工闸门'
+    -Description 'skill drift watchdog: copies vs worktree + gate'
   ```
+
+  `--copies` 写成绝对路径是有原因的：计划任务里 `HOME` 常指向 MSYS 的 `/home/<user>` 而不是 `C:\Users\<user>`，靠默认名单会**一个副本都比对不到**——那种"没查"脚本会当错误报（exit 2），不会给你一行绿。
 
 条款原文以 [SKILL.md](SKILL.md) 的「Propagation rule (MANDATORY)」为准，本节是给人看的操作版。
 

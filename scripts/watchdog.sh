@@ -38,20 +38,49 @@ if [ ! -f "$SOURCE/SKILL.md" ] || [ ! -e "$SOURCE/.git" ]; then
 fi
 
 if [ -z "$COPIES" ]; then
-  HOME_DIR="${HOME:-${USERPROFILE:-}}"
-  COPIES="$HOME_DIR/.qoder-cn/skills/multi-agent-task-handoff,$HOME_DIR/.codex/skills/multi-agent-task-handoff,$HOME_DIR/.claude/skills/multi-agent-task-handoff"
+  # HOME 在不同 shell / 计划任务里可能指向 /home/<user>（MSYS 默认）而 USERPROFILE 才是
+  # C:\Users\<user>；技能目录只装在后者下面。两个都试、去重，全落空则由下面的 checked=0 报错。
+  _homes=()
+  for _h in "${HOME:-}" "${USERPROFILE:-}"; do
+    [ -n "$_h" ] || continue
+    _h="${_h//\\//}"
+    case "$_h" in
+      ?:*) _h="/$(printf '%s' "${_h:0:1}" | tr 'A-Z' 'a-z')${_h:2}" ;;
+    esac
+    _h="${_h%/}"
+    _dup=0
+    for _e in "${_homes[@]}"; do
+      [ "$_e" = "$_h" ] && { _dup=1; break; }
+    done
+    [ "$_dup" = 0 ] && _homes+=("$_h")
+  done
+  for _h in "${_homes[@]}"; do
+    for _ag in .qoder-cn .codex .claude; do
+      COPIES="${COPIES:+$COPIES,}$_h/$_ag/skills/multi-agent-task-handoff"
+    done
+  done
+  [ -n "$COPIES" ] || { echo "HOME 与 USERPROFILE 都取不到，无法推断副本目录——请用 --copies 显式给出"; exit 2; }
 fi
 
 problems=""
 report=""
+checked=0
 IFS=',' read -ra COPY_ARR <<< "$COPIES"
 for c in "${COPY_ARR[@]}"; do
+  # 名单也接受 Windows 写法：C:\Users\x 与 C:/Users/x 都归一到 /c/Users/x，
+  # 否则计划任务里手填的反斜杠路径会让每个目录都"不存在"。
+  c="${c//\\//}"
+  case "$c" in
+    ?:[/]*) c="/$(printf '%s' "${c:0:1}" | tr 'A-Z' 'a-z')${c:2}" ;;
+  esac
   c="${c%/}"
+  [ -z "$c" ] && continue
   if [ ! -d "$c" ]; then
     report="${report}  [跳过] $c 不存在
 "
     continue
   fi
+  checked=$((checked + 1))
   # -q 只列不同的文件名，副本多几千行也不至于把日志刷爆；-x .git 两边都排除。
   d="$(diff -rq -x .git "$SOURCE" "$c" 2>&1)"
   if [ -n "$d" ]; then
@@ -65,6 +94,14 @@ $(printf '%s\n' "$d" | sed 's/^/    /')
 "
   fi
 done
+
+if [ "$checked" = 0 ]; then
+  # 一个副本都没比对不等于全绿——计划任务里 HOME 常常指向 /home/<user> 而不是 C:\Users\<user>，
+  # 名单因此整批落空。这种"没查"必须响，否则看门狗自己就成了假绿灯的制造者。
+  echo "没有可比对的副本目录（名单里全是「不存在」）——这是没查，不是绿。用 --copies 显式传路径。"
+  printf '%s' "$report"
+  exit 2
+fi
 
 if [ "$RUN_GATE" = 1 ]; then
   gate_out="$(bash "$GATE" 2>&1)"; gate_rc=$?
