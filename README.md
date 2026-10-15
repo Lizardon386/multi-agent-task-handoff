@@ -132,33 +132,80 @@ git -C D:\agent_workspace\multi-agent-task-handoff push origin master
 powershell -NoProfile -ExecutionPolicy Bypass -File D:\agent_workspace\multi-agent-task-handoff\scripts\install-everywhere.ps1
 ```
 
+### 谁触发铺满
+
+| 触发点 | 在哪跑 | 这一趟做什么 | 没做成时会怎样 |
+|---|---|---|---|
+| 手动 | 工作树里跑 `scripts\install-everywhere.ps1` | 铺技能目录 + 全局规则块 + 工作区脚本副本 | 全靠人记得跑——这就是历史上出事的那条缝 |
+| 别人 `git pull` | `.git/hooks/post-merge` | 同上，且带 `-Prune` | 清单打在 pull 的输出里 |
+| 本机 `git push` | `.git/hooks/pre-push` | 同上，且带 `-Prune` | 工作树脏 → 跳过只警告；铺满真失败 → **阻断本次 push** |
+| 每日 10:10 | 计划任务跑 `scripts/watchdog.sh` | 逐字节比对副本与工作树，再跑一遍闸门 | 写 `<工作区根>/.watchdog/_需要处理.md`，全绿自动撤掉 |
+
+### 铺满那一趟刷了什么
+
 - `-Source` 缺省 = 脚本所在 `scripts\` 的上一级 = 真源根，所以**从工作树里那份启动即正确**。
 - 同一趟幂等刷新：各 agent 技能目录、各 agent 的全局规则块（`.codex\AGENTS.md`、`.claude\CLAUDE.md`）、每个已登记工作区的脚本副本目录（含 `install-everywhere.ps1` 自己）。**副本目录就是真源时跳过自铺**，否则会把扁平脚本铺到工作树根、与 `scripts/` 正主并存两份。
-- **已有规则块的工作区不会被自动更新**：`bootstrap.sh` 与本脚本都靠标题正则 `任务[双三]档规范` 判重、只补不覆盖。改了条款要**手工同步那份 `AGENTS.md`**，否则那里的 agent 读到的还是旧版。**本机 `D:\agent_workspace\AGENTS.md` 已改成"入口版"**（2026-10-15，149 行 → 32 行）：只留工作区本地政策 + 指向 skill 的指针 + 三条最容易出事的硬要求，不再复述细则，因此**对它没有同步义务了**——但那行标题是幂等锚，动它就等于让铺满追加第二份规则块。装了 skill、agent 会读 `SKILL.md` 的工作区都可以这么降级；不加载 skill 的工作区仍需整份规则块，那正是 `bootstrap.sh` 的默认产物。
-- **默认只补不删**：仓库里删掉的文件在各副本里会留着（2026-10-14 合并落地页时就留下三份幽灵 `.github/README.md`，内容还是旧规矩，而铺满输出照样全绿）。要清就加 `-Prune`——**先把待删清单打进输出，再删**；只想看清单用 `-Prune -DryRun`。手动跑的那趟默认不带 prune（省略开关就只补），本机的钩子已经带上了，见下条。作用域严格限定在本脚本自己铺的两个子树：技能目录下的 skill 子树按真源镜像比对，工作区脚本副本目录按「6 份脚本 + templates/」比对；真源目录本身拒绝执行，也不碰 `AGENTS.md`、全局规则文件与任务目录。**副作用要说明白：工作区那个脚本副本目录归安装器所有，别往里放自己的笔记。**
-- 推荐：装 `post-merge` 钩子，pull 完自动铺满。**钩子带 `-Prune`**——钩子那趟是无人值守的，不带 prune 就等于「删文件后要清残留」这一步永远没人做（2026-10-14 合并落地页后那三份幽灵 `.github/README.md`，正是靠手动补跑才清掉的）。`.git/hooks/post-merge` 四行：
 
-  ```sh
-  #!/bin/sh
-  # 更新即铺满，带 -Prune：先打待删清单，再删
-  powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$(git rev-parse --show-toplevel)/scripts/install-everywhere.ps1" -Prune
-  ```
+### 已装的规则块不会被自动更新
 
-  待删清单打在 pull 自己的输出里，看得见才删；作用域只有两个受管子树，真源目录拒绝执行。
-- **本机另外装了两条机械兜底**，因为「commit 了但没人跑铺满」这条缝不是规则能堵的（已经踩过两次）：
-  - `.git/hooks/pre-push`——push 前自动铺满（带 `-Prune`）。挂在 push 而不是 commit：真源即发布源，而 `post-commit` 会把分几次提交的中间态规矩也铺出去。**工作树脏时跳过**（铺满拷的是工作树，脏树会把未提交内容当权威铺出去），此时只警告不阻断；**铺满真失败则阻断本次 push**，不留「已发布、副本没跟上」的状态。
-  - `scripts/watchdog.sh` 挂成每日计划任务——逐字节比对各副本与工作树、顺带跑一遍闸门，**只在出问题时**写 `<工作区根>/.watchdog/_需要处理.md`（全绿自动撤掉），日志追加在同目录 `propagation.log`。它覆盖的是前两条都够不着的情形：既没 pull 也没 push 的漂移、有人直接在副本里手改、以及别的会话忘了铺。
-  - 两个钩子文件都在 `.git/hooks/` 下，**不被 git 跟踪**：换机器要照上面重建，且必须保持 LF 行尾（带回车的 `sh` 在 Git Bash 下直接语法报错）。看门狗脚本本身随仓库走，注册一次即可（PowerShell，只在登录状态下跑，好让待处理件看得见）：
+- 判重靠标题正则 `任务[双三]档规范`，**只补不覆盖**。改了条款，得**手工同步那份 `AGENTS.md`**，否则那里的 agent 读到的还是旧版。
+- **本机 `D:\agent_workspace\AGENTS.md` 已改成"入口版"**（2026-10-15，149 行 → 32 行）：只留工作区本地政策 + 指向 skill 的指针 + 三条最容易出事的硬要求，不复述细则，所以**对它没有同步义务了**。代价是它标题里那四个字成了幂等锚——**删掉就等于让下次铺满追加第二份规则块**。
+- 装了 skill、agent 会读 `SKILL.md` 的工作区都可以这么降级；**不加载 skill 的工作区不适用**，那里仍需整份规则块，而那正是 `bootstrap.sh` 的默认产物。
 
-  ```powershell
-  $cp = '~/.qoder-cn/skills/multi-agent-task-handoff,~\.codex\skills\multi-agent-task-handoff,~\.claude\skills\multi-agent-task-handoff'
-  $a = New-ScheduledTaskAction -Execute 'D:\software\Git\bin\bash.exe' `
-    -Argument ('-c "bash /d/agent_workspace/multi-agent-task-handoff/scripts/watchdog.sh --copies ''{0}''"' -f $cp)
-  Register-ScheduledTask -TaskName 'multi-agent-handoff-drift' -Action $a `
-    -Trigger (New-ScheduledTaskTrigger -Daily -At 10:10) `
-    -Settings (New-ScheduledTaskSettingsSet -StartWhenAvailable -MultipleInstances IgnoreNew) `
-    -Description 'skill drift watchdog: copies vs worktree + gate'
-  ```
+### 只补不删是默认，清理要显式 `-Prune`
+
+- **为什么会留垃圾**：仓库里删掉的文件在各副本里原样留着。2026-10-14 合并落地页时就留下三份幽灵 `.github/README.md`，内容还是旧规矩，而铺满输出照样全绿——"副本 == 真源"这个前提被静默破掉。
+- **两个开关**：`-Prune` **先把待删清单打进输出、再删**；`-Prune -DryRun` 只列不删。手动那一趟默认不带 prune（省略开关就只补，由跑的人决定），本机的钩子已经带上了。
+- **作用域严格限定**在本脚本自己铺的两个子树：技能目录下的 skill 子树按真源镜像比对，工作区脚本副本目录按「6 份脚本 + templates/」比对；真源目录本身拒绝执行，也不碰 `AGENTS.md`、全局规则文件与任务目录。
+- **副作用要说白**：工作区那个脚本副本目录归安装器所有，别往里放自己的笔记。
+
+### 钩子与计划任务的配方
+
+> 两个钩子都在 `.git/hooks/` 下，**不被 git 跟踪**：换机器照本节重建，且必须保持 **LF** 行尾（带回车的 `sh` 在 Git Bash 下直接语法报错）。
+
+**① `post-merge` —— 别人 pull 时自动铺满。** 带 `-Prune` 的理由：钩子那趟无人值守，不带 prune 就等于「删文件后要清残留」这一步永远没人做（2026-10-14 合并落地页后那三份幽灵 `.github/README.md`，正是靠手动补跑才清掉的）。待删清单打在 pull 自己的输出里，看得见才删；作用域只有两个受管子树，真源目录拒绝执行。`.git/hooks/post-merge` 四行：
+
+```sh
+#!/bin/sh
+# 更新即铺满，带 -Prune：先打待删清单，再删
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$(git rev-parse --show-toplevel)/scripts/install-everywhere.ps1" -Prune
+```
+
+**② `pre-push` —— 本机 push 时自动铺满。** 它补的是「commit 了但没人跑铺满」那条缝（已经踩过两次）。挂在 push 而不是 commit：真源即发布源、push 是必经动作，而 `post-commit` 会把分几次提交的**中间态规矩**也铺出去。两种"没铺成"必须分开处理：
+
+| 情形 | 钩子的动作 | 为什么 |
+|---|---|---|
+| 工作树脏 | 跳过铺满，只警告，**放行 push** | 铺满拷的是工作树，脏树会把未提交内容当权威铺进每个技能目录 |
+| 铺满真失败 | **阻断本次 push** | 只打一行没人读的通知，等于回到"靠自觉" |
+
+```sh
+#!/bin/sh
+# 铁律「更新即铺满」的机械化：推之前先把最新内容铺到本机所有 agent 的技能目录与工作区。
+set -e
+cd "$(git rev-parse --show-toplevel)" || exit 1
+if [ -n "$(git status --porcelain)" ]; then
+  echo "pre-push: 工作树有未提交改动，跳过铺满（副本可能落后，watchdog 会报）"
+  exit 0
+fi
+if powershell.exe -NoProfile -ExecutionPolicy Bypass -File "scripts/install-everywhere.ps1" -Prune; then
+  echo "pre-push: 铺满完成（-Prune）— 各 agent 技能目录与工作区副本已与工作树一致"
+else
+  echo "pre-push: 铺满失败，已阻断本次 push（先修脚本，或手工跑一次 install-everywhere.ps1 再推）" >&2
+  exit 1
+fi
+```
+
+**③ 每日看门狗 —— 前两条都够不着的情形归它兜**：既没 pull 也没 push 的漂移、有人直接在副本里手改、别的会话忘了铺。`scripts/watchdog.sh` 逐字节比对各副本与工作树、顺带跑一遍闸门，**只在出问题时**写 `<工作区根>/.watchdog/_需要处理.md`（全绿自动撤掉），日志追加在同目录 `propagation.log`。脚本随仓库走，注册一次即可（PowerShell，只在登录状态下跑，好让待处理件真能被看见）：
+
+```powershell
+$cp = '~/.qoder-cn/skills/multi-agent-task-handoff,~\.codex\skills\multi-agent-task-handoff,~\.claude\skills\multi-agent-task-handoff'
+$a = New-ScheduledTaskAction -Execute 'D:\software\Git\bin\bash.exe' `
+  -Argument ('-c "bash /d/agent_workspace/multi-agent-task-handoff/scripts/watchdog.sh --copies ''{0}''"' -f $cp)
+Register-ScheduledTask -TaskName 'multi-agent-handoff-drift' -Action $a `
+  -Trigger (New-ScheduledTaskTrigger -Daily -At 10:10) `
+  -Settings (New-ScheduledTaskSettingsSet -StartWhenAvailable -MultipleInstances IgnoreNew) `
+  -Description 'skill drift watchdog: copies vs worktree + gate'
+```
 
   `--copies` 写成绝对路径是有原因的：计划任务里 `HOME` 常指向 MSYS 的 `/home/<user>` 而不是 `C:\Users\<user>`，靠默认名单会**一个副本都比对不到**——那种"没查"脚本会当错误报（exit 2），不会给你一行绿。
 
@@ -186,15 +233,28 @@ powershell -NoProfile -ExecutionPolicy Bypass -File D:\agent_workspace\multi-age
 
 ## 限制与注意事项
 
+### 跑起来需要什么
+
 - 需要 bash（Git Bash / Linux / macOS 均可）。`check-docs.sh` **不依赖 GNU `date -d`**（2026-10-14 起改用纯 bash 的 civil→days 算法），但整个脚本仍是 bash——**纯 cmd / PowerShell 下没有对应实现**，这是刻意的：`[空]/[档]/[链]` 全靠 grep/awk，两套判定逻辑必然漂移。Windows 请走 Git Bash。
 - `install-everywhere.ps1` 仅 Windows（PowerShell 5.1+），运行加 `-ExecutionPolicy Bypass`；脚本含中文，**保存必须 UTF-8 带 BOM**，否则 5.1 按 GBK 误读、判重失效会追加出重复规则块。它的输出是 GBK，接 `| iconv -f GBK -t UTF-8` 才读得懂。
+
+### 谁会删东西，输出为什么会花
 - **只有闸门不碰删除**：`check-docs.sh` 不联网、不执行删除、不跑 git——它是验收工具，不是清理工具。会删的是另外两个，且各自范围窄：`install-everywhere.ps1 -Prune` 只删两个受管子树里的残留文件（先列清单），`watchdog.sh` 只删**它自己写的**待处理件。
 - **Git Bash 里钩子与铺满的输出会有一半乱码**：PowerShell 按 GBK 写、`sh` 的 `echo` 是 UTF-8，同一条流两种编码，整体 `| iconv -f GBK -t UTF-8` 就把 UTF-8 那半弄花（反之亦然）。不改脚本的 `OutputEncoding`——它会连带影响 cmd 那边，而这两行都只是状态播报，不是判定结果；**要看的关键内容（prune 的待删清单、闸门违规行）来自 PowerShell 侧，`iconv` 之后是干净的**。
+
+### 闸门拦什么、拦不住什么
+
 - **闸门性能是功能的一部分**：Windows 起一个子进程 ≈25ms，现在每个任务目录只起 4 次进程（三档判定一次 awk、链接提取一次、裸名候选一次、`find` 一次），真工作区全量 ≈0.9 秒。2026-10-14 之前是 10.7 秒，更早 38 秒那版直接被人绕过——慢的闸门等于没有闸门。
 - 文档与默认值里出现的 `D:/agent_workspace`、`C:/Users/…` 只是本机示例路径。非本机首次使用**必须显式传 `--root`**，否则 `check-docs.sh` 会静默检查一个不存在的目录。
 - 闸门只校验**结构与是否留空**，不判断内容质量：正确的标题配空话照样通过。这是刻意的弱校验（取舍见 [DESIGN.md](DESIGN.md) 的表）。
-- **闸门绿不等于链接点得开**：`[链]` 对 `file:///` 与相对路径都接受、都验本机可达，所以文档里写满 `file:///` 照样 exit 0、在预览里却点不开——选形式这件事它帮不上。
+- **闸门绿不等于链接点得开**，而且它只在**本机**判可达。三种它看不见的情况：① 文档里写满 `file:///` 照样 exit 0，在预览面板却点不开（选错形式）；② 指向工作区外的 `file:///` 一律跳过（脚本要能发给没有 `D:` 盘的人）；③ 相对链接 `../` 越出仓库根——本机真的存在，GitHub 上却是 404。第 ③ 种 2026-10-15 手工查出并改净 5 条，让 `[链]` 自动拦的待办记在 [CONTEXT.md](CONTEXT.md)。
 - 一级子目录除 `templates`/`node_modules`/`.git` 外都被要求三档；脚本副本目录**按内容判**（只有脚本时跳过，铺了三档就照任务目录查）。别顺手把任务目录加进跳过名单，那等于关掉规矩。
 - 章节匹配用 `grep -qE "^## +.*<节名>"` 子串匹配，正文里出现同名普通二级标题会被误判为"该节已存在"。
+
+### 仓库里不能删的配置
+
 - 本仓库根目录留了 `.gitattributes`（`* text=auto eol=lf`），不能删：Windows Git 默认 `autocrlf=true`，bash 脚本一旦带上 `\r`，接收方直接语法报错。
+
+### 仓库根那三份文档是什么身份
+
 - 根目录的 `README.md` / `DESIGN.md` / `CONTEXT.md` 是**本工作区的三档交接文档**，写的是本机路径与进度，属于上下文不是规范——规范以 [SKILL.md](SKILL.md) 与 `references/` 为准。GitHub 首页渲染优先级是 `.github` > 根目录 > `docs`，2026-10-14 合并后根 README 就是首页那份。
