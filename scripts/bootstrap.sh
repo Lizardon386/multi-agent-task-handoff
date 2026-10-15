@@ -1,9 +1,11 @@
 #!/usr/bin/env bash
 # bootstrap.sh — 把「任务三档规范」装进一个工作区根目录（换机器 / 换 agent / 新工作区时用）
-# 用法：bash bootstrap.sh --root <工作区根> [--force]
+# 用法：bash bootstrap.sh --root <工作区根> [--force] [--entry]
 # 做三件事：1) 复制五份脚本到工作区脚本副本目录（清单须与 install-everywhere.ps1 一致）
 #           2) 复制三份模板到 <副本目录>/templates/
-#           3) 若 <root>/AGENTS.md 没有「任务三档规范」章节，则追加规则全文（不存在则创建）
+#           3) 装 AGENTS.md：老锚「任务三档规范」或新锚 `agents-entry` 命中任一就不动；
+#              默认整份追加 references/agents-rule.md（并写出处戳），--entry 只生成
+#              "本机政策 + 指针"的入口文件——细则从此不在工作区里，也没有同步义务。
 # 副本目录 2026-10-14 起叫 multi-agent-task-handoff；工作区里已有旧名 tools/ 时继续用旧名。
 set -euo pipefail
 
@@ -11,12 +13,14 @@ SELF_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SKILL_DIR="$(cd "$SELF_DIR/.." && pwd)"
 ROOT=""
 FORCE=0
+ENTRY=0
 
 while [ $# -gt 0 ]; do
   case "$1" in
     --root) ROOT="${2:?--root 需要目录参数}"; shift 2 ;;
     --force) FORCE=1; shift ;;
-    -h|--help) echo "用法: bash bootstrap.sh --root <工作区根> [--force]"; exit 0 ;;
+    --entry) ENTRY=1; shift ;;
+    -h|--help) echo "用法: bash bootstrap.sh --root <工作区根> [--force] [--entry]"; echo "  --entry  装了 skill 的工作区：生成\"本机政策 + 指针\"的入口文件，不复述条款（此后无同步义务）"; echo "  默认     整份模式：把 references/agents-rule.md 整段追加进去（D/E 档——没有 skill 机制的 agent 需要这个）"; exit 0 ;;
     *) echo "未知参数: $1" >&2; exit 1 ;;
   esac
 done
@@ -63,16 +67,43 @@ if [ "$SKIP_SYNC" = 0 ]; then
   done
 fi
 
-# 去重标记同时接受旧标题「任务双档规范」：2026-10-14 规范从两档扩成三档、标题改成「任务三档规范」，
-# 但 bootstrap 与 install-everywhere 都是"缺才写、有就不动"，老工作区里留的是旧标题——
-# 标记只认新名的话，会给它们追加出第二份规则块。
+# 去重锚有**两个**，命中任一就不追加：
+#   1) 老锚——标题里含「任务三档规范」（历史上还接受拆分前的旧标题「任务双档规范」，只认新名会让
+#      留着旧标题的工作区被追加出第二份规则块）；
+#   2) 新锚——一行 `<!-- agents-entry -->`，走"入口模式"的工作区根里没有条款文字，靠它判重。
+# install-everywhere.ps1 用同一双锚，两处必须一起改（2026-10-15 加入口模式时就是先改这边）。
 RULE_MARK_RE="任务[双三]档规范"
-if [ -f "$ROOT/AGENTS.md" ] && grep -qE "$RULE_MARK_RE" "$ROOT/AGENTS.md"; then
-  echo "AGENTS.md 已含规则块（标题命中「$RULE_MARK_RE」），不动"
+# 新锚必须**整行匹配**：agents-rule.md 正文里就会提到 `agents-entry` 这串字，用裸子串匹配会把
+# "提到过锚"当成"装了锚"，于是整份模式的文件被误判成入口模式、该追加的不追加（假绿灯）。
+ENTRY_MARK_RE='^<!--[[:space:]]*agents-entry[[:space:]]*-->$'
+if [ -f "$ROOT/AGENTS.md" ] && grep -qE "$ENTRY_MARK_RE" "$ROOT/AGENTS.md"; then
+  echo "AGENTS.md 已是入口模式（新锚：整行命中「$ENTRY_MARK_RE」），不动——细则只在 skill 里"
+elif [ -f "$ROOT/AGENTS.md" ] && grep -qE "$RULE_MARK_RE" "$ROOT/AGENTS.md"; then
+  echo "AGENTS.md 已含规则块（老锚：标题命中「$RULE_MARK_RE」），不动"
+elif [ "$ENTRY" = 1 ]; then
+  if [ -f "$ROOT/AGENTS.md" ]; then
+    # 既不认老锚也不认新锚的已存在文件：往里灌整段规则等于覆盖别人写的东西，拒绝，让人明确选模式。
+    echo "[错误] $ROOT/AGENTS.md 既没有「任务三档规范」标题也没有 <!-- agents-entry -->，我不往来源未知的文件里灌规则。" >&2
+    echo "       要整份模式：去掉 --entry 重跑；要入口模式：在该文件里加一行 <!-- agents-entry --> 再重跑。" >&2
+    exit 1
+  fi
+  {
+    printf '# 工作区约定（%s）\n\n' "$(basename "$ROOT")"
+    printf '<!-- agents-entry -->\n\n'
+    printf '> 这个工作区的 agent 会加载 skill，所以本文件**只写本机政策 + 指针**，不复述条款——\n'
+    printf '> 细则的唯一权威是 skill `multi-agent-task-handoff` 的 `references/agents-rule.md`，改规矩只改那里。\n'
+    printf '> 上面那行 `agents-entry` 是安装器的判重锚：删掉它，下次铺满会往这里追加整段规则。\n\n'
+    printf '## 本工作区自己的约定（人手维护，skill 不管这部分）\n\n'
+    printf -- '- 在这里写产物落点、盘符、不许动的目录之类的本机/本工作区事实。\n'
+  } > "$ROOT/AGENTS.md"
+  echo "已生成入口模式 AGENTS.md（政策段落留给你填，规矩不在这里）: $ROOT/AGENTS.md"
 else
   { [ -f "$ROOT/AGENTS.md" ] && printf '\n' >> "$ROOT/AGENTS.md" || printf '# 工作区约定（%s）\n\n' "$(basename "$ROOT")" > "$ROOT/AGENTS.md"; }
   cat "$SKILL_DIR/references/agents-rule.md" >> "$ROOT/AGENTS.md"
-  echo "已追加规则块到 AGENTS.md"
+  # 出处戳：派生物得能回答"我是从哪个版本的原文生成的"，watchdog 的 [出处] 探针靠它算落后多少。
+  sha="$(git -C "$SKILL_DIR" log -1 --format=%h -- references/agents-rule.md 2>/dev/null || echo unknown)"
+  printf '\n<!-- generated-from: references/agents-rule.md @ %s (%s) -->\n' "$sha" "$(date +%Y-%m-%d)" >> "$ROOT/AGENTS.md"
+  echo "已追加规则块到 AGENTS.md（出处戳 @ ${sha}）"
 fi
 
 echo

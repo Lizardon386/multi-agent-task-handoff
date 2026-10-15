@@ -6,7 +6,12 @@
 #         （D:\agent_workspace\multi-agent-task-handoff\scripts\）里跑它就是对的。
 #         2026-10-14 前真源住在 agent 的 skills 目录里；现在那里只是下游副本，别再从那儿改。
 # 做什么: ① 把 skill 同步进每个 agent 的技能目录  ② 给有全局指令文件的 agent 写规则块（缺才写）
-#         ③ 给每个工作区铺脚本副本目录 + AGENTS.md 规则块（与 bootstrap.sh 同一去重标记，兼容旧标题）
+#         ③ 给每个工作区铺脚本副本目录 + AGENTS.md 规则块（与 bootstrap.sh 同一把**双锚**去重锁：
+#            老锚「任务三档规范」或新锚 `agents-entry`，命中任一就不动；两者都没有的已存在文件
+#            只警告不灌规则，防止覆盖别人写的东西）
+#         全局规则块与出处戳都从 references\agents-rule.md 取——本脚本里**不再写死第二份文本**。
+#         装了 skill 的工作区可用 `bootstrap.sh --root <根> --entry` 走"入口模式"：AGENTS.md 只剩
+#         本机政策 + 指针，细则只在真源里，从此没有同步义务。
 #         副本目录 2026-10-14 起叫 multi-agent-task-handoff；工作区里已有旧名 tools/ 时沿用旧名。
 # 默认只补不删：仓库里删掉一个文件（如 2026-10-14 合并掉的 .github/README.md），各副本里那份
 #         会留着继续误导 agent，而"副本 == 真源"正是整套铺满的前提。加 -Prune 才会清理，
@@ -20,10 +25,16 @@ param(
   [switch]$DryRun
 )
 $ErrorActionPreference = "Stop"
-# 去重标记用正则，同时接受旧标题「任务双档规范」：2026-10-14 规范从两档扩成三档后标题改成
-# 「任务三档规范」，而本脚本对规则块是"缺才写、有就不动"——只认新名会给留着旧标题的工作区
-# 追加出第二份规则块（-match 本来就是正则，这里不用额外改判定逻辑）。
+# 去重锚有两个，命中任一即视为"这里已经装过规则块"、不再追加：
+#   老锚——标题里含「任务三档规范」（同时接受拆分前的旧标题「任务双档规范」，只认新名会给
+#         留着旧标题的工作区追加出第二份规则块）；
+#   新锚——**整行**的 <!-- agents-entry -->：入口模式的工作区根里没有任何条款文字，靠它判重。
+# 新锚必须整行匹配——本文件与 agents-rule.md 正文都会提到 agents-entry 这串字，裸子串匹配会把
+# "提到过锚"当成"装了锚"，该追加的就不追加了（假绿灯）。
+# 与 bootstrap.sh 的 RULE_MARK_RE / ENTRY_MARK_RE 是同一把锁的两套实现，**必须一起改**。
 $marker = "任务[双三]档规范"
+$entryMarker = '(?m)^\s*<!--\s*agents-entry\s*-->\s*$'
+
 if (-not (Test-Path $Source)) { throw "skill 源目录不存在: $Source" }
 $report = @()
 $sourceRoot = (Resolve-Path $Source).Path.TrimEnd('\')
@@ -88,25 +99,45 @@ foreach ($agentHome in $AgentHomes) {
 }
 
 # ② 全局指令文件写规则块（仅对有全局文件约定的 agent；缺才追加）
-$globalBlock = @"
-
-## 任务三档规范（强制，来自 skill multi-agent-task-handoff）
-
-以下条款对每一次会话、任意工作目录生效——禁止以"当前目录不在 agent workspace"为由跳过：
-
-1. 会话开始即按 skill ``multi-agent-task-handoff`` 的规范工作。
-2. 链接强制（无条件）：**写进 .md 文档里的链接一律相对该文档自身目录**（上级用 ``../``，行号与文档内锚点写进链接文字，不用 ``#L42``）——预览面板按相对路径解析 href，文档里写 ``file:///`` 点不开。聊天回复才按宿主选：Qoder 侧边栏 / Codex 用 ``file:///``，支持跳行的宿主用「工作区相对 + ``#L``」。禁止裸文件名、反引号路径。
-3. 在任何工作区新建任务/项目目录时，立即铺 ``README.md``（使用者说明）+ ``DESIGN.md``（方案设计）+ ``CONTEXT.md``（agent 交接）三档骨架；三档 H1 必须含任务目录名（中文名写成「目录名（别名）· 使用说明」）；收工前更新 CONTEXT.md 的「当前状态」「变更记录」，三档「最近更新」同日且一致。git 仓库源码跟随仓库自身规范。
-4. 工作区脚本副本目录（新名 ``multi-agent-task-handoff``，旧名 ``tools``）里存在 ``check-docs.sh`` 时，收工前必跑、退出码 0 才算完成；跑闸门不加管道。
-5. 细节以 skill 的 ``references/agents-rule.md`` 为唯一权威。
-"@
-$globalFiles = @{ "~\.codex" = "AGENTS.md"; "~\.claude" = "CLAUDE.md" }
+# 全局块**不再在本脚本里写死**（2026-10-15 合并）：从 references/agents-rule.md 的
+# <!-- global-block:start/end --> 之间截取。源头只有一个，不会再出现"原文更新了、
+# 各 agent 的全局块还停在旧版"。截不到就报错退出——绝不用脆弱正则猜着拼。
+$globalAnchorA = "<!-- global-block:start -->"
+$globalAnchorB = "<!-- global-block:end -->"
+function Get-GlobalBlock([string]$src) {
+  $txt = [System.IO.File]::ReadAllText((Join-Path $src "references\agents-rule.md"))
+  $s = $txt.IndexOf($globalAnchorA); $e = $txt.IndexOf($globalAnchorB)
+  if ($s -lt 0 -or $e -lt 0 -or $e -le $s) { throw "agents-rule.md 里找不到 global-block 锚点段——全局规则块没有源头可取" }
+  $block = $txt.Substring($s + $globalAnchorA.Length, $e - $s - $globalAnchorA.Length).Trim()
+  # 截出来的段必须含老锚，否则写进全局文件后下次判重失配、会追加出第二份全局块
+  if ($block -notmatch $script:marker) { throw "global-block 段里没有「$script:marker」字样，写出去会让下次铺满追加第二份全局块" }
+  return "`n" + $block + "`n"
+}
+# 出处戳：派生物要能回答"我是从哪个版本的原文生成的"，watchdog 的 [出处] 探针靠它算落后多少。
+function Get-SourceStamp([string]$src) {
+  $sha = $null
+  try { $sha = (& git -C $src log -1 --format=%h -- references/agents-rule.md 2>$null) } catch { }
+  if (-not $sha) { $sha = "unknown" }
+  return "<!-- generated-from: references/agents-rule.md @ $sha ($(Get-Date -Format 'yyyy-MM-dd')) -->`n"
+}
+$globalBlock = (Get-GlobalBlock $sourceRoot) + (Get-SourceStamp $sourceRoot)
+# 全局文件按 agent 家目录**推导**，不再写死 `~\…`（2026-10-15 修）：
+# 原先这里硬编码本机两个路径，发给别人的机器上第②步等于空转——别人的全局规则文件根本没被写。
+# 约定：`.codex` → AGENTS.md（Codex CLI/桌面版每次会话必读），`.claude` → CLAUDE.md；其他家目录没有全局文件约定，跳过。
+$globalByName = @{ ".codex" = "AGENTS.md"; ".claude" = "CLAUDE.md" }
+$globalFiles = @{}
+foreach ($ah in $AgentHomes) {
+  $base = (Split-Path $ah -Leaf)
+  if ($globalByName.ContainsKey($base)) { $globalFiles[$ah] = $globalByName[$base] }
+}
 foreach ($agentHome in $globalFiles.Keys) {
   if (-not (Test-Path $agentHome)) { continue }
   $gf = Join-Path $agentHome $globalFiles[$agentHome]
-  if ((Test-Path $gf) -and ([System.IO.File]::ReadAllText($gf) -match $marker)) { $report += "全局规则已存在，跳过: $gf"; continue }
+  $gt = ""
+  if (Test-Path $gf) { $gt = [System.IO.File]::ReadAllText($gf) }
+  if (($gt -match $marker) -or ($gt -match $entryMarker)) { $report += "全局规则已存在，跳过: $gf"; continue }
   [System.IO.File]::AppendAllText($gf, $globalBlock, (New-Object System.Text.UTF8Encoding($false)))
-  $report += "全局规则已写入: $gf"
+  $report += "全局规则已写入: $gf（出处戳见文件末行）"
 }
 
 # ③ 工作区铺脚本副本目录 + AGENTS.md 规则块（与 bootstrap.sh 等价、同标记）
@@ -136,8 +167,21 @@ foreach ($root in $WorkspaceRoots) {
     if ($Prune) { Remove-StaleFiles $tools (Get-CopyExpectedSet $sourceRoot) "工作区副本 $tools" }
   }
   $wf = Join-Path $root "AGENTS.md"
-  if ((Test-Path $wf) -and ([System.IO.File]::ReadAllText($wf) -match $marker)) { $report += "工作区规则已存在，跳过: $wf（副本目录: $tools）"; continue }
-  [System.IO.File]::AppendAllText($wf, ("`n" + [System.IO.File]::ReadAllText((Join-Path $Source "references\agents-rule.md"))), (New-Object System.Text.UTF8Encoding($false)))
+  $wt = ""
+  if (Test-Path $wf) { $wt = [System.IO.File]::ReadAllText($wf) }
+  if (($wt -match $marker) -or ($wt -match $entryMarker)) {
+    $which = if ($wt -match $entryMarker) { "新锚 agents-entry（入口模式）" } else { "老锚「任务三档规范」" }
+    $report += "工作区规则已存在，跳过: $wf（$which；副本目录: $tools）"
+    continue
+  }
+  if (Test-Path $wf) {
+    # 既不认老锚也不认新锚的已存在文件：往里灌整段规则等于覆盖别人写的东西。铺满是无人的，
+    # 所以这里只警告不动手（bootstrap.sh 交互式那条则直接报错要人选模式）。落后交给看门狗报。
+    $report += "[警告] $wf 既无「任务三档规范」标题也无 <!-- agents-entry -->，不往里灌规则——请明确选一种模式：整份跑 bootstrap.sh --root $root，入口模式加 --entry（并在新文件里留住锚）"
+    continue
+  }
+  $body = "`n" + [System.IO.File]::ReadAllText((Join-Path $Source "references\agents-rule.md")) + "`n" + (Get-SourceStamp $sourceRoot)
+  [System.IO.File]::AppendAllText($wf, ("# 工作区约定（" + (Split-Path $root -Leaf) + "）`n" + $body), (New-Object System.Text.UTF8Encoding($false)))
   $report += "工作区规则已写入: $wf（副本目录: $tools）"
 }
 

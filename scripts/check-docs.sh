@@ -535,6 +535,6 @@ echo
 if [ "$fail" = 0 ]; then
   echo "OK: 三档（README / DESIGN / CONTEXT）齐全且结构合规（root: $ROOT）"
 else
-  echo "不合规见上。规则见 $ROOT/AGENTS.md「任务三档规范」；新任务用 bash \"$ROOT/$COPY_DIR/init-task.sh\" <任务名>"
+  echo "不合规见上。规矩原文见 skill multi-agent-task-handoff 的 references/agents-rule.md（工作区根 AGENTS.md 可能是\"入口版\"，那里不含条款）；新任务用 bash \"$ROOT/$COPY_DIR/init-task.sh\" <任务名>"
 fi
 exit $fail

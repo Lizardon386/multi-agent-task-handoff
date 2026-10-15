@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
-# watchdog.sh — 「副本 == 真源」的终审：逐字节比对每个下游副本，顺带跑一遍收工闸门。
-# 只在有问题时留下可见产物（日志 + .watchdog/_需要处理.md），全绿就把待处理件撤掉。
-# 用法：bash watchdog.sh [--source <工作树>] [--copies <目录1,目录2>] [--gate] [--no-mark]
-# 退出码：0 无漂移；1 有漂移或闸门红；2 配置错（找不到真源，或给了个不是工作树的路径）
+# watchdog.sh — 三件事的终审：① 各下游副本 == 真源（diff 逐字节）② 派生规则文件的 [锚]/[出处]/[指针]
+#                ③ 顺带跑一遍收工闸门。只在有问题时留下可见产物（日志 + .watchdog/_需要处理.md），
+#                全绿就把待处理件撤掉；全绿也每类打一行，让"跑过"这件事本身有痕迹。
+# 用法：bash watchdog.sh [--source <工作树>] [--copies d1,d2] [--entries f1,f2] [--no-gate] [--no-mark]
+# 退出码：0 无漂移；1 有漂移/探针红/闸门红；2 配置错（找不到真源，或一个副本都没比对到）
 # 为什么需要它：post-merge 只在**别人 pull**时跑，pre-push 只在**本机 push**时跑，
 # 而"改了没铺"恰恰发生在既不 pull 也不 push 的那条缝里——本仓库为这条缝记过两次事故。
 set -uo pipefail
@@ -13,14 +14,16 @@ SOURCE=""
 COPIES=""
 RUN_GATE=1
 MAKE_MARK=1
+ENTRIES=""
 
 while [ $# -gt 0 ]; do
   case "$1" in
     --source) SOURCE="${2:?--source 需要工作树路径}"; shift 2 ;;
     --copies) COPIES="${2:?--copies 需要逗号分隔的目录列表}"; shift 2 ;;
     --no-gate) RUN_GATE=0; shift ;;
+    --entries) ENTRIES="${2:?--entries 需要逗号分隔的文件列表}"; shift 2 ;;
     --no-mark) MAKE_MARK=0; shift ;;
-    -h|--help) echo "用法: bash watchdog.sh [--source <工作树>] [--copies d1,d2] [--no-gate] [--no-mark]"; exit 0 ;;
+    -h|--help) echo "用法: bash watchdog.sh [--source <工作树>] [--copies d1,d2] [--entries f1,f2] [--no-gate] [--no-mark]"; exit 0 ;;
     *) echo "未知参数: $1（-h 看用法）"; exit 2 ;;
   esac
 done
@@ -37,23 +40,20 @@ if [ ! -f "$SOURCE/SKILL.md" ] || [ ! -e "$SOURCE/.git" ]; then
   exit 2
 fi
 
+# HOME 归一：计划任务里 HOME 常指向 MSYS 的 /home/<user>，而技能与全局规则文件只装在
+# USERPROFILE（C:\Users\<user>）下面。两个都收进 _homes 并去重，让副本名单与入口名单共用。
+norm_win() { local h="${1//\\//}"; case "$h" in ?:[/]*) h="/$(printf '%s' "${h:0:1}" | tr 'A-Z' 'a-z')${h:2}" ;; esac; printf '%s' "${h%/}"; }
+_homes=()
+for _raw in "${HOME:-}" "${USERPROFILE:-}"; do
+  [ -n "$_raw" ] || continue
+  _h="$(norm_win "$_raw")"
+  [ -n "$_h" ] || continue
+  _dup=0
+  for _e in "${_homes[@]}"; do [ "$_e" = "$_h" ] && { _dup=1; break; }; done
+  [ "$_dup" = 0 ] && _homes+=("$_h")
+done
+
 if [ -z "$COPIES" ]; then
-  # HOME 在不同 shell / 计划任务里可能指向 /home/<user>（MSYS 默认）而 USERPROFILE 才是
-  # C:\Users\<user>；技能目录只装在后者下面。两个都试、去重，全落空则由下面的 checked=0 报错。
-  _homes=()
-  for _h in "${HOME:-}" "${USERPROFILE:-}"; do
-    [ -n "$_h" ] || continue
-    _h="${_h//\\//}"
-    case "$_h" in
-      ?:*) _h="/$(printf '%s' "${_h:0:1}" | tr 'A-Z' 'a-z')${_h:2}" ;;
-    esac
-    _h="${_h%/}"
-    _dup=0
-    for _e in "${_homes[@]}"; do
-      [ "$_e" = "$_h" ] && { _dup=1; break; }
-    done
-    [ "$_dup" = 0 ] && _homes+=("$_h")
-  done
   for _h in "${_homes[@]}"; do
     for _ag in .qoder-cn .codex .claude; do
       COPIES="${COPIES:+$COPIES,}$_h/$_ag/skills/multi-agent-task-handoff"
@@ -103,6 +103,65 @@ if [ "$checked" = 0 ]; then
   exit 2
 fi
 
+# ── 派生规则文件的探针：[锚] / [出处] / [指针] ────────────────────────────────
+# 工作区根 `AGENTS.md` 与各 agent 的全局规则文件是**派生物**：没有版本控制，闸门也刻意不查
+# `AGENTS.md`（规则正文里全是语法示例）。它们漂了只有这里能发现，而本机已经漂过三次。
+#   [锚]    双锚之一在不在（老锚「任务三档规范」/ 整行的 <!-- agents-entry -->）。
+#            两个都没有 → 安装器会拒绝往里灌规矩，读它的 agent 一条规矩也拿不到 → 判失败。
+#   [出处]  generated-from 戳 vs 真源当前版本。落后只**告警不算失败**——"只补不覆盖"是刻意的，
+#            自动重写会把工作区自己写的本地政策一起冲掉；探针的价值是把"漂了没人知道"变成量。
+#   [指针]  文里点名的 references/*.md、scripts/*.{sh,ps1} 必须在真源里存在，指错=规矩找不到。
+WS_ROOT="$(cd "$SOURCE/.." && pwd)"
+SRC_SHA="$(git -C "$SOURCE" log -1 --format=%h -- references/agents-rule.md 2>/dev/null || echo '')"
+if [ -z "$ENTRIES" ]; then
+  ENTRIES="$WS_ROOT/AGENTS.md"
+  for _h in "${_homes[@]}"; do
+    ENTRIES="$ENTRIES,$_h/.codex/AGENTS.md,$_h/.claude/CLAUDE.md"
+  done
+fi
+IFS=',' read -ra ENT_ARR <<< "$ENTRIES"
+for e in "${ENT_ARR[@]}"; do
+  e="$(norm_win "$e")"
+  [ -n "$e" ] || continue
+  if [ ! -f "$e" ]; then
+    report="${report}  [跳过] 规则文件 $e 不存在
+"
+    continue
+  fi
+  # ① 锚（先查新锚：入口文件若顺带提到"任务三档规范"几个字，不该被误标成整份模式）
+  if grep -qE '^<!--[[:space:]]*agents-entry[[:space:]]*-->$' "$e"; then
+    report="${report}  [锚] $e 入口模式（新锚命中）
+"
+  elif grep -qE '任务[双三]档规范' "$e"; then
+    report="${report}  [锚] $e 整份模式（老锚命中）
+"
+  else
+    problems="${problems}  [锚] $e 既没有「任务三档规范」标题也没有整行的 <!-- agents-entry -->
+    → 安装器会拒绝往里灌规矩（怕覆盖你写的东西），结果读它的 agent 一条规矩也拿不到
+"
+  fi
+  # ② 出处戳
+  stamped="$(grep -oE 'generated-from: references/agents-rule.md @ [0-9a-f]+' "$e" 2>/dev/null | head -1 | awk '{print $NF}')"
+  if [ -z "$stamped" ]; then
+    report="${report}  [出处] $e 无出处戳（2026-10-15 之前生成的，下次重写才会带上）
+"
+  elif [ -z "$SRC_SHA" ] || [ "$stamped" = "$SRC_SHA" ]; then
+    report="${report}  [出处] $e 与原文同步（@ ${stamped}）
+"
+  else
+    behind="$(git -C "$SOURCE" rev-list --count "${stamped}..${SRC_SHA}" -- references/agents-rule.md 2>/dev/null || echo '?')"
+    report="${report}  [出处] $e 落后原文 ${behind} 个提交（戳 @ ${stamped}，现 @ ${SRC_SHA}）——只补不覆盖是刻意的，要新版请手工同步那一段
+"
+  fi
+  # ③ 指针
+  while IFS= read -r p; do
+    [ -n "$p" ] || continue
+    [ -e "$SOURCE/$p" ] && continue
+    problems="${problems}  [指针] $e 指向真源里不存在的文件: ${p}
+"
+  done < <(grep -oE '(references/[A-Za-z0-9._-]+\.md|scripts/[A-Za-z0-9._-]+\.(sh|ps1))' "$e" 2>/dev/null | sort -u)
+done
+
 if [ "$RUN_GATE" = 1 ]; then
   gate_out="$(bash "$GATE" 2>&1)"; gate_rc=$?
   if [ "$gate_rc" != 0 ]; then
@@ -118,8 +177,7 @@ $(printf '%s\n' "$gate_out" | sed 's/^/    /')
 fi
 
 # 日志与待处理件放工作区根的 .watchdog/：bash 的 */ glob 不匹配点开头目录，
-# 所以闸门不会把它当任务目录查（它没有三档，被查必红）。
-WS_ROOT="$(cd "$SOURCE/.." && pwd)"
+# 所以闸门不会把它当任务目录查（它没有三档，被查必红）。WS_ROOT 已在上面探针段算过。
 LOG_DIR="$WS_ROOT/.watchdog"
 MARK="$LOG_DIR/_需要处理.md"
 [ "$MAKE_MARK" = 1 ] && mkdir -p "$LOG_DIR" 2>/dev/null

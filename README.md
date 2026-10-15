@@ -139,18 +139,29 @@ powershell -NoProfile -ExecutionPolicy Bypass -File D:\agent_workspace\multi-age
 | 手动 | 工作树里跑 `scripts\install-everywhere.ps1` | 铺技能目录 + 全局规则块 + 工作区脚本副本 | 全靠人记得跑——这就是历史上出事的那条缝 |
 | 别人 `git pull` | `.git/hooks/post-merge` | 同上，且带 `-Prune` | 清单打在 pull 的输出里 |
 | 本机 `git push` | `.git/hooks/pre-push` | 同上，且带 `-Prune` | 工作树脏 → 跳过只警告；铺满真失败 → **阻断本次 push** |
-| 每日 10:10 | 计划任务跑 `scripts/watchdog.sh` | 逐字节比对副本与工作树，再跑一遍闸门 | 写 `<工作区根>/.watchdog/_需要处理.md`，全绿自动撤掉 |
+| 每日 10:10 | 计划任务跑 `scripts/watchdog.sh` | 逐字节比对副本与工作树；查派生规则文件的 `[锚]`/`[出处]`/`[指针]`；再跑一遍闸门 | 写 `<工作区根>/.watchdog/_需要处理.md`，全绿自动撤掉 |
 
 ### 铺满那一趟刷了什么
 
 - `-Source` 缺省 = 脚本所在 `scripts\` 的上一级 = 真源根，所以**从工作树里那份启动即正确**。
 - 同一趟幂等刷新：各 agent 技能目录、各 agent 的全局规则块（`.codex\AGENTS.md`、`.claude\CLAUDE.md`）、每个已登记工作区的脚本副本目录（含 `install-everywhere.ps1` 自己）。**副本目录就是真源时跳过自铺**，否则会把扁平脚本铺到工作树根、与 `scripts/` 正主并存两份。
 
+### 两种模式：整份 vs 入口（判重有**两个**锚）
+
+| 模式 | 命令 | `AGENTS.md` 里放什么 | 谁需要它 | 之后改规矩 |
+|---|---|---|---|---|
+| 整份（默认） | `bash scripts/bootstrap.sh --root <工作区根>` | 本文件（`agents-rule.md`）整段 + 出处戳 | **不加载 skill、只读规则文件**的 agent（安装路 D/E 档），这是它们唯一的规矩来源 | 手工同步那份，或重跑安装器（只补不覆盖） |
+| 入口 | `bash scripts/bootstrap.sh --root <工作区根> --entry` | 本机政策 + 一行 `<!-- agents-entry -->` + 一行指针，**不含任何条款** | 装了 skill、agent 会读 `SKILL.md` 的工作区（本机就是这种，149 行 → 16 行） | **不需要动它**——规矩只在源头改 |
+
+- 判重锚：老锚 = 标题含 `任务[双三]档规范`；新锚 = **整行**的 `<!-- agents-entry -->`。`bootstrap.sh` 与 `install-everywhere.ps1` 都认这两个，**两处必须一起改**；入口模式需要认得新锚的安装器，旧版会把整段规则追加进去（本机靠 `pre-push` 保证不落后）。
+- 一个文件**两个锚都没有**又已存在时：`bootstrap.sh --entry` 直接报错要人选模式，`install-everywhere.ps1` 只警告不灌（铺满是无人的，不敢覆盖来源不明的文件）——**绝不往未知文件里灌整段规则**。
+- 新锚必须整行匹配：正文里出现 `agents-entry` 这串字（本文件就有）不该被当成"装了锚"，那是假绿灯。
+
 ### 已装的规则块不会被自动更新
 
-- 判重靠标题正则 `任务[双三]档规范`，**只补不覆盖**。改了条款，得**手工同步那份 `AGENTS.md`**，否则那里的 agent 读到的还是旧版。
-- **本机 `D:\agent_workspace\AGENTS.md` 已改成"入口版"**（2026-10-15，149 行 → 32 行）：只留工作区本地政策 + 指向 skill 的指针 + 三条最容易出事的硬要求，不复述细则，所以**对它没有同步义务了**。代价是它标题里那四个字成了幂等锚——**删掉就等于让下次铺满追加第二份规则块**。
-- 装了 skill、agent 会读 `SKILL.md` 的工作区都可以这么降级；**不加载 skill 的工作区不适用**，那里仍需整份规则块，而那正是 `bootstrap.sh` 的默认产物。
+- 判重靠那两个锚，**只补不覆盖**。改了条款，整份模式的工作区得**手工同步那份 `AGENTS.md`**，否则那里的 agent 读到的还是旧版；入口模式不需要——它里面没有条款。
+- **本机 `D:\agent_workspace\AGENTS.md` 现在是入口版**（2026-10-15，149 行 → 16 行）：只剩「工作目录约定」那章本机政策 + 锚 + 一行指针。它不再有同步义务；代价是那一章**天生没有源头**，防误删只能靠给工作区根做版本控制。
+- 各 agent 的全局规则文件（`~\.codex\AGENTS.md`、`~\.claude\CLAUDE.md`）也是派生物：本机那两份是 2026-10-15 之前的手抄、**没有出处戳**，探针每天报"无出处戳"但不算失败——重写会覆盖本地增补，所以由人决定；它们的措辞已先上收进 `agents-rule.md`，源头不比派生物少东西。
 
 ### 只补不删是默认，清理要显式 `-Prune`
 
@@ -218,7 +229,7 @@ Register-ScheduledTask -TaskName 'multi-agent-handoff-drift' -Action $a `
 | [SKILL.md](SKILL.md) | skill 入口：工作流、必备章节、产物链接规则、铺满铁律（agent 读这份） |
 | [scripts/init-task.sh](scripts/init-task.sh) | 建任务目录 + 铺三档骨架 |
 | [scripts/check-docs.sh](scripts/check-docs.sh) | 合规闸门（本仓库所有规矩的可执行下限） |
-| [scripts/bootstrap.sh](scripts/bootstrap.sh) | 把整套规矩装进任意工作区根（`--force` 重同步副本） |
+| [scripts/bootstrap.sh](scripts/bootstrap.sh) | 把整套规矩装进任意工作区根（`--force` 重同步副本；`--entry` 生成"本机政策 + 指针"的入口文件，不复述条款） |
 | [scripts/install-everywhere.ps1](scripts/install-everywhere.ps1) | 「更新即铺满」的执行工具（铺技能目录 + 全局规则 + 工作区副本，含它自己） |
 | [references/doc-spec.md](references/doc-spec.md) | 规则全文：命名禁令、分工红线、产物链接、边界特例 |
 | [references/agents-rule.md](references/agents-rule.md) | bootstrap 追加进各工作区 `AGENTS.md` 的规则块原文 |
