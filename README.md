@@ -161,7 +161,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File D:\agent_workspace\multi-age
 
 - 判重靠那两个锚，**只补不覆盖**。改了条款，整份模式的工作区得**手工同步那份 `AGENTS.md`**，否则那里的 agent 读到的还是旧版；入口模式不需要——它里面没有条款。
 - **本机 `D:\agent_workspace\AGENTS.md` 现在是入口版**（2026-10-15，149 行 → 16 行）：只剩「工作目录约定」那章本机政策 + 锚 + 一行指针。它不再有同步义务；代价是那一章**天生没有源头**，防误删只能靠给工作区根做版本控制。
-- 各 agent 的全局规则文件（`~\.codex\AGENTS.md`、`~\.claude\CLAUDE.md`）也是派生物：本机那两份是 2026-10-15 之前的手抄、**没有出处戳**，探针每天报"无出处戳"但不算失败——重写会覆盖本地增补，所以由人决定；它们的措辞已先上收进 `agents-rule.md`，源头不比派生物少东西。
+- 各 agent 的全局规则文件（`~\.codex\AGENTS.md`、`~\.claude\CLAUDE.md`）也是派生物：本机那两份是 2026-10-15 之前的手抄、**没有出处戳**，探针每天报"无出处戳"但不算失败——重写会覆盖本地增补，所以由人决定；它们的措辞已先上收进 `agents-rule.md`，源头不比派生物少东西。要迁就跑 [scripts/sync-global-rules.ps1](scripts/sync-global-rules.ps1)：默认 DryRun 只报告保留哪几行、删掉哪几行，`-Apply` 才写并先留 `.bak-<时间戳>`。锚点标题**之上**的内容永久保留，所以想把本机专属的说明长期留住，就写在文件顶部那一段，而不是写进规则块里。
 
 ### 只补不删是默认，清理要显式 `-Prune`
 
@@ -237,6 +237,7 @@ Register-ScheduledTask -TaskName 'multi-agent-handoff-drift' -Action $a `
 | [scripts/selftest.sh](scripts/selftest.sh) | **闸门夹具自检**：47 条断言，在隔离临时根上造夹具、闸门只跑一次、按目录切段断言。改判定前后都要跑 |
 | [scripts/muttest.sh](scripts/muttest.sh) | 变异测试：把闸门逐条改坏 18 处，确认 selftest 每条都会红——防的是"断言静默消失"那种假绿灯 |
 | [scripts/watchdog.sh](scripts/watchdog.sh) | 铺满漂移看门狗：`diff -q` 逐字节比对各副本与工作树 + 跑一遍闸门，只在出问题时写 `<工作区根>/.watchdog/_需要处理.md`。挂每日计划任务（注册命令见「更新即铺满」） |
+| [scripts/sync-global-rules.ps1](scripts/sync-global-rules.ps1) | 一次性迁移工具：把各 agent 的**全局规则文件**重写成源头当前的 global-block 段 + 出处戳。默认 DryRun，`-Apply` 才写且先备份；只认"第一个命中锚的标题行→文件末尾"，锚点之后还有 H1 就中止。**刻意不进工作区扁平副本清单**（它需要 `references/` 与 `git`） |
 | [README.md](README.md) | 本文件：仓库落地页 + 本目录三档之一（2026-10-14 起合并，不再有第二份 `.github/README.md`） |
 | [DESIGN.md](DESIGN.md) | 本目录方案设计：工具自己的取舍表、脚本之间的接缝、动不得的契约 |
 | [CONTEXT.md](CONTEXT.md) | 本目录交接档案：进度、待办、踩坑，**以及对外的「发布更新记录」** |

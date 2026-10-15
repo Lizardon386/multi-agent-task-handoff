@@ -187,7 +187,8 @@ powershell -NoProfile -ExecutionPolicy Bypass -File D:\agent_workspace\multi-age
 - `scripts/selftest.sh` — 47 fixture assertions over an isolated temp root; run before and after any gate change.
 - `scripts/muttest.sh` — breaks the gate 18 different ways and checks that `selftest.sh` goes red each time.
 - `scripts/install-everywhere.ps1` — the Windows propagator that executes the Propagation rule below: skill dirs of every agent + global rule files + every registered workspace. Run the copy from the newest source.
-- `scripts/watchdog.sh` — the daily终审: diffs every downstream copy against the worktree and re-runs the gate, writing a to-fix marker only when something drifted. Propagation is not optional just because nobody remembered to run it.
+- `scripts/watchdog.sh` — the daily终审: diffs every downstream copy against the worktree, checks derived rule files (`[锚]` / `[出处]` / `[指针]`) and re-runs the gate, writing a to-fix marker only when something is wrong. Propagation is not optional just because nobody remembered to run it.
+- `scripts/sync-global-rules.ps1` — one-time migrator that rewrites each agent's **global** rule file (`~/.codex/AGENTS.md`, `~/.claude/CLAUDE.md`) from the anchored `global-block` slice plus a provenance stamp. Dry-run by default; `-Apply` backs the file up first and only replaces from the anchored heading to end-of-file, refusing to guess if another H1 follows. Deliberately absent from the workspace flat-copy lists: it needs `references/` and `git`.
 - `assets/README.md.tpl`, `assets/DESIGN.md.tpl`, `assets/CONTEXT.md.tpl` — section skeletons (bootstrap copies these into `multi-agent-task-handoff/templates/`).
 - `references/doc-spec.md` — the complete written rule (read when writing or reviewing docs).
 - `references/agents-rule.md` — the exact block bootstrap appends to a workspace `AGENTS.md`.
