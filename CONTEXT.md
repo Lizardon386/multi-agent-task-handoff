@@ -50,7 +50,8 @@
   ① `.git/hooks/post-merge` 的铺满命令加上 `-Prune`。理由：钩子那趟无人值守，不带 prune 就等于「仓库删文件 → 之后有人手动去各副本清残留」这一步永远没人做；2026-10-14 合并落地页后那三份幽灵 `.github/README.md` 正是手动补跑才清掉的。脚本自身的手动调用保持"只补不删"的保守默认（要删自己加开关），`-Prune -DryRun` 仍只列不删；删除范围仍只有两个受管子树，真源目录拒绝执行。待删清单先打进输出再删，所以清单就在 `git pull` 自己的输出里。
   ② 配方同步到两个读面：[README.md](README.md) 的「更新即铺满」（三行改四行，并写明钩子文件不被 git 跟踪、换机器要重建、必须 LF）与 [SKILL.md](SKILL.md) 的 Propagation rule（新增一条带配方的 bullet）。`.git/hooks/` 本身不受 git 跟踪，所以**这次改动推不上去**——别人 clone 后照 README 那段自己建。
   ③ 顺带清掉三处过期散文：README 与 SKILL 里 prune 作用域写的"4 份脚本"改成实际的 6 份（`selftest.sh`/`muttest.sh` 已进清单）；DESIGN「问题与目标」还写着"约 11s"（性能改造后 ≈0.9s）；CONTEXT 关键约束里"GitHub 首页仍是 `.github/README.md`"（那份 2026-10-14 已合并删除）。待办两条收尾：`-Prune` 那个小坑关掉，`strip_code` 拖慢那条标记已被性能改造解决。
-  ④ 验证：`selftest.sh` 47/47、`muttest.sh` 18/18、全量闸门无管道 exit 0、三处技能副本 `diff -r --exclude=.git` 为 0，并在真工作区实跑一次带 `-Prune` 的铺满确认输出为"无残留文件"。钩子本身用 `bash .git/hooks/post-merge` 直接执行验证（不靠下次 pull 才第一次跑）。
+  ④ 验证：`selftest.sh` 47/47、`muttest.sh` 18/18、全量闸门无管道 exit 0、三处技能副本 `diff -r --exclude=.git` 为 0，并在真工作区实跑一次带 `-Prune` 的铺满确认输出为"无残留文件"。钩子本身用 `bash .git/hooks/post-merge` 直接执行验证（不靠下次 pull 才第一次跑），另种一个 `ghost-prune-test.md` 进 `.claude` 副本，确认钩子那趟先打「待删」清单再打「已删」——prune 真的咬。
+  ⑤ **补做一处本应更早发现的漂移**（我先前判"不值"，查完已装块才看清代价与收益都估错了）：`D:\agent_workspace\AGENTS.md` 与 `dsp-hal-eval\AGENTS.md` 是 2026-10-14 手工同步过链接规矩的那两份，但**真源路径还写着 `~/.qoder-cn/skills/multi-agent-task-handoff\`**——那是 `.git` 搬走**之前**的位置。这条会咬人：agent 照它去 skills 目录改脚本，下次铺满静默覆盖，正是本仓库记过两次的事故。顺手把两份已装块与原文对齐：`[名]` 的固定名豁免从四个补成"四个 + `SKILL.md`"（原文 `agents-rule.md` 自己也没改，这是真源里的一处漏，已改）、`[链]` 补上"行内 `` `code` `` 也不验、反引号按等长 run 配对"、副本目录改成按内容判、`-Source` 缺省改成"脚本所在 `scripts\` 的上一级"、`bash tools/bootstrap.sh` 换成真实路径、并各加 `-Prune`/钩子那一条；两份末尾都标了"本章最后一次手工同步：2026-10-15"。工作区根 `AGENTS.md` **不在任何 git 仓库里**（`D:\agent_workspace` 不是仓库），改完只能落盘；`dsp-hal-eval` 自己是仓库（无 remote），单独提交。判断依据记进 [DESIGN.md](DESIGN.md)：旧文本导致**错误动作**才值得手改两份，纯补充说明不值得——这次是前者。
 
 - 2026-10-14 Qoder（本会话，**闸门性能优化 + 夹具落地**，接 d8d34e7f 的交接）：
   ① 收下 `scripts/selftest.sh`（29 条断言）并扩到 **47 条**：新增 `[旧]` 告警、`days_from_civil` 与 `date -u` 的 12 组对拍、两列表边界（gap2col）与三列表半填（gaphalf）一对、未闭合反引号只报一次（spanopen，靠 `assert_count` 才钉得住）、等长 run 配对（spanrun）、代码段里的例子不验（quotecase）、`SKILL.md` 两条豁免（skillcopy）、正文日期不算顶部日期（nobodydate/holderbody）、副本目录按内容判的正反两面（multi-agent-task-handoff / tools）。再加一个**断言条数哨兵**（`EXPECT_ASSERTS`）——`10#` 那个变异让日期对拍中途崩掉时，断言数从 38 掉到 37 而 exit 仍是 0，正是这个哨兵把它揪出来的。
@@ -114,6 +115,7 @@
 **2026-10-15**
 
 - **`post-merge` 钩子默认带 `-Prune`**：pull 那一趟自动铺满时顺带清掉各副本里仓库已删除的文件，不用事后手动补跑一趟 prune。铺满脚本本身保持"默认只补不删"——手动那一趟由跑的人决定要不要删。删除作用域没有放宽：只有技能目录的 skill 子树和各工作区的脚本副本目录两处，真源目录拒绝执行，不碰 `AGENTS.md`、全局规则文件与任务目录，且**待删清单先打进输出再删**。钩子配方（四行，带 `-Prune`）现在写在 README 的「更新即铺满」一节；`.git/hooks/` 不被 git 跟踪，换机器照那段自建。
+- **`references/agents-rule.md`（各工作区 `AGENTS.md` 的规则块原文）四处补正**：真源与 `-Source` 的措辞补上「工作树的 `post-merge` 钩子已默认带 `-Prune`」；`[名]` 的固定名豁免由四个补成"四个 + `SKILL.md`"，并在「命名」一节写明 `SKILL.md` 为什么豁免（它是 skill 加载器强制的文件名，只出现在工作树里，普通任务目录不该有它）。**已装工作区的 `AGENTS.md` 不会被自动更新**，本机那两份（工作区根与 `dsp-hal-eval`）已手工同步——那两份此前的"唯一真源"还写着 `.git` 搬走**之前**的 `~/.qoder-cn\skills\…`，照它改脚本会被下次铺满静默覆盖。
 
 **2026-10-14**
 
