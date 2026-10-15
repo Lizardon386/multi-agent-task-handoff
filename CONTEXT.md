@@ -1,7 +1,7 @@
 # multi-agent-task-handoff · 会话上下文与进展
 
 > 本文件是任务交接档案，供 Qoder / ZCode / 其他 agent 实时跟进。改动产物后请更新「当前状态」「变更记录」。
-> 最近更新：2026-10-14（Qoder）
+> 最近更新：2026-10-15（Qoder）
 > 面向使用者的说明见同目录 `README.md`，工具自身的设计取舍与契约见 `DESIGN.md`。
 
 ## 背景与目标
@@ -25,14 +25,14 @@
 - [x] ~~未接 git hook（工作区当前不是 git 仓库）~~ → 2026-10-14 按裁定**关闭且不做**：工作区不是 git 仓库；skill 仓库的 pre-commit 去检查别人的任务目录方向不对。"收工必跑闸门"继续靠规则约束
 - [x] ~~跨平台：`date -d` 依赖 GNU date~~ → 2026-10-14 去掉该依赖（纯 bash civil→days 算法，与 `date -u` 对拍 14 组）。**不做 PowerShell 版**：`[空]/[档]/[链]` 全靠 grep/awk，两套判定逻辑必然漂移，等于造第二个真源
 - [x] ~~`[链]` 的可达性校验只覆盖 README「产物与目录」~~ → **这条待办的前提早已过期**：`check_links` 是 `find "$dir" -name "*.md"` 全目录递归，CONTEXT 变更记录与交付物正文本就在查（2026-10-12 那次"闸门放过死链"是围栏/行内代码剥离之前的旧行为）。本轮真正的缺口在反方向——**假阳性**，已修（见变更记录）
-- [x] ~~**安装器只补不删**：仓库里删掉的文件在各副本里留着~~ → 同日已实现 `-Prune`（先列待删清单再删，`-Prune -DryRun` 只列不删），作用域限两个受管子树、真源目录拒绝执行、不碰任务目录与 `AGENTS.md`。剩一个小坑：`post-merge` 钩子跑的是不带 `-Prune` 的默认命令，所以**删文件后仍要手动跑一次 `-Prune`**；要不要让钩子默认带 prune 再定。
+- [x] ~~**安装器只补不删**：仓库里删掉的文件在各副本里留着~~ → 2026-10-14 实现 `-Prune`（先列待删清单再删，`-Prune -DryRun` 只列不删），作用域限两个受管子树、真源目录拒绝执行、不碰任务目录与 `AGENTS.md`。**同日留下的那个小坑已于 2026-10-15 关掉**：`post-merge` 钩子现在默认带 `-Prune`，pull 那一趟就顺手清残留，不再需要手动补跑（脚本自身的手动调用仍是保守的"只补不删"，见 [DESIGN.md](DESIGN.md) 的「设计思路」）。
 - [ ] 遗留：`.review/` 归档记录与若干历史「变更记录」行里仍写着旧路径 `D:/agent_workspace/tools/…`。**历史记录不改写**（那是当时事实），但读的人会以为是现行路径——下次有人踩到再考虑在 `.review/` 里放一行说明
-- [ ] 遗留：`strip_code` 是逐字符扫描，全量闸门从 ~9s 涨到 ~11s。已用"没有反引号或没有 `](` 就跳过"提前短路；若再慢，考虑只在含 `` ` `` 且含 `](` 的行上扫描（现在已经是）→ 下一步只能上 awk 单次编译或分块，先不动
+- [x] ~~遗留：`strip_code` 是逐字符扫描，全量闸门从 ~9s 涨到 ~11s~~ → 2026-10-14 的性能改造已把它连带解决（每目录 4 次进程，真工作区 ≈0.9s）。**下一条是这条唯一还剩下的成本**：合并成单次 awk 后，判定语义只能靠夹具与变异测试守。
 
 ## 关键约束与注意事项
 
-- **真源就是本目录（2026-10-14 起）**：`.git` 已从 `~/.qoder-cn/skills/multi-agent-task-handoff\` 移到这里，本目录是 skill 仓库的 git 工作树，布局是 `SKILL.md` + `scripts/` + `assets/` + `references/` + `.github/`。三个 agent 的 skills 目录（`.qoder-cn`/`.codex`/`.claude`）与其它工作区的脚本副本目录**都是下游副本**，改它们等于等着被覆盖。改完的顺序固定：本目录改 → `git commit` + `git push` → 跑 `scripts/install-everywhere.ps1` 铺满。
-- **本目录的三档（README/DESIGN/CONTEXT）随仓库一起提交**（用户 2026-10-14 裁定），所以它们是**公开可见**的：写的时候记住里面的大盘路径与进度对别人没有意义，规范以 `SKILL.md` 与 `references/` 为准。GitHub 首页仍是 `.github/README.md`（渲染优先级 `.github` > 根目录 > `docs`）。
+- **真源就是本目录（2026-10-14 起）**：`.git` 已从 `~/.qoder-cn/skills/multi-agent-task-handoff\` 移到这里，本目录是 skill 仓库的 git 工作树，布局是 `SKILL.md` + `scripts/` + `assets/` + `references/`（2026-10-14 同日删掉了多一份落地页 `.github/README.md`，合并进根 README）。三个 agent 的 skills 目录（`.qoder-cn`/`.codex`/`.claude`）与其它工作区的脚本副本目录**都是下游副本**，改它们等于等着被覆盖。改完的顺序固定：本目录改 → `git commit` + `git push` → 跑 `scripts/install-everywhere.ps1` 铺满。
+- **本目录的三档（README/DESIGN/CONTEXT）随仓库一起提交**（用户 2026-10-14 裁定），所以它们是**公开可见**的：写的时候记住里面的本机路径与进度对别人没有意义，规范以 `SKILL.md` 与 `references/` 为准。GitHub 首页就是根 [README.md](README.md)——2026-10-14 把原 `.github/README.md` 合并进来删掉了（渲染优先级 `.github` > 根目录 > `docs`，前者不存在时首页落到根）。对外 changelog 在本文的「发布更新记录」节，README 里指过来。
 - **跑闸门/建任务的命令在本目录多一层 `scripts/`**：`bash scripts/check-docs.sh`；下游工作区是扁平副本，写 `bash <副本目录>/check-docs.sh`。两种布局 root 解析都认，`…/skills/…`、`….codex…`、`….claude…` 下的那份**不**反推成工作区根。
 - **skill 仓库自 2026-10-09 起即 git 工作树**（私有仓库 `Lizardon386/multi-agent-task-handoff`，真源即发布源）：改完不推 = 别人拿不到；分发不走 zip/tar.gz（当年那个 `skill-export/` 目录已不在工作区，故此处不带链接——死链比裸名更坏）。
 - **副本目录名是新的硬契约（2026-10-14）**：工作区脚本副本目录新名 `multi-agent-task-handoff`、旧名 `tools`，**四处**都得同时认：`check-docs.sh` 的 root 解析、`check-docs.sh` 的跳过名单（改成按内容判）、`init-task.sh` 的模板查找、`bootstrap.sh` + `install-everywhere.ps1` 的目标目录解析。少改一处就会出现"一次铺满铺出两份脚本"或"根退化成硬编码 D 盘"。手法与幂等标记 `任务[双三]档规范` 一致：新旧两名都接受，不做一刀切改名。
@@ -45,6 +45,12 @@
 - 不要在 `check-docs.sh` 里执行任何删除或 `git` 操作——它是验收闸门，不是清理工具。
 
 ## 变更记录
+
+- 2026-10-15 Qoder（本会话，**`post-merge` 钩子默认带 `-Prune`**，用户定）：
+  ① `.git/hooks/post-merge` 的铺满命令加上 `-Prune`。理由：钩子那趟无人值守，不带 prune 就等于「仓库删文件 → 之后有人手动去各副本清残留」这一步永远没人做；2026-10-14 合并落地页后那三份幽灵 `.github/README.md` 正是手动补跑才清掉的。脚本自身的手动调用保持"只补不删"的保守默认（要删自己加开关），`-Prune -DryRun` 仍只列不删；删除范围仍只有两个受管子树，真源目录拒绝执行。待删清单先打进输出再删，所以清单就在 `git pull` 自己的输出里。
+  ② 配方同步到两个读面：[README.md](README.md) 的「更新即铺满」（三行改四行，并写明钩子文件不被 git 跟踪、换机器要重建、必须 LF）与 [SKILL.md](SKILL.md) 的 Propagation rule（新增一条带配方的 bullet）。`.git/hooks/` 本身不受 git 跟踪，所以**这次改动推不上去**——别人 clone 后照 README 那段自己建。
+  ③ 顺带清掉三处过期散文：README 与 SKILL 里 prune 作用域写的"4 份脚本"改成实际的 6 份（`selftest.sh`/`muttest.sh` 已进清单）；DESIGN「问题与目标」还写着"约 11s"（性能改造后 ≈0.9s）；CONTEXT 关键约束里"GitHub 首页仍是 `.github/README.md`"（那份 2026-10-14 已合并删除）。待办两条收尾：`-Prune` 那个小坑关掉，`strip_code` 拖慢那条标记已被性能改造解决。
+  ④ 验证：`selftest.sh` 47/47、`muttest.sh` 18/18、全量闸门无管道 exit 0、三处技能副本 `diff -r --exclude=.git` 为 0，并在真工作区实跑一次带 `-Prune` 的铺满确认输出为"无残留文件"。钩子本身用 `bash .git/hooks/post-merge` 直接执行验证（不靠下次 pull 才第一次跑）。
 
 - 2026-10-14 Qoder（本会话，**闸门性能优化 + 夹具落地**，接 d8d34e7f 的交接）：
   ① 收下 `scripts/selftest.sh`（29 条断言）并扩到 **47 条**：新增 `[旧]` 告警、`days_from_civil` 与 `date -u` 的 12 组对拍、两列表边界（gap2col）与三列表半填（gaphalf）一对、未闭合反引号只报一次（spanopen，靠 `assert_count` 才钉得住）、等长 run 配对（spanrun）、代码段里的例子不验（quotecase）、`SKILL.md` 两条豁免（skillcopy）、正文日期不算顶部日期（nobodydate/holderbody）、副本目录按内容判的正反两面（multi-agent-task-handoff / tools）。再加一个**断言条数哨兵**（`EXPECT_ASSERTS`）——`10#` 那个变异让日期对拍中途崩掉时，断言数从 38 掉到 37 而 exit 仍是 0，正是这个哨兵把它揪出来的。
@@ -103,7 +109,11 @@
 
 > 2026-10-14 起这一节从仓库落地页（原 `.github/README.md`）挪到这里：按三档分工，历史记录归 CONTEXT；落地页只剩 [README.md](README.md) 一份。跟进方式永远是：`git pull` → 跑 `scripts/install-everywhere.ps1` 铺满。
 
-跟进方式：`git -C D:/agent_workspace/multi-agent-task-handoff pull` 后**必须**按「更新即铺满」跑一次 `scripts/install-everywhere.ps1`（本机已装 `post-merge` 钩子，pull 完自动铺满）。
+跟进方式：`git -C D:/agent_workspace/multi-agent-task-handoff pull` 后**必须**按「更新即铺满」跑一次 `scripts/install-everywhere.ps1`（本机已装 `post-merge` 钩子，pull 完自动铺满，且钩子带 `-Prune`，仓库里删掉的文件当场从各副本清掉）。手动跑的那一趟默认仍不带 prune，需要清理自己加开关，或先用 `-Prune -DryRun` 只看清单。
+
+**2026-10-15**
+
+- **`post-merge` 钩子默认带 `-Prune`**：pull 那一趟自动铺满时顺带清掉各副本里仓库已删除的文件，不用事后手动补跑一趟 prune。铺满脚本本身保持"默认只补不删"——手动那一趟由跑的人决定要不要删。删除作用域没有放宽：只有技能目录的 skill 子树和各工作区的脚本副本目录两处，真源目录拒绝执行，不碰 `AGENTS.md`、全局规则文件与任务目录，且**待删清单先打进输出再删**。钩子配方（四行，带 `-Prune`）现在写在 README 的「更新即铺满」一节；`.git/hooks/` 不被 git 跟踪，换机器照那段自建。
 
 **2026-10-14**
 
