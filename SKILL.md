@@ -168,6 +168,10 @@ powershell -NoProfile -ExecutionPolicy Bypass -File D:\agent_workspace\multi-age
   #!/bin/sh
   powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$(git rev-parse --show-toplevel)/scripts/install-everywhere.ps1" -Prune
   ```
+- **Two mechanical backstops exist on this machine** (2026-10-15) because "committed but never propagated" is a gap rules cannot close — it has caused incidents twice:
+  - `.git/hooks/pre-push` propagates (`-Prune`) before every push. It hangs on push, not commit: the worktree is the release source, and `post-commit` would ship half-finished rules from multi-commit work. **Dirty worktree → skip with a warning** (the propagator copies the working tree, so a dirty tree would push uncommitted content as authority); **a real propagation failure blocks the push.**
+  - `scripts/watchdog.sh`, scheduled daily, diffs every downstream copy against the worktree byte-for-byte and then runs the gate. It stays silent when clean and writes `<workspace-root>/.watchdog/_需要处理.md` (removed automatically on the next green run) plus `propagation.log`. This is the only layer that catches drift from the cases neither hook sees: no pull and no push, someone editing a copy by hand, or another session forgetting to propagate.
+  - Hook files under `.git/hooks/` are **not tracked by git** — rebuild them on a new machine and keep them LF.
 - **A workspace's existing `AGENTS.md` is NOT rewritten** — both installers dedupe on a heading match and only append when nothing matches. Since 2026-10-14 the marker is the regex `任务[双三]档规范`, so a workspace still carrying the old `任务双档规范` heading is recognized instead of getting a duplicated rule block. After changing rule text here, sync that workspace's `AGENTS.md` (and each agent's global rule file) by hand — the installers never rewrite an existing block.
 `templates/` is infrastructure and is excluded from the check. The script folder is excluded **only while it holds no `README.md`** — once it carries the three documents they are checked like a task folder's, which is how 2026-10-14 caught 20 links still pointing at the old `tools/` path.
 
@@ -179,6 +183,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File D:\agent_workspace\multi-age
 - `scripts/selftest.sh` — 47 fixture assertions over an isolated temp root; run before and after any gate change.
 - `scripts/muttest.sh` — breaks the gate 18 different ways and checks that `selftest.sh` goes red each time.
 - `scripts/install-everywhere.ps1` — the Windows propagator that executes the Propagation rule below: skill dirs of every agent + global rule files + every registered workspace. Run the copy from the newest source.
+- `scripts/watchdog.sh` — the daily终审: diffs every downstream copy against the worktree and re-runs the gate, writing a to-fix marker only when something drifted. Propagation is not optional just because nobody remembered to run it.
 - `assets/README.md.tpl`, `assets/DESIGN.md.tpl`, `assets/CONTEXT.md.tpl` — section skeletons (bootstrap copies these into `multi-agent-task-handoff/templates/`).
 - `references/doc-spec.md` — the complete written rule (read when writing or reviewing docs).
 - `references/agents-rule.md` — the exact block bootstrap appends to a workspace `AGENTS.md`.

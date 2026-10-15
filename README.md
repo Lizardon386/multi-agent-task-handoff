@@ -144,7 +144,19 @@ powershell -NoProfile -ExecutionPolicy Bypass -File D:\agent_workspace\multi-age
   powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$(git rev-parse --show-toplevel)/scripts/install-everywhere.ps1" -Prune
   ```
 
-  待删清单打在 pull 自己的输出里，看得见才删；作用域只有两个受管子树，真源目录拒绝执行。钩子文件不被 git 跟踪，换机器要重新建，且必须保持 LF 行尾（带回车的 `sh` 在 Git Bash 下直接语法报错）。
+  待删清单打在 pull 自己的输出里，看得见才删；作用域只有两个受管子树，真源目录拒绝执行。
+- **本机另外装了两条机械兜底**，因为「commit 了但没人跑铺满」这条缝不是规则能堵的（已经踩过两次）：
+  - `.git/hooks/pre-push`——push 前自动铺满（带 `-Prune`）。挂在 push 而不是 commit：真源即发布源，而 `post-commit` 会把分几次提交的中间态规矩也铺出去。**工作树脏时跳过**（铺满拷的是工作树，脏树会把未提交内容当权威铺出去），此时只警告不阻断；**铺满真失败则阻断本次 push**，不留「已发布、副本没跟上」的状态。
+  - `scripts/watchdog.sh` 挂成每日计划任务——逐字节比对各副本与工作树、顺带跑一遍闸门，**只在出问题时**写 `<工作区根>/.watchdog/_需要处理.md`（全绿自动撤掉），日志追加在同目录 `propagation.log`。它覆盖的是前两条都够不着的情形：既没 pull 也没 push 的漂移、有人直接在副本里手改、以及别的会话忘了铺。
+  - 两个钩子文件都在 `.git/hooks/` 下，**不被 git 跟踪**：换机器要照上面重建，且必须保持 LF 行尾（带回车的 `sh` 在 Git Bash 下直接语法报错）。看门狗脚本本身随仓库走，注册一次即可（PowerShell，只在登录状态下跑，好让待处理件看得见）：
+
+  ```powershell
+  $a = New-ScheduledTaskAction -Execute 'D:\software\Git\bin\bash.exe' -Argument '-c "bash /d/agent_workspace/multi-agent-task-handoff/scripts/watchdog.sh"'
+  Register-ScheduledTask -TaskName 'multi-agent-handoff-drift' -Action $a `
+    -Trigger (New-ScheduledTaskTrigger -Daily -At 10:10) `
+    -Settings (New-ScheduledTaskSettingsSet -StartWhenAvailable -MultipleInstances IgnoreNew) `
+    -Description 'skill 铺满漂移看门狗：副本 vs 工作树 + 收工闸门'
+  ```
 
 条款原文以 [SKILL.md](SKILL.md) 的「Propagation rule (MANDATORY)」为准，本节是给人看的操作版。
 
@@ -162,6 +174,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File D:\agent_workspace\multi-age
 | [assets/README.md.tpl](assets/README.md.tpl) · [assets/DESIGN.md.tpl](assets/DESIGN.md.tpl) · [assets/CONTEXT.md.tpl](assets/CONTEXT.md.tpl) | 三档骨架模板 |
 | [scripts/selftest.sh](scripts/selftest.sh) | **闸门夹具自检**：47 条断言，在隔离临时根上造夹具、闸门只跑一次、按目录切段断言。改判定前后都要跑 |
 | [scripts/muttest.sh](scripts/muttest.sh) | 变异测试：把闸门逐条改坏 18 处，确认 selftest 每条都会红——防的是"断言静默消失"那种假绿灯 |
+| [scripts/watchdog.sh](scripts/watchdog.sh) | 铺满漂移看门狗：`diff -q` 逐字节比对各副本与工作树 + 跑一遍闸门，只在出问题时写 `<工作区根>/.watchdog/_需要处理.md`。挂每日计划任务（注册命令见「更新即铺满」） |
 | [README.md](README.md) | 本文件：仓库落地页 + 本目录三档之一（2026-10-14 起合并，不再有第二份 `.github/README.md`） |
 | [DESIGN.md](DESIGN.md) | 本目录方案设计：工具自己的取舍表、脚本之间的接缝、动不得的契约 |
 | [CONTEXT.md](CONTEXT.md) | 本目录交接档案：进度、待办、踩坑，**以及对外的「发布更新记录」** |
