@@ -102,7 +102,7 @@ STALE_DAYS=7 bash multi-agent-task-handoff/check-docs.sh         # 收紧"过期
 
 **跑闸门不要加管道**（`| tail`、`| grep`）——只看结尾那句 `OK` 会把违规行截掉，这是真实发生过的自审失真。
 
-**改闸门判定或判重锁**的验收线是三条：`bash scripts/selftest.sh` 全绿 → `bash scripts/muttest.sh` 全部被抓到 → 真工作区输出与基线**逐字节相同**。第三条是"只改性能没改语义"的硬证据。整套现在约 11–12 秒（夹具 60 条断言）/ 变异一轮约 5 分钟（25 处，实测 308 秒）。
+**改闸门判定、判重锁或全局文件重写**的验收线是三条：`bash scripts/selftest.sh` 全绿 → `bash scripts/muttest.sh` 全部被抓到 → 真工作区输出与基线**逐字节相同**。第三条是"只改性能没改语义"的硬证据。整套现在约 13 秒（夹具 61 条断言）/ 变异一轮约 6.5 分钟（29 处，实测 387 秒）。
 
 ### 检查项前缀与严重度
 
@@ -234,8 +234,8 @@ Register-ScheduledTask -TaskName 'multi-agent-handoff-drift' -Action $a `
 | [references/doc-spec.md](references/doc-spec.md) | 规则全文：命名禁令、分工红线、产物链接、边界特例 |
 | [references/agents-rule.md](references/agents-rule.md) | bootstrap 追加进各工作区 `AGENTS.md` 的规则块原文 |
 | [assets/README.md.tpl](assets/README.md.tpl) · [assets/DESIGN.md.tpl](assets/DESIGN.md.tpl) · [assets/CONTEXT.md.tpl](assets/CONTEXT.md.tpl) | 三档骨架模板 |
-| [scripts/selftest.sh](scripts/selftest.sh) | **夹具自检**：60 条断言。第 1–5 组在隔离临时根上造三档夹具、闸门只跑一次、按目录切段断言；第 6 组钉**判重锁**（双锚 / 整行匹配 / 出处戳），直接调真实的 `bootstrap.sh`、`watchdog.sh`、`install-everywhere.ps1`，每个方向都造一个"看着像锚"的文件。改判定前后都要跑 |
-| [scripts/muttest.sh](scripts/muttest.sh) | 变异测试：把闸门逐条改坏 18 处、把判重锁的三套实现各改坏 7 处，确认 selftest 每条都会红——防的是"断言静默消失"那种假绿灯。要在 skill 的 git 工作树里跑（出处戳断言依赖 `git log`） |
+| [scripts/selftest.sh](scripts/selftest.sh) | **夹具自检**：61 条断言。第 1–5 组在隔离临时根上造三档夹具、闸门只跑一次、按目录切段断言；第 6 组钉**判重锁**（双锚 / 整行匹配 / 出处戳），第 7 组钉**全局文件重写的写盘路径**（BOM、换行风格、不许出现孤立 CR、幂等）。两组都直接调真实脚本，不在测试里重述判据。改判定前后都要跑 |
+| [scripts/muttest.sh](scripts/muttest.sh) | 变异测试：把闸门逐条改坏 18 处、判重锁的三套实现改坏 7 处、`sync-global-rules.ps1` 的写盘路径改坏 4 处（共 29），确认 selftest 每条都会红——防的是"断言静默消失"那种假绿灯。要在 skill 的 git 工作树里跑（出处戳断言依赖 `git log`） |
 | [scripts/watchdog.sh](scripts/watchdog.sh) | 铺满漂移看门狗：`diff -q` 逐字节比对各副本与工作树 + 跑一遍闸门，只在出问题时写 `<工作区根>/.watchdog/_需要处理.md`。挂每日计划任务（注册命令见「更新即铺满」） |
 | [scripts/sync-global-rules.ps1](scripts/sync-global-rules.ps1) | 一次性迁移工具：把各 agent 的**全局规则文件**重写成源头当前的 global-block 段 + 出处戳。默认 DryRun，`-Apply` 才写且先备份；只认"第一个命中锚的标题行→文件末尾"，锚点之后还有 H1 就中止。**刻意不进工作区扁平副本清单**（它需要 `references/` 与 `git`） |
 | [README.md](README.md) | 本文件：仓库落地页 + 本目录三档之一（2026-10-14 起合并，不再有第二份 `.github/README.md`） |

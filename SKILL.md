@@ -30,9 +30,9 @@ The convention exists because sessions are volatile: without a handoff file the 
    ```
 3. **Work.**
 4. **Before ending the session**, update the three files, then verify:
-   (Changing the gate or the dedupe anchors is a different job: run `scripts/selftest.sh` — 60 fixture
-   assertions, 13 of them on the anchors — and `scripts/muttest.sh` — 25 deliberate regressions proving
-   those assertions bite — before committing. `muttest.sh` needs the git worktree.)
+   (Changing the gate, the dedupe anchors or the global-file rewriter is a different job: run
+   `scripts/selftest.sh` — 61 fixture assertions — and `scripts/muttest.sh` — 29 deliberate regressions
+   proving those assertions bite — before committing. `muttest.sh` needs the git worktree.)
    ```bash
    bash scripts/check-docs.sh            # all folders; append a name to check one
    ```
@@ -185,8 +185,8 @@ powershell -NoProfile -ExecutionPolicy Bypass -File D:\agent_workspace\multi-age
 - `scripts/init-task.sh` — create a task folder with the three skeletons.
 - `scripts/check-docs.sh` — compliance gate (existence, sections, placeholders, empty scaffolds, freshness).
 - `scripts/bootstrap.sh` — install / re-sync the convention into a workspace root.
-- `scripts/selftest.sh` — 60 fixture assertions over an isolated temp root (47 on the gate, 13 on the dedupe anchors and provenance stamp); run before and after any change to those judgements.
-- `scripts/muttest.sh` — breaks the gate 18 ways and the anchor predicates 7 more (bash grep, PowerShell `-match`, watchdog probe), checking that `selftest.sh` goes red each time. Run it from the git worktree — the stamp assertions need `git log`.
+- `scripts/selftest.sh` — 61 fixture assertions over an isolated temp root (47 on the gate, 13 on the dedupe anchors and provenance stamp, 1 on the global-file rewriter's byte-level output); run before and after any change to those judgements.
+- `scripts/muttest.sh` — 29 deliberate breakages (gate 18, anchor predicates 7 across bash grep / PowerShell `-match` / watchdog probe, `sync-global-rules.ps1` write path 4) and checks that `selftest.sh` goes red each time. Run it from the git worktree — the stamp assertions need `git log`.
 - `scripts/install-everywhere.ps1` — the Windows propagator that executes the Propagation rule below: skill dirs of every agent + global rule files + every registered workspace. Run the copy from the newest source.
 - `scripts/watchdog.sh` — the daily终审: diffs every downstream copy against the worktree, checks derived rule files (`[锚]` / `[出处]` / `[指针]`) and re-runs the gate, writing a to-fix marker only when something is wrong. Propagation is not optional just because nobody remembered to run it.
 - `scripts/sync-global-rules.ps1` — one-time migrator that rewrites each agent's **global** rule file (`~/.codex/AGENTS.md`, `~/.claude/CLAUDE.md`) from the anchored `global-block` slice plus a provenance stamp. Dry-run by default; `-Apply` backs the file up first and only replaces from the anchored heading to end-of-file, refusing to guess if another H1 follows. Deliberately absent from the workspace flat-copy lists: it needs `references/` and `git`.

@@ -70,6 +70,12 @@ mut "狗: 锚判据退化成裸子串"    "grep -qE '^<!--[[:space:]]*agents-ent
 mut "ps1: 丢掉 (?m) 多行开关"  "\$entryMarker = '(?m)^\\s*<!--\\s*agents-entry\\s*-->\\s*\$' => \$entryMarker = '^\\s*<!--\\s*agents-entry\\s*-->\\s*\$'" install-everywhere.ps1
 mut "ps1: 老锚只认新名"        "\$marker = \"任务[双三]档规范\" => \$marker = \"任务三档规范\"" install-everywhere.ps1
 
+# 全局文件重写的写盘路径（2026-10-16 那条 `\r\r\n` 真 bug 就是这儿的）
+mut "sync: 块内又硬写 CR"      '$newBlock = "`n" + $body + "`n" + $stamp + "`n" => $newBlock = "`r`n" + $body + "`r`n" + $stamp + "`r`n"' sync-global-rules.ps1
+mut "sync: BOM 无条件强加"      'New-Object System.Text.UTF8Encoding($hasBom) => New-Object System.Text.UTF8Encoding($true)' sync-global-rules.ps1
+mut "sync: 换行风格不再探测"    '$nl = if ($content -match "`r`n") { "`r`n" } else { "`n" } => $nl = "`n"' sync-global-rules.ps1
+mut "sync: 幂等短路失效"        'if ($Matches[1] -eq $sha) { Write-Host "  已同步（戳 @$sha），不动"; continue } => if ($false) { Write-Host "  已同步（戳 @$sha），不动"; continue }' sync-global-rules.ps1
+
 rm -rf "$M"
 echo
 if [ "$fails" = 0 ]; then echo "变异测试：全部被抓到"; else echo "变异测试：$fails 条没抓到或没施加"; exit 1; fi

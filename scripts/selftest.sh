@@ -564,8 +564,56 @@ else
   ok 锁-ps1同锁 "本机没有 powershell.exe，跳过 PowerShell 侧（bash 侧四条仍在）"
 fi
 
+# ---------- 7. 全局文件重写：sync-global-rules.ps1 的 -Apply 写盘路径 ----------
+# 这条路径 2026-10-16 第一次被真用就写出过 `\r\r\n`（块内硬写 CR + 写回时整段再转一次）。
+# DryRun 报告再全也证明不了字节层不出事，所以这里造两份起手不同的假全局文件（BOM+CRLF / 无BOM+LF），
+# 真跑 -Apply 后按**字节**验四件事：没有孤立 CR、BOM 与换行风格各自保持、锚点之上的本地内容还在、
+# 戳更新到源头当前版本；再跑一次必须报"已同步、不动"（幂等，否则每次迁移都多一个 .bak）。
+echo "== 7. 全局文件重写（-Apply 写盘路径）"
+if command -v powershell.exe >/dev/null 2>&1; then
+  GH="$LK/glob"; mkdir -p "$GH/gh1/.codex" "$GH/gh2/.codex"
+  GBODY='# 全局规则（夹具）\n\n### 任务三档规范（强制，来自 skill multi-agent-task-handoff）\n\n条款正文。\n<!-- generated-from: references/agents-rule.md @ deadbee (2026-10-15) -->\n'
+  printf '%b' "$GBODY" > "$GH/gh2/.codex/AGENTS.md"                                # 无 BOM + LF
+  printf '\357\273\277' > "$GH/gh1/.codex/AGENTS.md" && printf '%b' "$GBODY" | sed 's/$/\r/' >> "$GH/gh1/.codex/AGENTS.md"   # BOM + CRLF
+  PW_GH="$ROOT/anchorlock/glob"
+  PW_SYNC="$( (cd "$SELF_DIR" && pwd -W) )/sync-global-rules.ps1"
+  GH_R1=$(powershell.exe -NoProfile -ExecutionPolicy Bypass -Command \
+    "[Console]::OutputEncoding=[System.Text.Encoding]::UTF8; & '$PW_SYNC' -Apply -AgentHomes @('$PW_GH/gh1/.codex','$PW_GH/gh2/.codex')" 2>&1)
+  GH_R2=$(powershell.exe -NoProfile -ExecutionPolicy Bypass -Command \
+    "[Console]::OutputEncoding=[System.Text.Encoding]::UTF8; & '$PW_SYNC' -Apply -AgentHomes @('$PW_GH/gh1/.codex','$PW_GH/gh2/.codex')" 2>&1)
+  GH_BAD=""
+  for pair in "gh1 crlf" "gh2 lf"; do
+    set -- $pair; d=$1; want=$2; f="$GH/$d/.codex/AGENTS.md"
+    crcnt=$(tr -cd '\r' < "$f" | wc -c); lfcnt=$(tr -cd '\n' < "$f" | wc -c)
+    if [ "$want" = crlf ]; then
+      [ "$crcnt" -gt 0 ] || GH_BAD="${GH_BAD}$d 原本是 CRLF、写出来变成 LF（风格探测失效）; "
+      [ "$crcnt" = "$lfcnt" ] || GH_BAD="${GH_BAD}$d 有孤立 CR（CR=$crcnt 行=$lfcnt）; "
+      [ "$(od -An -tx1 -N3 "$f" | tr -d ' \n')" = "efbbbf" ] || GH_BAD="${GH_BAD}$d BOM 丢了; "
+    else
+      [ "$crcnt" = 0 ] || GH_BAD="${GH_BAD}$d 被塞进了 CR（$crcnt 个）; "
+      [ "$(od -An -tx1 -N3 "$f" | tr -d ' \n')" != "efbbbf" ] || GH_BAD="${GH_BAD}$d 被加了本来没有的 BOM; "
+    fi
+    # 本地那行必须还是**第一行**（BOM 与 CR 先剥掉再比——带 BOM 的文件里 `^#` 是匹配不到的）
+    first=$(head -1 "$f" | tr -d '\r' | sed 's/^\xef\xbb\xbf//')
+    [ "$first" = "# 全局规则（夹具）" ] || GH_BAD="${GH_BAD}$d 锚点之上的本地内容不在了（首行「$first」）; "
+    # 戳必须从 deadbee 换成一个真 sha；知道源头 sha 时还要相等（没 .git 的机器上只验前者）
+    if ! grep -qE 'generated-from: references/agents-rule\.md @ [0-9a-f]{7}' "$f" || grep -q 'deadbee' "$f"; then
+      GH_BAD="${GH_BAD}$d 戳没被换成源头版本; "
+    elif [ -n "$WANT_SHA" ] && ! grep -qF "@ $WANT_SHA" "$f"; then
+      GH_BAD="${GH_BAD}$d 戳不是源头当前 sha（应 @ $WANT_SHA）; "
+    fi
+    ls "$GH/$d/.codex/"AGENTS.md.bak-* >/dev/null 2>&1 || GH_BAD="${GH_BAD}$d 写之前没留 .bak; "
+  done
+  n_skip=$(grep -cF '已同步（戳 @' <<<"$GH_R2")
+  [ "$n_skip" = 2 ] || GH_BAD="${GH_BAD}第二次没报两行「已同步、不动」（$n_skip 行）——幂等破了; "
+  if [ -z "$GH_BAD" ]; then ok 锁-全局重写 "两种起手各写过一次：无孤立 CR、BOM/风格各自保持、本地内容在、戳更新、二次幂等"
+  else no 锁-全局重写 "$GH_BAD｜首跑：$(tr '\n' ' ' <<<"$GH_R1")"; fi
+else
+  ok 锁-全局重写 "本机没有 powershell.exe，跳过（其余断言不受影响）"
+fi
+
 echo
-EXPECT_ASSERTS=60   # 加了/删了断言就改这里；条数对不上说明有断言静默消失或整个夹具没跑
+EXPECT_ASSERTS=61   # 加了/删了断言就改这里；条数对不上说明有断言静默消失或整个夹具没跑
 if [ $((pass + fail)) -ne "$EXPECT_ASSERTS" ]; then
   printf 'selftest：断言数 %d 与期望 %d 不符——有断言中途消失（夹具报错、循环被打断都算）
 ' $((pass + fail)) "$EXPECT_ASSERTS"
