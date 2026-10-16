@@ -65,6 +65,13 @@
 
 ## 变更记录
 
+- 2026-10-16 Qoder（本会话，**用户"你来改，确认别的所有目录，杜绝 `AGENTS.md` 这种会立刻生效配置里还有此 skill 的痕迹"**）：
+  ① 先分类再动手，扫出四类。真·立刻生效的配置面其实有**三处漏网**：`D:\agent_workspace\dsp-hal-eval\AGENTS.md`（152 行整份规则副本，H1 就是 `bootstrap.sh` 写的 `# 工作区约定（dsp-hal-eval）`，逐行比对确认没有本地政策混在里面）；`D:\agent_workspace\AGENTS.md` 入口那一节（含 `agents-entry` 锚）；以及最要命的一条——**`~\.codex\automations\automation\automation.toml`：`status=ACTIVE`、`FREQ=DAILY;BYHOUR=9` 的 Codex 巡检自动化**，prompt 让 Codex 每天跑 `check-docs.sh` 报违规，还指着早已改名的 `D:\agent_workspace\tools\`。**教训：卸载要看每个 agent 自己的"自动化/定时任务"面，`skills 目录 + 规则文件 + 计划任务` 这张清单不完整。**
+  ② 处置：删 Codex 那条自动化（备份 `Desktop\.uninstall-backup\codex-automation.toml.20261016-155424`）；删 `dsp-hal-eval\AGENTS.md`（备份同目录 `.bak-uninstall-20261016-155424`，它的三档与两份交付文档没碰）；`D:\agent_workspace\AGENTS.md` 去掉入口节与锚、只剩 8 行「工作目录约定」本机政策。
+  ③ 判定保留不动的两类：**应用自己的状态与历史**（`.codex\.codex-global-state.json` 命中的是聊天里贴过的仓库 URL、`.qoder-cn\skill-usage.json` 是使用计数、`.qoder-cn\tasks\*.json` 是会话任务清单、`.codex\sessions\*.jsonl`、`.claude\file-history\*`、sqlite WAL）——手改这些会碰正在运行的应用；以及**我这边 `.qoder-cn\memory\*`**：主条目已重写成"已卸载 + 别再按三档行事 + 别自动装回去 + 重装方法"，索引行同步改短；其余条目（中文命名、可点链接、先计划再执行…）是从这套流程沉淀出的**个人偏好**，与装没装无关，留着，已向用户说明可另删。
+  ④ 复扫三遍确认：工作区所有 `AGENTS.md`/`CLAUDE.md`/`.cursorrules`/`.mdc`/`copilot-instructions.md` 命中 **0**；`~\.codex`、`~\.claude`、`~\.cursor`、`~\.config` 排除应用态与备份后命中 **0**；`~\.qoder-cn` 排除 tasks/plugins/memory/应用态后命中 **0**。
+  ⑤ 顺带留下一个待用户决定的事实：`.bak-*` 备份现在有 4 份/文件（`.codex`、`.claude` 各 4 个）+ 桌面那份自动化备份，要不要一起清。
+
 - 2026-10-16 Qoder（本会话，**用户"删掉副本"→ 先清点再删，结果两处分岔**）：清点发现 `3178-battle-platform/tools/` **根本不是 skill 副本**——6 个文件全是它自己的（`check-seam.sh`、`gen-bat.mjs`、`monkey*.mjs`、`repro-*.mjs`），安装器那 9 个一个都没有，只是撞名 `tools`，**没碰**。`dsp-hal-eval/tools/` 是真副本**但混着它自己写的 10 个脚本**（`fix_*.js`、`check_*.js`、`elf_dynsyms.js`、`restructure_8_1.js`、`unlink_deleted.js`、`normalize_vendor_name.js`、`probe_wildcard_depth.mk`），而 `dsp-hal-eval` 已不是 git 仓库 ⇒ 这 10 个没有任何版本控制。**按用户选的"只删安装器那 9 个"执行**：删 `bootstrap.sh`/`check-docs.sh`/`init-task.sh`/`install-everywhere.ps1`/`selftest.sh`/`muttest.sh` + `templates/`（3 份 `.tpl`），复查残留 0、剩 10 个自有脚本原样在。**顺带更正我自己上一条消息里的一个数**：我说"11 个自己的脚本"，实际 10 个（数错了）。**留给那个会话的事实（我不动）**：它的 `AGENTS.md` 第 111、114 行仍教人跑 `bash tools/init-task.sh` 与 `bash tools/check-docs.sh`，这两个文件现在不存在了。
 
 - 2026-10-16 Qoder（本会话，**用户要求"在所有 agent 目录中卸载此 skill"，选档"彻底卸"**）：
