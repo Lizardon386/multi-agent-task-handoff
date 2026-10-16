@@ -4,7 +4,7 @@
 > 标识 `multi-agent-task-handoff`，Qoder / Claude Code / Codex 的用户级 Skill。
 > **本目录同时是这个仓库的 git 工作树（真源）**——`D:\agent_workspace\multi-agent-task-handoff\`；`~\.qoder-cn\skills\`、`~\.codex\skills\`、`~\.claude\skills\` 三处是下游副本。
 > 设计取舍见 [DESIGN.md](DESIGN.md)，进度与**对外更新记录**见 [CONTEXT.md](CONTEXT.md)，工作区规矩原文见 [references/agents-rule.md](references/agents-rule.md)（本机 `D:\agent_workspace\AGENTS.md` 是它的入口版，不在仓库内，所以不给链接）。
-> 最近更新：2026-10-15
+> 最近更新：2026-10-16
 
 ## 一句话说明
 
