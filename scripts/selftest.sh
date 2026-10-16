@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
-# selftest.sh — check-docs.sh 的夹具自检：改闸门前后都跑它。
-# 用法：bash selftest.sh     （在隔离临时根上跑，不碰任何真实任务目录）
+# selftest.sh — 闸门与判重锁的夹具自检：改 check-docs.sh / bootstrap.sh / watchdog.sh /
+#               install-everywhere.ps1 前后都跑它。
+# 用法：bash selftest.sh     （在隔离临时根上跑，不碰任何真实任务目录；需要 git，
+#        有 powershell.exe 时顺带验 PowerShell 那一套实现，没有则跳过那一组）
 # 退出码：0 全部断言通过；1 有断言失败（失败打印期望与实际）
 #
 # 为什么要有这个文件：2026-10-14 一天之内三个会话各造一遍"跑完即删"的夹具来验
@@ -463,8 +465,107 @@ else
   else no "date" "日期算法 $bad/$tot 组不一致"; fi
 fi
 
+# ---------- 6. 判重锁：双锚 / 整行匹配 / 出处戳 ----------
+# 同一把锁有**三套实现**：bootstrap.sh 的 bash grep、install-everywhere.ps1 的 PowerShell -match、
+# watchdog.sh 的 [锚] 探针。它写错的方向永远是假绿灯——把散文里提到的 `agents-entry` 当成"这文件
+# 已经装过规矩"，于是该追加规矩的工作区一条也没拿到。所以每条断言都往**错的那一侧**造一个文件。
+# 这一段只调真实的三个脚本，测试里**不重述正则**（重述就等于再造第四套实现，照样会漂）。
+echo "== 6. 判重锁：双锚 / 整行匹配 / 出处戳"
+SKILL_DIR="$(cd "$SELF_DIR/.." && pwd)"
+LK="$TMP/anchorlock"
+mkdir -p "$LK"
+B_ENTRY='# 工作区约定（入口）\n\n<!-- agents-entry -->\n\n- 本机政策：产物放本目录。\n'
+B_OLD='# 工作区约定（整份）\n\n## 任务双档规范（强制）\n\n条款正文。\n'
+B_PROSE='# 工作区约定（只有提及）\n\n这里提到过 `agents-entry` 这串字，但它不是锚行。\n'
+B_TAIL='# 工作区约定（锚行带尾巴）\n\n<!-- agents-entry --> 后面被人顺手写了字\n'
+lk_mk() { mkdir -p "$LK/$1"; printf '%b' "$2" > "$LK/$1/AGENTS.md"; }
+lk_has() { if grep -qF -- "$2" <<<"$3"; then ok "$1" "响：$2"
+  else no "$1" "$1 期望「$2」没出现｜实际：$(tr '\n' ' ' <<<"$3")"; fi; }
+
+# ① 看门狗 [锚]：一次调用查四个文件。--no-mark 保证不落 .watchdog/，--copies 指向真源自己
+#    （自己比自己必绿），这样退出码就**只由探针决定**——红了不影响退出码等于没查。
+lk_mk wd-entry "$B_ENTRY"; lk_mk wd-old "$B_OLD"; lk_mk wd-prose "$B_PROSE"; lk_mk wd-tail "$B_TAIL"
+WD_OUT=$(bash "$SELF_DIR/watchdog.sh" --source "$SKILL_DIR" --copies "$SKILL_DIR" --no-gate --no-mark \
+  --entries "$LK/wd-entry/AGENTS.md,$LK/wd-old/AGENTS.md,$LK/wd-prose/AGENTS.md,$LK/wd-tail/AGENTS.md" 2>&1)
+WD_CODE=$?
+if [ "$WD_CODE" = 1 ]; then ok 锁-看门狗红 "两个无锚文件把退出码判成 1"
+else no 锁-看门狗红 "探针红了但退出码是 $WD_CODE——红不落到退出码上，看门狗就是假绿灯"; fi
+lk_has 锁-狗-入口 "$LK/wd-entry/AGENTS.md 入口模式（新锚命中）" "$WD_OUT"
+lk_has 锁-狗-老锚 "$LK/wd-old/AGENTS.md 整份模式（老锚命中）" "$WD_OUT"
+lk_has 锁-狗-散文不算锚 "$LK/wd-prose/AGENTS.md 既没有" "$WD_OUT"
+lk_has 锁-狗-尾巴不算锚 "$LK/wd-tail/AGENTS.md 既没有" "$WD_OUT"
+
+# ② bootstrap.sh：三种"已装过"的都不许动；两种"看着像锚"的必须照旧追加
+lk_mk bs-entry "$B_ENTRY"; SZE=$(wc -c < "$LK/bs-entry/AGENTS.md")
+O=$(bash "$SELF_DIR/bootstrap.sh" --root "$LK/bs-entry" 2>&1)
+if grep -qF "已是入口模式" <<<"$O" && [ "$(wc -c < "$LK/bs-entry/AGENTS.md")" = "$SZE" ]; then
+  ok 锁-入口不动 "命中新锚 → 一句不动（不追加第二份规矩）"
+else no 锁-入口不动 "整行锚没被认出来或文件被改｜$(tr '\n' ' ' <<<"$O")"; fi
+lk_mk bs-old "$B_OLD"; SZO=$(wc -c < "$LK/bs-old/AGENTS.md")
+O=$(bash "$SELF_DIR/bootstrap.sh" --root "$LK/bs-old" 2>&1)
+if grep -qF "已含规则块（老锚" <<<"$O" && [ "$(wc -c < "$LK/bs-old/AGENTS.md")" = "$SZO" ]; then
+  ok 锁-老锚不动 "拆分前的旧标题「任务双档规范」也算已装（只认新名会追加出第二份）"
+else no 锁-老锚不动 "老锚的 [双三] 没兜住旧标题｜$(tr '\n' ' ' <<<"$O")"; fi
+lk_mk bs-prose "$B_PROSE"; SZP=$(wc -c < "$LK/bs-prose/AGENTS.md")
+O=$(bash "$SELF_DIR/bootstrap.sh" --root "$LK/bs-prose" 2>&1)
+if grep -qF "已追加规则块" <<<"$O" && [ "$(wc -c < "$LK/bs-prose/AGENTS.md")" -gt "$SZP" ]; then
+  ok 锁-散文不算锚 "行内 code 里的 agents-entry 没被当成锚 → 照常追加"
+else no 锁-散文不算锚 "裸子串匹配（去掉 ^...$ 就是这个结果）把提及当成已装，该追加的没追加"; fi
+lk_mk bs-tail "$B_TAIL"; SZT=$(wc -c < "$LK/bs-tail/AGENTS.md")
+O=$(bash "$SELF_DIR/bootstrap.sh" --root "$LK/bs-tail" 2>&1)
+if grep -qF "已追加规则块" <<<"$O" && [ "$(wc -c < "$LK/bs-tail/AGENTS.md")" -gt "$SZT" ]; then
+  ok 锁-尾巴不算锚 "锚行后面带字 → 不匹配整行 → 照常追加"
+else no 锁-尾巴不算锚 "行尾锚定 \$ 掉了（或整条锚判据松了）"; fi
+
+# ③ 出处戳的**跨实现契约**：bootstrap 写的戳必须能被 watchdog 的解析正则抓到、且是原文当前版本
+GOT_SHA=$(grep -oE 'generated-from: references/agents-rule\.md @ [0-9a-f]+' "$LK/bs-prose/AGENTS.md" 2>/dev/null | head -1 | awk '{print $NF}')
+WANT_SHA=$(git -C "$SKILL_DIR" log -1 --format=%h -- references/agents-rule.md 2>/dev/null || echo '')
+if [ -n "$GOT_SHA" ] && { [ -z "$WANT_SHA" ] || [ "$GOT_SHA" = "$WANT_SHA" ]; }; then
+  ok 锁-出处戳可解析 "bootstrap 写的 @ $GOT_SHA 被 watchdog 的正则读到"
+else no 锁-出处戳可解析 "戳行缺失或 sha 对不上（读到「$GOT_SHA」，原文 @ ${WANT_SHA:-无}）——[出处] 从此恒为无戳"; fi
+
+# ④ 两个方向的"不动手"：无锚已存在 + --entry 必须拒绝；无 AGENTS.md + --entry 生成的壳必须
+#    被同一个 bootstrap 认成入口模式（生成的锚行格式与匹配器不一致 = 下次铺满追加第二份）
+lk_mk bs-refuse "$B_PROSE"; SZR=$(wc -c < "$LK/bs-refuse/AGENTS.md")
+O=$(bash "$SELF_DIR/bootstrap.sh" --root "$LK/bs-refuse" --entry 2>&1); RC=$?
+if [ "$RC" = 1 ] && grep -qF "我不往来源未知的文件里灌规则" <<<"$O" && [ "$(wc -c < "$LK/bs-refuse/AGENTS.md")" = "$SZR" ]; then
+  ok 锁-拒绝灌未知文件 "两锚都不认 + --entry：退出码 1、文件一个字节没变"
+else no 锁-拒绝灌未知文件 "退出码 $RC、未拒绝或文件被动过——往来源不明的 AGENTS.md 灌规则是不可逆的"; fi
+mkdir -p "$LK/bs-none"
+O1=$(bash "$SELF_DIR/bootstrap.sh" --root "$LK/bs-none" --entry 2>&1)
+SZ1=$(wc -c < "$LK/bs-none/AGENTS.md" 2>/dev/null || echo 0)
+O2=$(bash "$SELF_DIR/bootstrap.sh" --root "$LK/bs-none" --entry 2>&1)
+if grep -qF "已生成入口模式 AGENTS.md" <<<"$O1" && grep -qF "已是入口模式" <<<"$O2" \
+   && [ "$(wc -c < "$LK/bs-none/AGENTS.md" 2>/dev/null || echo -1)" = "$SZ1" ] && [ "$SZ1" -gt 0 ]; then
+  ok 锁-生成的壳自匹配 "第一次生成、第二次被自己的锚认出（幂等）"
+else no 锁-生成的壳自匹配 "生成的锚行与自己匹配不上｜一次：$(tr '\n' ' ' <<<"$O1")｜二次：$(tr '\n' ' ' <<<"$O2")"; fi
+
+# ⑤ PowerShell 那一套实现：四根一次跑完（入口/老锚/散文提及/全新），断言四条判定各就各位。
+#    -AgentHomes 指向临时假家目录（叶名不在 .codex/.claude 映射里 → 不碰任何真实全局文件）。
+if command -v powershell.exe >/dev/null 2>&1; then
+  PW_LK="$ROOT/anchorlock"
+  PW_PS1="$( (cd "$SELF_DIR" && pwd -W) )/install-everywhere.ps1"
+  PW_SRC="$( (cd "$SKILL_DIR" && pwd -W) )"
+  mkdir -p "$LK/fakehome" "$LK/ps-none"
+  lk_mk ps-entry "$B_ENTRY"; lk_mk ps-old "$B_OLD"; lk_mk ps-prose "$B_PROSE"
+  SZPP=$(wc -c < "$LK/ps-prose/AGENTS.md")
+  PS_OUT=$(powershell.exe -NoProfile -ExecutionPolicy Bypass -Command \
+    "[Console]::OutputEncoding=[System.Text.Encoding]::UTF8; & '$PW_PS1' -Source '$PW_SRC' -AgentHomes @('$PW_LK/fakehome') -WorkspaceRoots @('$PW_LK/ps-entry','$PW_LK/ps-old','$PW_LK/ps-prose','$PW_LK/ps-none')" 2>&1)
+  PS_BAD=""
+  grep -qE 'ps-entry[/\\]AGENTS\.md（新锚 agents-entry（入口模式）' <<<"$PS_OUT" || PS_BAD="${PS_BAD}入口根没跳过; "
+  grep -qE 'ps-old[/\\]AGENTS\.md（老锚「任务三档规范」' <<<"$PS_OUT" || PS_BAD="${PS_BAD}老锚根没跳过; "
+  grep -qE 'ps-prose[/\\]AGENTS\.md 既无「任务三档规范」标题' <<<"$PS_OUT" || PS_BAD="${PS_BAD}散文根没警告; "
+  [ "$(wc -c < "$LK/ps-prose/AGENTS.md")" = "$SZPP" ] || PS_BAD="${PS_BAD}散文根被灌了规则; "
+  PS_SHA=$(grep -oE 'generated-from: references/agents-rule\.md @ [0-9a-f]+' "$LK/ps-none/AGENTS.md" 2>/dev/null | head -1 | awk '{print $NF}')
+  [ -n "$PS_SHA" ] || PS_BAD="${PS_BAD}全新根没写出可解析的戳; "
+  if [ -z "$PS_BAD" ]; then ok 锁-ps1同锁 "PowerShell 侧四根判定全对（含戳 @ $PS_SHA）"
+  else no 锁-ps1同锁 "$PS_BAD｜实际报告：$(tr '\n' ' ' <<<"$PS_OUT" | grep -oE '.{0,240}(ps-entry|ps-old|ps-prose|ps-none).{0,120}')"; fi
+else
+  ok 锁-ps1同锁 "本机没有 powershell.exe，跳过 PowerShell 侧（bash 侧四条仍在）"
+fi
+
 echo
-EXPECT_ASSERTS=47   # 加了/删了断言就改这里；条数对不上说明有断言静默消失或整个夹具没跑
+EXPECT_ASSERTS=60   # 加了/删了断言就改这里；条数对不上说明有断言静默消失或整个夹具没跑
 if [ $((pass + fail)) -ne "$EXPECT_ASSERTS" ]; then
   printf 'selftest：断言数 %d 与期望 %d 不符——有断言中途消失（夹具报错、循环被打断都算）
 ' $((pass + fail)) "$EXPECT_ASSERTS"
