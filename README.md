@@ -222,6 +222,20 @@ Register-ScheduledTask -TaskName 'multi-agent-handoff-drift' -Action $a `
 
 条款原文以 [SKILL.md](SKILL.md) 的「Propagation rule (MANDATORY)」为准，本节是给人看的操作版。
 
+### 怎么卸载
+
+装进去的东西散在五处，卸载就是按**反序**撤——先撤"会把它铺回来"的那两处，再删被铺的东西，否则删完下次 pull/push 又长出来：
+
+| 顺序 | 撤什么 | 怎么做 |
+|---|---|---|
+| ① | 两个 git 钩子 | 在真源工作树里 `rm .git/hooks/post-merge .git/hooks/pre-push` |
+| ② | 每日看门狗计划任务 | `schtasks /Delete /TN multi-agent-handoff-drift /F` |
+| ③ | 三处 skill 目录 | 删 `<agent>\skills\multi-agent-task-handoff\`（`.qoder-cn`、`.codex`、`.claude`） |
+| ④ | 两份全局规则块 | 手工把锚点标题（`### … 任务三档规范`）到文件末尾那一段删掉，**先留 `.bak`**。仓库里**没有**卸载脚本——`sync-global-rules.ps1` 只会按源头重写那块，不会撤掉它 |
+| ⑤ | 工作区根入口文件 | 把指向 skill 的那几行指针改掉；`<!-- agents-entry -->` 那行**留着**，将来重装才认得这是入口、不会往里灌第二份 |
+
+不动的东西：真源工作树与 GitHub 仓库、各任务目录里已有的三档文档、`<工作区根>/.watchdog/propagation.log`（历史日志）。**卸完之后 `watchdog.sh` 会 `exit 2`**（"一个副本都没比对到"）——那是"没查"，不是坏了；重装跑一次 `install-everywhere.ps1` 即可回到上面的状态。
+
 ## 产物与目录
 
 | 文件 | 用途 |

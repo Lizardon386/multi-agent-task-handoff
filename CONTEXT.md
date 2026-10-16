@@ -10,6 +10,7 @@
 
 ## 当前状态
 
+- **2026-10-16：本机已把 skill 卸载掉（用户选"彻底卸"）。** 三处 `skills/multi-agent-task-handoff\` 已删、`.codex\AGENTS.md` 与 `.claude\CLAUDE.md` 里的规则块已撤（各留 `.bak-uninstall-20261016-153259`）、每日计划任务 `multi-agent-handoff-drift` 已注销、工作树的 `post-merge`/`pre-push` 两个钩子已删。**本目录仍是 git 工作树、仍是规矩的源头**，GitHub 仓库照旧；`D:\agent_workspace\AGENTS.md` 的指针已改成"已卸载 + 怎么重装"。所以：**下次会话别自作主张跑 `install-everywhere.ps1` 把副本铺回去**，那是用户主动要的事；`scripts/watchdog.sh` 现在会 `exit 2`（名单全落空＝"没查"不是绿），这是预期。重装配方见 README「怎么卸载」一节（反向执行）。
 - 2026-10-08 创建，本会话内完成并验证：
   - [README.md.tpl](assets/README.md.tpl)、[CONTEXT.md.tpl](assets/CONTEXT.md.tpl) 六节骨架；
   - [init-task.sh](scripts/init-task.sh) 生成骨架（已实测：建目录、注入任务名与当天日期、已存在文件不覆盖）；
@@ -63,6 +64,13 @@
 - **`pre-push` 的脏树守卫不是可有可无**：铺满脚本拷的是**工作树**而不是 HEAD，脏树时 push 会把未提交内容铺进每个 agent 的技能目录。所以钩子里先 `git status --porcelain`，非空就跳过铺满只警告。
 
 ## 变更记录
+
+- 2026-10-16 Qoder（本会话，**用户要求"在所有 agent 目录中卸载此 skill"，选档"彻底卸"**）：
+  ① 先摸现状再动手：三处 skills 副本各 18 个文件、两份全局块带戳、两个钩子、计划任务在。按**反序**撤——先删 `.git/hooks/post-merge` 与 `pre-push`、注销计划任务 `multi-agent-handoff-drift`（`schtasks /Delete`，Git Bash 里要 `MSYS_NO_PATHCONV=1`），**再**删三处副本；顺序反过来的话钩子一触发就把副本铺回来。
+  ② 两份全局文件：从锚点标题 `### …任务三档规范` 删到文件末尾，各先留 `.bak-uninstall-20261016-153259`。复验按字节：`.codex\AGENTS.md` 只剩手写那行 H1（52 字节、BOM 与 CRLF 保住、无"任务三档规范/agents-rule"残留）；`.claude\CLAUDE.md` 回到 3 字节（只有 BOM，它本来没有本地内容）。
+  ③ 三处副本 `rm -rf` 后逐个复查为"无"，同目录下别的 skill（`dogfood`/`frontend-design`/`hallmark`/`ui-styling`/`human-writing-zh`/`shuorenhua`）没被碰；Qoder 这边的 skill 列表当场少掉 `multi-agent-task-handoff`，算卸载生效的独立证据。
+  ④ 没删的：本工作树与 GitHub 仓库、各任务目录已有的三档、`D:\agent_workspace\.watchdog\propagation.log`（28K 历史日志，没有遗留的 `_需要处理.md`）。`D:\agent_workspace\AGENTS.md` 的指针改成"已卸载 + 重装命令"，**`<!-- agents-entry -->` 那行留着**——将来重装才认得这是入口，不会往里灌第二份。
+  ⑤ README 补「怎么卸载」一节（五处、反序、含"仓库里没有卸载脚本"这句实话）。**下次会话注意**：别顺手跑铺满把东西装回去；`watchdog.sh` 现在 `exit 2` 是预期。
 
 - 2026-10-16 Qoder（本会话，**用户"做"→ 给 `-Apply` 写盘路径补夹具**，并把上一条记录里欠的存量清理核掉）：
   ① 用户跑完清理命令，我这面按字节复验两份真实全局文件：`bareCR=0`、BOM 保住、12 行全 CRLF、非空行 9 == 备份的 9、正文与备份**只差戳**（`@ ea75440`）。存量清了。
