@@ -33,6 +33,7 @@
 - [ ] **探针噪声**：入口模式的 `AGENTS.md` 被 `[出处]` 报成"无出处戳（下次重写才会带上）"，但它**永远不该有戳**（里面没有派生条款，戳只会误导）。改成：命中入口锚的文件 `[出处]` 打「不适用（入口模式）」。（三行改动，下次动 `watchdog.sh` 时顺手做）
 - [ ] 入口模式的那 9 行本机政策**彻底没有兜底**（不在 git、闸门不查、探针只管锚与指针）。要兜只能上 C 方案：`D:\agent_workspace` 起仓库、`.gitignore` 只放行根级规则文件。这会改掉"工作区不是 git 仓库"这个前提，等用户点头。
 - [ ] 遗留：`watchdog.sh` 的三条边界（名单全落空 exit 2、假 `HOME` 仍查到真名单、`C:\` 与 `C:/` 两种写法）是**手测**的，没进 `selftest.sh`——那个夹具只覆盖 `check-docs.sh`。要不要给看门狗单开一组断言（它带写文件与删自己产物的副作用，夹具得用临时根隔离），下次动它时再定。本轮的双锚 / 整行匹配 / 出处戳这三条判据同理，目前靠一次性沙箱实测（见变更记录），**没进夹具**。
+- [ ] **任务目录里藏着第二份脚本副本**（全工作区扫过，唯一一处：`dsp-hal-eval/tools/`，6 脚本 + `templates/` + 4 个 `.js`）。三个后果：① 它不在机械维护范围内（`install-everywhere` 默认只管根级），会长期漂——20:35 那次实测它就停在 `7c09c5b` 版、落后 4 个提交；② **从那儿跑闸门会把 `dsp-hal-eval` 当工作区根**，`coding/`、`documents/` 被当任务目录，凭空 6 条假 `[缺]`（实测）；③ 那 4 个 `.js` 不在 prune 应有集里，谁把 `dsp-hal-eval` 当根跑一次 `-Prune` 就删掉。候选做法：给闸门加 `[拷]`（任务目录内出现 `tools/`/`multi-agent-task-handoff/` 且有 `check-docs.sh`/`init-task.sh` → 判失败），但**加严前得先把这一处清掉**（等那个会话自己处置）。
 - [ ] **闸门看不见"越出仓库根"的相对链接**：本仓库根同时是任务目录，`../AGENTS.md` 指到仓库外的 `D:\agent_workspace\AGENTS.md`，`[链]` 判它可达、GitHub 读者点过去是 404。2026-10-15 手工查出并改净 5 条（README 2 + CONTEXT 历史行 3），但**同一类错还会再犯**。候选做法：任务目录里若存在 `.git`，就把解析后越过该仓库根的相对链接判失败（文案写清"本机可达但 GitHub 404"）。要做就照验收线来：先把存量改净 → 夹具正反两向断言 → `muttest.sh` 补一个变异 → 与基线逐字节比对。
 - [x] ~~遗留：`strip_code` 是逐字符扫描，全量闸门从 ~9s 涨到 ~11s~~ → 2026-10-14 的性能改造已把它连带解决（每目录 4 次进程，真工作区 ≈0.9s）。剩下的代价只有一条：合并成单次 awk 后，判定语义只能靠夹具与变异测试守，不能靠读代码。
 
@@ -45,7 +46,7 @@
 - **真源就是本目录（2026-10-14 起）**：`.git` 已从 `~/.qoder-cn/skills/multi-agent-task-handoff\` 移到这里，本目录是 skill 仓库的 git 工作树，布局是 `SKILL.md` + `scripts/` + `assets/` + `references/`（2026-10-14 同日删掉了多一份落地页 `.github/README.md`，合并进根 README）。三个 agent 的 skills 目录（`.qoder-cn`/`.codex`/`.claude`）与其它工作区的脚本副本目录**都是下游副本**，改它们等于等着被覆盖。改完的顺序固定：本目录改 → `git commit` + `git push` → 跑 `scripts/install-everywhere.ps1` 铺满。
 - **本目录的三档（README/DESIGN/CONTEXT）随仓库一起提交**（用户 2026-10-14 裁定），所以它们是**公开可见**的：写的时候记住里面的本机路径与进度对别人没有意义，规范以 `SKILL.md` 与 `references/` 为准。GitHub 首页就是根 [README.md](README.md)——2026-10-14 把原 `.github/README.md` 合并进来删掉了（渲染优先级 `.github` > 根目录 > `docs`，前者不存在时首页落到根）。对外 changelog 在本文的「发布更新记录」节，README 里指过来。
 - **跑闸门/建任务的命令在本目录多一层 `scripts/`**：`bash scripts/check-docs.sh`；下游工作区是扁平副本，写 `bash <副本目录>/check-docs.sh`。两种布局 root 解析都认，`…/skills/…`、`….codex…`、`….claude…` 下的那份**不**反推成工作区根。
-- **`D:\agent_workspace\AGENTS.md` 已降级成"入口 + 指针"（2026-10-15，149 行 → 32 行）**：顶部「工作目录约定」那章本机政策照留，细则只指向工作树的 `references/agents-rule.md`。**别再往那儿贴全文规则块**——那正是我们刚甩掉的第二真源。它标题里的「任务三档规范」是安装器判重锚，改文件时必须留住那四个字，实测改完跑 `install-everywhere.ps1` 输出"工作区规则已存在，跳过"且行数不变才算对。**`dsp-hal-eval\AGENTS.md` 仍是全文副本**（在它自己的 git 仓库里、漂了可回滚），那一份的手工同步义务照旧。
+- **`D:\agent_workspace\AGENTS.md` 已降级成"入口 + 指针"（2026-10-15，149 行 → 32 行）**：顶部「工作目录约定」那章本机政策照留，细则只指向工作树的 `references/agents-rule.md`。**别再往那儿贴全文规则块**——那正是我们刚甩掉的第二真源。它标题里的「任务三档规范」是安装器判重锚，改文件时必须留住那四个字，实测改完跑 `install-everywhere.ps1` 输出"工作区规则已存在，跳过"且行数不变才算对。**`dsp-hal-eval\AGENTS.md` 仍是全文副本**，而且**现在不在任何 git 里**（2026-10-15 该会话把 `.git` 迁到 `dsp-hal-eval\coding\android\vendor\chery\proprietary\ExtDsp\`，新仓库只跟踪 `dspcontrol-hal/`，外层 `dsp-hal-eval` 不再是仓库）——原先"漂了可回滚"的前提已经不成立，它和根级那份一样是裸文件，手工同步义务照旧、风险更高。
 - **skill 仓库自 2026-10-09 起即 git 工作树**（私有仓库 `Lizardon386/multi-agent-task-handoff`，真源即发布源）：改完不推 = 别人拿不到；分发不走 zip/tar.gz（当年那个 `skill-export/` 目录已不在工作区，故此处不带链接——死链比裸名更坏）。
 - **副本目录名是新的硬契约（2026-10-14）**：工作区脚本副本目录新名 `multi-agent-task-handoff`、旧名 `tools`，**四处**都得同时认：`check-docs.sh` 的 root 解析、`check-docs.sh` 的跳过名单（改成按内容判）、`init-task.sh` 的模板查找、`bootstrap.sh` + `install-everywhere.ps1` 的目标目录解析。少改一处就会出现"一次铺满铺出两份脚本"或"根退化成硬编码 D 盘"。手法与幂等标记 `任务[双三]档规范` 一致：新旧两名都接受，不做一刀切改名。
 - **AGENTS.md 的章节标题是幂等标记**：`bootstrap.sh` 与 `install-everywhere.ps1` 都拿它判重、只补不覆盖。2026-10-14 标题从「任务双档规范」改成「任务三档规范」，标记同步改成正则 `任务[双三]档规范`**同时接受旧标题**——否则留着旧标题的工作区再跑一次就追加出重复规则块。以后改标题必须连脚本正则一起改。skill 自身改名与此无关。
@@ -61,6 +62,12 @@
 - **`pre-push` 的脏树守卫不是可有可无**：铺满脚本拷的是**工作树**而不是 HEAD，脏树时 push 会把未提交内容铺进每个 agent 的技能目录。所以钩子里先 `git status --porcelain`，非空就跳过铺满只警告。
 
 ## 变更记录
+
+- 2026-10-15 Qoder（本会话，**并行会话把 `dsp-hal-eval` 的 `.git` 迁走了，核现状 + 清我文档里的旧前提**）：
+  ① 事实：`.git` 现在在 `dsp-hal-eval\coding\android\vendor\chery\proprietary\ExtDsp\`，新仓库根 = 那里，只跟踪 `dspcontrol-hal/`（21 个文件、工作树干净）；迁之前先把外层 407 项改动提交成终态（`b083904`），迁根是 `50b1d72`。`git -C dsp-hal-eval rev-parse` 现在直接 `fatal: not a git repository`。
+  ② 用户猜"`tools/` 副本是这次迁移造成的"——**不对一半**：那份副本迁移前就在（停在 `7c09c5b` 版，即截图里的 `047dfa71`），是当年有人把 `dsp-hal-eval` 当工作区根跑安装器留下的。迁移改变的是它的性质：以前 5 个文件被外层仓库跟踪、旧版能从 `HEAD` 复活；现在外层不是仓库，`git show HEAD:tools/check-docs.sh` 在新仓库里已无此路径，**复活路径消失，代价是整个 `dsp-hal-eval`（含三档、`documents/`、它的 `AGENTS.md` 全文副本）彻底没有版本控制**。
+  ③ 我这边跟着修：`CONTEXT` 关键约束里"dsp-hal-eval 那份在自己仓库里、漂了可回滚"这句已改成"现在不在任何 git 里"；新增一条待办记 `[拷]` 检查（任务目录里的第二份脚本副本，闸门现在看不见）与它的三个后果。
+  ④ 全工作区扫描结论：除 `dsp-hal-eval/tools/` 外**没有第二处**（3178 / ai-model-transfer / douyin-shop-tax-study / opengrok-transfer / uno-online / uno-webgame 全 0），根级 `tools/` 也已不存在。
 
 - 2026-10-15 Qoder（本会话，**规矩收回单一源头：入口模式 + 双锚 + 出处戳 + 探针**，用户拍板"AGENTS.md 只留政策，内容从源头跟踪"）：
   ① **承重墙先做**：判重从"只有标题锚"改成**双锚**——老锚 `任务[双三]档规范`、新锚**整行** `^<!-- agents-entry -->$`，`bootstrap.sh` 与 `install-everywhere.ps1` 两套实现一起改。为什么必须整行：`agents-rule.md` 正文自己就写着 `agents-entry` 这串字，裸子串会把"提到过锚"当成"装了锚"，于是**该追加的不追加**——正是这套东西最怕的假绿灯。
