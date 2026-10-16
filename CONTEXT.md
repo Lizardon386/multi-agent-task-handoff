@@ -65,6 +65,8 @@
 
 ## 变更记录
 
+- 2026-10-16 Qoder（本会话，**用户"删掉副本"→ 先清点再删，结果两处分岔**）：清点发现 `3178-battle-platform/tools/` **根本不是 skill 副本**——6 个文件全是它自己的（`check-seam.sh`、`gen-bat.mjs`、`monkey*.mjs`、`repro-*.mjs`），安装器那 9 个一个都没有，只是撞名 `tools`，**没碰**。`dsp-hal-eval/tools/` 是真副本**但混着它自己写的 10 个脚本**（`fix_*.js`、`check_*.js`、`elf_dynsyms.js`、`restructure_8_1.js`、`unlink_deleted.js`、`normalize_vendor_name.js`、`probe_wildcard_depth.mk`），而 `dsp-hal-eval` 已不是 git 仓库 ⇒ 这 10 个没有任何版本控制。**按用户选的"只删安装器那 9 个"执行**：删 `bootstrap.sh`/`check-docs.sh`/`init-task.sh`/`install-everywhere.ps1`/`selftest.sh`/`muttest.sh` + `templates/`（3 份 `.tpl`），复查残留 0、剩 10 个自有脚本原样在。**顺带更正我自己上一条消息里的一个数**：我说"11 个自己的脚本"，实际 10 个（数错了）。**留给那个会话的事实（我不动）**：它的 `AGENTS.md` 第 111、114 行仍教人跑 `bash tools/init-task.sh` 与 `bash tools/check-docs.sh`，这两个文件现在不存在了。
+
 - 2026-10-16 Qoder（本会话，**用户要求"在所有 agent 目录中卸载此 skill"，选档"彻底卸"**）：
   ① 先摸现状再动手：三处 skills 副本各 18 个文件、两份全局块带戳、两个钩子、计划任务在。按**反序**撤——先删 `.git/hooks/post-merge` 与 `pre-push`、注销计划任务 `multi-agent-handoff-drift`（`schtasks /Delete`，Git Bash 里要 `MSYS_NO_PATHCONV=1`），**再**删三处副本；顺序反过来的话钩子一触发就把副本铺回来。
   ② 两份全局文件：从锚点标题 `### …任务三档规范` 删到文件末尾，各先留 `.bak-uninstall-20261016-153259`。复验按字节：`.codex\AGENTS.md` 只剩手写那行 H1（52 字节、BOM 与 CRLF 保住、无"任务三档规范/agents-rule"残留）；`.claude\CLAUDE.md` 回到 3 字节（只有 BOM，它本来没有本地内容）。
