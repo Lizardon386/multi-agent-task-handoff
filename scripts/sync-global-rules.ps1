@@ -40,7 +40,9 @@ $sha = $null
 try { $sha = (& git -C $sourceRoot log -1 --format=%h -- references/agents-rule.md 2>$null) } catch { }
 if (-not $sha) { $sha = "unknown" }
 $stamp = "<!-- generated-from: references/agents-rule.md @ $sha ($(Get-Date -Format 'yyyy-MM-dd')) -->"
-$newBlock = "`r`n" + $body + "`r`n" + $stamp + "`r`n"
+# 块内部一律用 LF：写回时第 104 行会按原文件的换行风格整段转一次。这里若直接写 `r`n，
+# 那一步会把已有的 CR 再补一个，产出 `\r\r\n`（2026-10-16 首次真跑就在三个块边界上各留了一个孤立 CR）。
+$newBlock = "`n" + $body + "`n" + $stamp + "`n"
 
 # ── 全局文件按 agent 家目录推导（与 install-everywhere.ps1 一致）──
 $byName = @{ ".codex" = "AGENTS.md"; ".claude" = "CLAUDE.md" }
