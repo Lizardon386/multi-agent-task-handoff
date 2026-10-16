@@ -65,6 +65,8 @@
 
 ## 变更记录
 
+- 2026-10-16 Qoder（本会话，**用户"清理备份文件"→ 卸载链上的 10 份备份全删**）：`.codex\AGENTS.md.bak-*` 与 `.claude\CLAUDE.md.bak-*` 各 4 份（10-15 手抄版、两次 `-Apply`、卸载那次）、`dsp-hal-eval\AGENTS.md.bak-uninstall-*` 1 份、`Desktop\.uninstall-backup\codex-automation.toml.*` 1 份（该空目录一并收掉）。删前逐个列名确认都是本链产物、没夹别家工具的 `.bak`；删后复查计数 0，两份全局文件仍是 52 / 3 字节。**唯一不可再生的是那条 Codex 巡检自动化的原文**——它的 10 行 toml 全文此刻只存在于本会话输出里（`prompt` 让 Codex 每日 09:00 跑 `check-docs.sh`）；要重建照那段重写即可，其余备份的内容都在仓库里（规则块由 `install-everywhere.ps1`/`bootstrap.sh` 从 `agents-rule.md` 生成）。
+
 - 2026-10-16 Qoder（本会话，**用户"你来改，确认别的所有目录，杜绝 `AGENTS.md` 这种会立刻生效配置里还有此 skill 的痕迹"**）：
   ① 先分类再动手，扫出四类。真·立刻生效的配置面其实有**三处漏网**：`D:\agent_workspace\dsp-hal-eval\AGENTS.md`（152 行整份规则副本，H1 就是 `bootstrap.sh` 写的 `# 工作区约定（dsp-hal-eval）`，逐行比对确认没有本地政策混在里面）；`D:\agent_workspace\AGENTS.md` 入口那一节（含 `agents-entry` 锚）；以及最要命的一条——**`~\.codex\automations\automation\automation.toml`：`status=ACTIVE`、`FREQ=DAILY;BYHOUR=9` 的 Codex 巡检自动化**，prompt 让 Codex 每天跑 `check-docs.sh` 报违规，还指着早已改名的 `D:\agent_workspace\tools\`。**教训：卸载要看每个 agent 自己的"自动化/定时任务"面，`skills 目录 + 规则文件 + 计划任务` 这张清单不完整。**
   ② 处置：删 Codex 那条自动化（备份 `Desktop\.uninstall-backup\codex-automation.toml.20261016-155424`）；删 `dsp-hal-eval\AGENTS.md`（备份同目录 `.bak-uninstall-20261016-155424`，它的三档与两份交付文档没碰）；`D:\agent_workspace\AGENTS.md` 去掉入口节与锚、只剩 8 行「工作目录约定」本机政策。
