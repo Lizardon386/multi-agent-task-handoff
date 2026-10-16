@@ -65,6 +65,8 @@
 
 ## 变更记录
 
+- 2026-10-16 Qoder（本会话，**用户"情况交接给 d85b18c2，它的三档太臃肿、到处都是，它的也删"**）：先查可恢复性再删——`dsp-hal-eval` 的三档**不在任何 git 里**（ExtDsp 新仓库只跟踪 `dspcontrol-hal/`），删了不可恢复，所以分了两档处理。**已删 6 份**：`coding\` 与 `documents\` 下各自的 README/DESIGN/CONTEXT（今天为满足"每个目录都要三档"补建的合规件，27KB）。**没删根级 `README.md`(111 行) 与 `CONTEXT.md`(260 行 / 120KB)**——那是该项目唯一的交接档案，删了没有任何地方能恢复，"要不要精简/删除"留给用户决定，并已明确告知那个会话"别自己删"。交付物 `架构设计.md`、`dspcontrol-hal调音透传实施方案.md` 保留。交接消息已发（`runtimeState` 从 running→opening，消息进队列），内容含：机器层面卸了什么、它目录里我删了什么（`AGENTS.md` 152 行、`tools\` 那 9 个安装器文件、这 6 份三档）、它自己的 10 个脚本一个没碰、此后别再建三档/别跑 `tools/check-docs.sh`/别重装 skill，并要求它回一句确认 + 是否在写那 6 份。
+
 - 2026-10-16 Qoder（本会话，**用户"清理备份文件"→ 卸载链上的 10 份备份全删**）：`.codex\AGENTS.md.bak-*` 与 `.claude\CLAUDE.md.bak-*` 各 4 份（10-15 手抄版、两次 `-Apply`、卸载那次）、`dsp-hal-eval\AGENTS.md.bak-uninstall-*` 1 份、`Desktop\.uninstall-backup\codex-automation.toml.*` 1 份（该空目录一并收掉）。删前逐个列名确认都是本链产物、没夹别家工具的 `.bak`；删后复查计数 0，两份全局文件仍是 52 / 3 字节。**唯一不可再生的是那条 Codex 巡检自动化的原文**——它的 10 行 toml 全文此刻只存在于本会话输出里（`prompt` 让 Codex 每日 09:00 跑 `check-docs.sh`）；要重建照那段重写即可，其余备份的内容都在仓库里（规则块由 `install-everywhere.ps1`/`bootstrap.sh` 从 `agents-rule.md` 生成）。
 
 - 2026-10-16 Qoder（本会话，**用户"你来改，确认别的所有目录，杜绝 `AGENTS.md` 这种会立刻生效配置里还有此 skill 的痕迹"**）：
