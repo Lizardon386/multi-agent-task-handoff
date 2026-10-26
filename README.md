@@ -1,13 +1,13 @@
 # multi-agent-task-handoff · 使用说明
 
-> 多 agent 任务接力的薄协议：默认一任务一份 `CONTEXT.md`；需要时用 `工程化` 升到三档，再用 `交接` 把状态交给另一个会话。
+> 多 agent 任务接力的最小协议：默认一任务一份 `CONTEXT.md`；需要时用 `工程化` 升到三档，再用 `交接` 把状态交给另一个会话。
 > 标识 `multi-agent-task-handoff`。本目录是协议真源与 git 工作树。
 > 设计取舍见 [DESIGN.md](DESIGN.md)，当前进度见 [CONTEXT.md](CONTEXT.md)。
 > 最近更新：2026-10-23
 
 ## 一句话说明
 
-装不装 skill 都能用：状态永远在任务目录的 `CONTEXT.md`。默认单档；`工程化` 才创建 README/DESIGN 并迁移文件；`交接` 只发交接消息，不复制聊天历史。v1（三档必填 + 闸门 + 安装器 + 看门狗）已归档到 tag `v1-three-tier`。
+**skill 是可选的**：状态永远在任务目录的 `CONTEXT.md`。不装就手动复制模板，并给新 agent 一段自包含指令（不能只说“读卡”）；装了可调用 `/multi-agent-task-handoff`，由它定义读卡/工程化/交接。装 skill 不等于全自动，仍需一次触发。默认单档；`工程化` 才创建 README/DESIGN 并迁移文件；`交接` 只发交接消息，不复制聊天历史。
 
 ## 快速开始
 
@@ -70,7 +70,7 @@ Qoder 有 `list_workspaces` / `create_chat_session` / `send_message_to_chat_sess
 | [assets/README.md.tpl](assets/README.md.tpl) | 工程化时可选的使用说明模板 |
 | [assets/DESIGN.md.tpl](assets/DESIGN.md.tpl) | 工程化时可选的方案设计模板 |
 
-v1 的脚本、`references/`、闸门已删除；旧版从 tag `v1-three-tier` 取。
+版本演进（为什么从强制三档收敛到单卡）见 [DESIGN.md](DESIGN.md) 的「版本与设计演进」。
 
 ## 限制与注意事项
 
