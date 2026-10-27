@@ -35,14 +35,18 @@ argument-hint: "[工程化 <任务名> | 交接 <sessionId> | 接续 <任务名>
 - 收工：CONTEXT 每次更新；README 仅在用法/产物变化时更新；DESIGN 仅在设计/架构变化时更新；三份的 `## 文档` 表和日期同步。
 - 质量自检：新 agent 能否只读这些文档回答 目标/当前/下一步/坑/验证；答不上就补，不交给下一家。
 - 单档不维护 README/DESIGN；三档才维护。
+- 收工只把本轮新学到的、会影响下一家的坑写进 CONTEXT；不与宿主 memory 逐条对齐。
+- 交接前扫 project memory 索引，把会影响下一家的项提升到 CONTEXT/DESIGN；冲突以 CONTEXT/DESIGN 为准。
+- 宿主 memory 是工作记忆，不是交接契约；不做每轮 diff。
 
 ## 交接 <sessionId>
 
 1. 读 CONTEXT，确认字段齐全：模式、目标/完成定义、现在在哪、下一步、坑、锚点、验证命令、交接记录、参考会话。
-2. 生成 prompt（≤40k）：工作目录 + 文档表 + 锚点 + 验证命令 + 下一步 1–3 条 + 勿动文件 + 已决策 + 旧会话 ID；要求新会话先回能力自检 + 锚点一致/不一致。
-3. `send_message_to_chat_session(sessionId, prompt)`；成功只代表接收。
-4. `wait_chat_sessions` / `read_chat_session` 确认锚点与验证通过；否则补信息，不宣布完成。
-5. 更新「当前接手」「交接记录」；旧会话停写。
+2. 先按「维护」做一次 memory 提升：把 project memory/本地记忆里会影响下一家的坑写进 CONTEXT/DESIGN。
+3. 生成 prompt（≤40k）：工作目录 + 文档表 + 锚点 + 验证命令 + 下一步 1–3 条 + 勿动文件 + 已决策 + 旧会话 ID；要求新会话先回能力自检 + 锚点一致/不一致。
+4. `send_message_to_chat_session(sessionId, prompt)`；成功只代表接收。
+5. `wait_chat_sessions` / `read_chat_session` 确认锚点与验证通过；否则补信息，不宣布完成。
+6. 更新「当前接手」「交接记录」；旧会话停写。
 
 ## 接续 <任务名>
 

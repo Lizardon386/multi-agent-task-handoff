@@ -84,6 +84,7 @@ flowchart TD
 - **不复制历史**：新会话无历史；需要细节按旧 sessionId 查，不搬运 transcript。
 - **工作区打开是手动步骤**：没有 create/open workspace 工具或 CLI，skill 只输出路径和下一步。
 - **跨 agent**：文件协议通用；Qoder 的会话/工作区 API 在 Codex/Claude 上不存在，按宿主能力降级。
+- **宿主 memory 是辅助回忆，不是交接契约**：下一家需要的事实进 CONTEXT/DESIGN；Codex 官方文档同样建议必须遵守的指导写进 AGENTS.md / 已签入文档（见 [Codex memories 文档](https://learn.chatgpt.com/docs/customization/memories?surface=app)）。
 
 ## 版本与设计演进
 
