@@ -13,7 +13,7 @@ argument-hint: "[工程化 <任务名> | 交接 <sessionId> | 接续 <任务名>
 
 - CONTEXT 顶部写 `模式：单档`；只记关键动作，≤100 行。
 - 开始：读卡、核对状态锚点、跑验证命令。
-- 收工：更新「现在在哪 / 下一步 / 坑」，交接记录加一条关键动作（≤3 行）。
+- 收工：更新「现在在哪 / 下一步 / 坑」，把 memory 里会影响下一家的坑写进「坑与约束」，交接记录加一条关键动作（≤3 行）。
 - README/DESIGN 只在有外部读者或设计取舍时写。
 
 ## 工程化 <任务名>
@@ -29,14 +29,13 @@ argument-hint: "[工程化 <任务名> | 交接 <sessionId> | 接续 <任务名>
    - CONTEXT 保持 ≤100 行，只记关键动作。
 5. **下一步**：让用户把目录打开为工作区；之后跑 `接续 <任务名>`，或手动建会话后跑 `交接 <sessionId>`。
 
-## 维护（按模式）
+## 维护（memory 与模式无关）
 
 - 开始：读 CONTEXT；`模式：三档` 时再读 README/DESIGN。
-- 收工：CONTEXT 每次更新；README 仅在用法/产物变化时更新；DESIGN 仅在设计/架构变化时更新；三份的 `## 文档` 表和日期同步。
-- 质量自检：新 agent 能否只读这些文档回答 目标/当前/下一步/坑/验证；答不上就补，不交给下一家。
-- 单档不维护 README/DESIGN；三档才维护。
-- 收工只把本轮新学到的、会影响下一家的坑写进 CONTEXT；不与宿主 memory 逐条对齐。
-- 交接前扫 project memory 索引，把会影响下一家的项提升到 CONTEXT/DESIGN；冲突以 CONTEXT/DESIGN 为准。
+- 收工：CONTEXT 每次更新；把本轮 memory 里会影响下一家的坑写进 CONTEXT；README 仅在用法/产物变化时更新；DESIGN 仅在设计/架构变化时更新；三档同步 `## 文档` 表和日期。
+- 交接前：再扫一遍 project memory 索引，把遗漏的、会影响下一家的项提升到 CONTEXT/DESIGN；冲突以 CONTEXT/DESIGN 为准。
+- 质量自检：新 agent 能否只读文档回答 目标/当前/下一步/坑/验证；答不上就补，不交给下一家。
+- 单档只维护 CONTEXT；三档才额外维护 README/DESIGN。memory 提升两种模式都做。
 - 宿主 memory 是工作记忆，不是交接契约；不做每轮 diff。
 
 ## 交接 <sessionId>
