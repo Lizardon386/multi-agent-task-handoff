@@ -37,19 +37,20 @@ argument-hint: "[工程化 <任务名> | 交接 <sessionId> | 接续 <任务名>
 - 质量自检：新 agent 能否只读文档回答 目标/当前/下一步/坑/验证；答不上就补，不交给下一家。
 - 单档只维护 CONTEXT；三档才额外维护 README/DESIGN。memory 提升两种模式都做。
 - 宿主 memory 是工作记忆，不是交接契约；不做每轮 diff。
+- 交接 prompt 带用户通用规则指针（`D:\agent_workspace\USER_RULES.md`）；读不到就贴相关子集，不把整份规则复制进 CONTEXT。
 
 ## 交接 <sessionId>
 
 1. 读 CONTEXT，确认字段齐全：模式、目标/完成定义、现在在哪、下一步、坑、锚点、验证命令、交接记录、参考会话。
 2. 先按「维护」做一次 memory 提升：把 project memory/本地记忆里会影响下一家的坑写进 CONTEXT/DESIGN。
-3. 生成 prompt（≤40k）：工作目录 + 文档表 + 锚点 + 验证命令 + 下一步 1–3 条 + 勿动文件 + 已决策 + 旧会话 ID；要求新会话先回能力自检 + 锚点一致/不一致。
+3. 生成 prompt（≤40k）：工作目录 + 文档表 + 锚点 + 验证命令 + 下一步 1–3 条 + 勿动文件 + 已决策 + 旧会话 ID + 用户通用规则指针（`D:\agent_workspace\USER_RULES.md`；读不到就贴相关子集）；要求新会话先回能力自检 + 锚点一致/不一致。
 4. `send_message_to_chat_session(sessionId, prompt)`；成功只代表接收。失败或目标不可用时，按「自动化失效时」给手动卡（复制 prompt 让用户粘贴）。
 5. `wait_chat_sessions` / `read_chat_session` 确认锚点与验证通过；否则补信息，不宣布完成。
 6. 更新「当前接手」「交接记录」；旧会话停写。
 
 ## 接续 <任务名>
 
-工作区已打开时：`list_workspaces` 按 `rootPaths` 精确匹配；找不到就停，按「自动化失效时」给手动卡。读卡生成 prompt，`create_chat_session({ workspaceId, prompt })`，后续同「交接」的确认步骤。
+工作区已打开时：`list_workspaces` 按 `rootPaths` 精确匹配；找不到就停，按「自动化失效时」给手动卡。按「交接」生成 prompt，`create_chat_session({ workspaceId, prompt })`，后续同「交接」的确认步骤。
 
 ## 自动化失效时
 
