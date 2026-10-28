@@ -2,7 +2,7 @@
 name: multi-agent-task-handoff
 description: 多 agent 任务接力协议：默认一份 CONTEXT.md 交接卡；工程化后升三档（README/DESIGN/CONTEXT），按 3178 式文档头块与文档表维护。
 when_to_use: 开始或结束一个任务、接盘别人留下的任务目录、把工作交接给另一个 agent/会话、或要把当前会话工程化到新目录时。
-argument-hint: "[--help | 接盘 [任务名] | 工程化 [任务名] | 压卡 [任务名] | 交接 [sessionId]]"
+argument-hint: "[--help | 接盘 [任务名] | 交接 [会话ID] | 压卡 [任务名] | 工程化 [任务名]]"
 ---
 
 # 多 agent 任务交接
@@ -14,11 +14,11 @@ argument-hint: "[--help | 接盘 [任务名] | 工程化 [任务名] | 压卡 [�
 | 无 | 默认单档：按「接盘」读写当前任务的 CONTEXT |
 | `--help` / `帮助` | 显示本表 |
 | `接盘` / `接手` `[任务名]` | 当前会话读 CONTEXT、核锚点、跑验证，进入工作状态 |
-| `交接` / `收工` `[sessionId]` | 整理任务信息并扫 memory 写进 CONTEXT/DESIGN；有 ID 再发送 |
+| `交接` / `收工` `[会话ID]` | 整理任务信息并扫 memory 写进 CONTEXT/DESIGN；有 ID 再发送 |
 | `压卡` / `压缩上下文` `[任务名]` | 检查 CONTEXT 维护情况，按本 skill 精简 |
 | `工程化` / `工程` / `建档` `[任务名]` | 建目录、迁移、三档 |
 
-任务名可省略：默认取 cwd 目录名。cwd 不是任务目录（如工作区根）时省略就显示本表，不猜。未知参数 → 显示本表。
+任务名 = 任务目录名，可省略，默认 cwd；会话ID = Qoder 会话 UUID，只用于 `交接`。两者不同，不互相替代。cwd 不是任务目录（如工作区根）时省略就显示本表，不猜。未知参数 → 显示本表。
 
 ## 默认：单档
 
@@ -32,7 +32,7 @@ argument-hint: "[--help | 接盘 [任务名] | 工程化 [任务名] | 压卡 [�
 
 1. 读 `CONTEXT.md`（没有就按 `assets/CONTEXT.md.tpl` 建）；`模式：三档` 时读 README/DESIGN，DESIGN 可由根目录的方案设计交付文档承担；`PROJECT_RULES.md` 存在就读（本机默认 `D:\agent_workspace\PROJECT_RULES.md`）。
 2. 核对状态锚点，跑验证命令。
-3. 有「参考会话」且信息不足时，若宿主提供 `read_chat_session`，按旧 sessionId 读最近 N 轮；没有就问用户。
+3. 有「参考会话」且信息不足时，若宿主提供 `read_chat_session`，按旧会话 ID 读最近 N 轮；没有就问用户。
 4. 缺字段/缺交接，按「自动化失效时」给手动卡；不要猜。
 
 ## 工程化 / 工程 / 建档 [任务名]
@@ -43,7 +43,7 @@ argument-hint: "[--help | 接盘 [任务名] | 工程化 [任务名] | 压卡 [�
 2. **建目录**：cwd 已在 `D:\agent_workspace` 下则接管；否则建 `D:\agent_workspace\<任务名>`，已存在不覆盖。
 3. **迁移**：先列「源 → 目标」清单；只处理 cwd 顶层非隐藏文件，排除 `.git`、`node_modules`、应用缓存；确认后复制、校验 hash、默认不删源。
 4. **写三档**：用 `assets/*.tpl` 生成三份并删注释；三份都要有 H1 + 一句话 + `最近更新` + `## 文档` 表；CONTEXT 写 `模式：三档`。README 按 GitHub 落地页写；DESIGN 含目标/约束、拓扑 mermaid、核心流程 mermaid、4.1 包/目录文本树 + 关系图、决策表、语义/工程约束。根目录已有方案设计交付文档时，不另立 DESIGN：在该文档补缺的节，或只在 CONTEXT 文档表里指向它。
-5. **下一步**：让用户把目录打开为工作区；之后 `交接` 准备交接信息，要发到某个会话就带 sessionId。
+5. **下一步**：让用户把目录打开为工作区；之后 `交接` 准备交接信息，要发到某个会话就带会话 ID。
 
 ## 压卡 / 压缩上下文 [任务名]
 
@@ -57,7 +57,7 @@ argument-hint: "[--help | 接盘 [任务名] | 工程化 [任务名] | 压卡 [�
 6. 校验：行数 ≤100、链接存在、验证命令可跑、搬运块逐字一致；有 git 提交推送；无 git 原件已在记录文件里。
 7. 最后报 before/after 行数和字节、搬移清单。
 
-## 交接 / 收工 [sessionId]
+## 交接 / 收工 [会话ID]
 
 两种用法：不带 ID 只整理并写卡（跨 agent 手动交接，prompt 交给用户自己粘）；带 ID 整理后再发给该会话（同 agent 不同会话）。
 
@@ -66,8 +66,8 @@ argument-hint: "[--help | 接盘 [任务名] | 工程化 [任务名] | 压卡 [�
 3. 写卡：只挑关键动作（不知道这条下一家会做错/重做才写；能从 CONTEXT/README/DESIGN/git 得到的不写）；更新「现在在哪 / 下一步 / 坑与约束」；交接记录加 1 条，≤10 条，超出先沉降再删最旧；README/DESIGN 只在用法或设计变化时动。
 4. 锚点：有 git 提交推送；没有 git 用时间戳，不另建备份。
 5. 生成 prompt（≤40k）：工作目录 + 文档表 + 锚点 + 验证命令 + 下一步 1–3 条 + 勿动文件 + 已决策 + 旧会话 ID + 项目规则指针（`D:\agent_workspace\PROJECT_RULES.md`；读不到就贴相关子集）；要求新会话按「接盘」开始，先回能力自检 + 锚点一致/不一致。
-6. 没有 sessionId：把 prompt 或状态摘要给用户，停，不建会话。有 sessionId：`send_message_to_chat_session`；成功只代表接收，失败按「自动化失效时」给手动卡。
-7. 有 sessionId 时 `wait_chat_sessions` / `read_chat_session` 确认锚点与验证通过；更新「当前接盘」「交接记录」，旧会话停写。
+6. 没有会话 ID：把 prompt 或状态摘要给用户，停，不建会话。有会话 ID：`send_message_to_chat_session(sessionId, prompt)`；成功只代表接收，失败按「自动化失效时」给手动卡。
+7. 有会话 ID 时 `wait_chat_sessions` / `read_chat_session` 确认锚点与验证通过；更新「当前接盘」「交接记录」，旧会话停写。
 
 ## 维护（memory 与模式无关）
 
@@ -94,6 +94,6 @@ argument-hint: "[--help | 接盘 [任务名] | 工程化 [任务名] | 压卡 [�
 
 - 默认自己决策：本协议、CONTEXT/DESIGN、状态锚点、能力表能支撑的，直接做并把依据写进交接记录；只在规则冲突、事实缺失或动作不可逆时问人。
 - 优化顺序：先压开场读取量（卡与触发器），再提高自动化覆盖率；不为结构完整增加必读文件。
-- 分类与降级按「自动化失效时」；不猜 workspaceId/sessionId。一个目录同一时间一个写者。
-- 不复制完整历史；细节按旧 sessionId 读。git 可选：有 git 用 HEAD，没有用时间戳。
+- 分类与降级按「自动化失效时」；不猜工作区 ID/会话 ID。一个目录同一时间一个写者。
+- 不复制完整历史；细节按旧会话 ID 读。git 可选：有 git 用 HEAD，没有用时间戳。
 - 不装钩子、不写全局规则、不铺副本、不起后台服务、不调用模型。

@@ -79,7 +79,7 @@ flowchart TD
 
   subgraph HAND[交接 / 收工]
     R --> S[读卡 + memory 提升 + 生成 prompt（含 PROJECT_RULES 指针）]
-    S --> T{有 sessionId?}
+    S --> T{有会话ID?}
     T -- 否 --> V0[输出 prompt / 摘要给用户，停]
     T -- 是 --> T2{发送可用?}
     T2 -- 是 --> U[send_message_to_chat_session]
@@ -100,7 +100,7 @@ flowchart TD
 
 1. **自检 ↔ 执行**：探针只读；输出了“可自动”的步骤才执行，输出“需确认”的先给清单。
 2. **工程化 ↔ 交接**：工程化只准备目录和文档；交接只发状态。两者可以分开跑，中间允许用户手动打开工作区。
-3. **卡 ↔ 交接 prompt**：prompt 从卡生成，不复制聊天历史；旧 sessionId 只让新会话按需查细节。
+3. **卡 ↔ 交接 prompt**：prompt 从卡生成，不复制聊天历史；旧会话 ID 只让新会话按需查细节。
 4. **状态锚点 ↔ git/备份**：git 仓库写 HEAD + 分支 + 工作树状态；非 git 写时间戳（原件在 `压卡备份.md`）。锚点对不上就停。
 5. **能力表 ↔ 自检**：先读 `AGENT_CAPABILITIES.md`，按表复验关键项；结果变化就地更新，不按探测追加行。
 6. **memory ↔ 交接**：收工/交接前只把会影响下一家的坑提升到 CONTEXT/DESIGN；宿主 memory 不做每轮 diff。
@@ -115,7 +115,7 @@ flowchart TD
 | 状态锚点 | git `HEAD` + 分支 + 工作树是否干净；非 git 为时间戳/`压卡备份.md`；只用于核对漂移 |
 | 完成定义 | 每阶段一条可验证标准；接盘先跑验证命令 |
 | 一个写者 | 同一时间只有一个会话改 `CONTEXT.md`；交接后旧会话停写 |
-| 不复制历史 | 新会话无历史；旧 sessionId 按需读，不搬运 transcript |
+| 不复制历史 | 新会话无历史；旧会话 ID 按需读，不搬运 transcript |
 | 跨 agent | 文件协议通用；Qoder 的会话/工作区 API 在 Codex/Claude 上不存在，按宿主能力降级 |
 | 宿主 memory | 辅助回忆，不是交接契约；下一家需要的事实进 CONTEXT/DESIGN；不做每轮 diff |
 | 项目规则 | `PROJECT_RULES.md`（`D:\agent_workspace`）；跨项目/跨 agent 的产物、验证、交接约定；宿主专属规则留在各自全局文件；能力表是 agent 侧缓存 |
