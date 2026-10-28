@@ -13,7 +13,7 @@
 - 2026-10-23：v2 已落地。`SKILL.md` 改为默认单档 + `工程化` / `交接` / `接续` + 只读自检；三份模板重写；当前工作树只保留 v2 的 SKILL、三份根文档和三份模板。
 - 2026-10-28：uno-webgame 试点通过。新会话只输入「继续」，自动读 `AGENTS.md` + `CONTEXT.md`；任务级 AGENTS.md 触发成立。3178 暂不使用。
 - 2026-10-28：建立 agent 能力矩阵 `AGENT_CAPABILITIES.md`（工作区根）：一行一个 agent/版本、固定能力列、就地更新；Qoder 行已填，Codex 待测。
-- 2026-10-28：handoff-pilot-test 闭环通过——收工自动回填 CONTEXT；接手会话读 CONTEXT + USER_RULES；send/wait/read 成功。工程化迁移/三档未测（skill 未安装）。
+- 2026-10-28：handoff-pilot-test 闭环通过——收工自动回填 CONTEXT；接手会话读 CONTEXT + ENGINEERING_RULES；send/wait/read 成功。工程化迁移/三档未测（skill 未安装）。
 - 本机无本 skill 的全局规则、钩子、计划任务或技能副本；不要重装。
 - 本目录是协议真源和 git 工作树；非 git 目录用 `.review/<任务>/` 做归档/备份锚点。
 - 远端同步状态以 `git status` / `git log` 为准；网络异常时先推本地提交。

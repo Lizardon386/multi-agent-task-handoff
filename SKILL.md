@@ -30,7 +30,7 @@ argument-hint: "[--help | 接手 <任务名> | 工程化 <任务名> | 交接 <s
 
 新会话进入任务目录时使用。
 
-1. 读 `CONTEXT.md`（没有就按 `assets/CONTEXT.md.tpl` 建）；`模式：三档` 时读 README/DESIGN；`USER_RULES.md` 存在就读（本机默认 `D:\agent_workspace\USER_RULES.md`）。
+1. 读 `CONTEXT.md`（没有就按 `assets/CONTEXT.md.tpl` 建）；`模式：三档` 时读 README/DESIGN；`ENGINEERING_RULES.md` 存在就读（本机默认 `D:\agent_workspace\ENGINEERING_RULES.md`）。
 2. 核对状态锚点，跑验证命令。
 3. 有「参考会话」且信息不足时，若宿主提供 `read_chat_session`，按旧 sessionId 读最近 N 轮；没有就问用户。
 4. 缺字段/缺交接，按「自动化失效时」给手动卡；不要猜。
@@ -58,7 +58,7 @@ argument-hint: "[--help | 接手 <任务名> | 工程化 <任务名> | 交接 <s
 
 1. 读 CONTEXT，字段齐全：模式、目标/完成定义、现在在哪、下一步、坑、锚点、验证命令、交接记录、参考会话；缺字段先按「接手」补，补不了给手动卡。
 2. 先按「维护」做 memory 提升。
-3. 生成 prompt（≤40k）：工作目录 + 文档表 + 锚点 + 验证命令 + 下一步 1–3 条 + 勿动文件 + 已决策 + 旧会话 ID + 用户通用规则指针（`D:\agent_workspace\USER_RULES.md`；读不到就贴相关子集）；要求新会话按「接手」开始，先回能力自检 + 锚点一致/不一致。
+3. 生成 prompt（≤40k）：工作目录 + 文档表 + 锚点 + 验证命令 + 下一步 1–3 条 + 勿动文件 + 已决策 + 旧会话 ID + 工程规则指针（`D:\agent_workspace\ENGINEERING_RULES.md`；读不到就贴相关子集）；要求新会话按「接手」开始，先回能力自检 + 锚点一致/不一致。
 4. `send_message_to_chat_session(sessionId, prompt)`；成功只代表接收；失败或不可用按「自动化失效时」给手动卡。
 5. `wait_chat_sessions` / `read_chat_session` 确认锚点与验证通过；否则补信息，不宣布完成。
 6. 更新「当前接手」「交接记录」；旧会话停写。

@@ -55,7 +55,7 @@ flowchart TD
   A -->|工程化| M[工程化]
 
   subgraph START[接手与收工]
-    B --> C[读 CONTEXT + USER_RULES；信息不足读旧会话]
+    B --> C[读 CONTEXT + ENGINEERING_RULES；信息不足读旧会话]
     C --> D{模式=三档?}
     D -- 是 --> E[读 README/DESIGN]
     D -- 否 --> F[只读 CONTEXT]
@@ -79,7 +79,7 @@ flowchart TD
   end
 
   subgraph HAND[交接与接续]
-    R --> S[读卡 + memory 提升 + 生成 prompt（含 USER_RULES 指针）]
+    R --> S[读卡 + memory 提升 + 生成 prompt（含 ENGINEERING_RULES 指针）]
     S --> T{发送可用?}
     T -- 是 --> U[send_message_to_chat_session]
     T -- 否 --> V[手动卡：复制 prompt 给用户粘贴]
@@ -118,6 +118,7 @@ flowchart TD
 | 不复制历史 | 新会话无历史；旧 sessionId 按需读，不搬运 transcript |
 | 跨 agent | 文件协议通用；Qoder 的会话/工作区 API 在 Codex/Claude 上不存在，按宿主能力降级 |
 | 宿主 memory | 辅助回忆，不是交接契约；下一家需要的事实进 CONTEXT/DESIGN；不做每轮 diff |
+| 工程规则 | `ENGINEERING_RULES.md`（`D:\agent_workspace`）；跨项目/跨 agent 的产物、验证、交接约定；宿主专属规则留在各自全局文件；能力表是 agent 侧缓存 |
 | memory 提升 | 与模式无关；单档写进 CONTEXT，三档再同步 README/DESIGN；只在收工/交接做 |
 | 触发器 | 任务级 `AGENTS.md` 的 3 行片段；不写全局规则；宿主不读回退显式调用；best-effort |
 | 能力表 | `D:\agent_workspace\AGENT_CAPABILITIES.md`（agent 工作区根）；一行一个 agent/版本，固定能力列，就地更新；30 天/版本变化复验；缓存不是契约 |

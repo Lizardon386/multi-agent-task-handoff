@@ -47,7 +47,7 @@ cp assets/CONTEXT.md.tpl <任务目录>/CONTEXT.md
 ### 交接
 
 - 目标会话必须已注册、未归档；`send_message_to_chat_session` 成功只代表接收。
-- prompt 由交接卡生成，包含：路径、锚点、验证命令、下一步、勿动文件、已决策、旧 sessionId。
+- prompt 由交接卡生成，包含：路径、锚点、验证命令、下一步、勿动文件、已决策、工程规则指针、旧 sessionId。
 - 新会话先回能力自检和锚点是否一致；旧会话用 `wait_chat_sessions` / `read_chat_session` 确认后才停写。
 - 不复制历史；细节按旧 sessionId 按需读取。
 
