@@ -13,7 +13,7 @@
 - 2026-10-23：v2 已落地。`SKILL.md` 改为默认单档 + `工程化` / `交接` / `接续` + 只读自检；三份模板重写；当前工作树只保留 v2 的 SKILL、三份根文档和三份模板。
 - 2026-10-28：uno-webgame 试点通过。新会话只输入「继续」，自动读 `AGENTS.md` + `CONTEXT.md`；任务级 AGENTS.md 触发成立。3178 暂不使用。
 - 2026-10-28：建立 agent 能力矩阵 `AGENT_CAPABILITIES.md`（工作区根）：一行一个 agent/版本、固定能力列、就地更新；Qoder 行已填，Codex 待测。
-- 2026-10-28：handoff-pilot-test 闭环通过——收工自动回填 CONTEXT；接手会话读 CONTEXT + PROJECT_RULES；send/wait/read 成功。工程化迁移/三档未测（skill 未安装）。
+- 2026-10-28：handoff-pilot-test 闭环通过——收工自动回填 CONTEXT；接手会话读 CONTEXT + PROJECT_RULES；send/wait/read 成功。三档与真实命令已验；实际跨目录迁移未实测。
 - 2026-10-28：P0.3 工程化模拟通过——读 SKILL/templates，接管 handoff-pilot-test，三档生成，AGENTS 与 snippet 一致，素材 hash 不变，dry-run 0 迁移。
 - 2026-10-28：P0.3 真实命令通过——临时装薄 skill 后新会话执行 `工程化 handoff-pilot-test`，Skill 正常加载；接管后三档刷新（README 58 / DESIGN 199 / CONTEXT 68），AGENTS 未变，素材 hash 不变，dry-run 0 迁移；测试后临时 skill 已删除。
 - 2026-10-28：补回 v1 的「DESIGN 可由交付文档承担」规则（`架构设计.md`、`XX实施方案.md` 这类复合名；评审意见不算），v2 收敛时随 references 误删。dsp-hal-eval 无 DESIGN 属正常。
@@ -27,7 +27,8 @@
 - [x] 三份文档、`SKILL.md`、三份模板按 v2 重写。
 - [x] uno-webgame 试点：任务级 AGENTS.md 触发成立（新会话只输入「继续」即读 AGENTS.md + CONTEXT.md）。
 - [x] handoff-pilot-test 闭环：收工自动回填、接手读卡、send/wait/read 通过。
-- [ ] 推广到 uno-online / dsp-hal-eval（3178 暂缓）；每个任务目录加 3 行 `AGENTS.md`。
+- [x] uno-online：卡 183 行 / 46 KB → 83 行 / 6.9 KB，历史原样搬到 `工作记录.md`；加 `AGENTS.md`，新会话自动读卡，未改文件。
+- [ ] dsp-hal-eval：卡 287 行 / 157 KB，先压卡再加触发器；3178 暂缓。
 - [x] 工程化模拟：三档生成 + AGENTS 一致 + dry-run 0 迁移（handoff-pilot-test）。
 - [x] 真实 `工程化` 命令：临时装薄 skill 实测通过（2026-10-28），测完已删。
 - [ ] 推广后复核能力表；Qoder 发交接/wait/read 已验，实际跨目录迁移仍未实测。
@@ -57,6 +58,8 @@
 - 2026-10-28：补回「DESIGN 可由方案设计交付文档承担」（v1 agents-rule 规则，v2 误删）；SKILL/README/DESIGN 同步。
 - 2026-10-28：SKILL/DESIGN 加自动化边界「可逆整理可自动、内容取舍按证据判、默认只搬不删」。
 - 2026-10-28：SKILL 加默认决策规则「能按协议/文档/锚点/能力表判定的自己做并记依据，例外才问」；README/DESIGN 同步。
+- 2026-10-28：uno-online 压卡 + 触发器落地：CONTEXT 183 行 / 46 KB → 83 行 / 6.9 KB，历史原样搬到 `工作记录.md`；新会话自动读 AGENTS/CONTEXT，未改文件。
+- 2026-10-28：SKILL/DESIGN 加两条评估指标（先省开场读取量、再提高自动化）与压卡步骤。
 
 ## 给下一个 agent 的追加区
 
