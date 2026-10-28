@@ -1,7 +1,7 @@
 # multi-agent-task-handoff · 方案设计
 
 > 面向改这套协议的人：为什么只留一份交接卡、工程化与交接怎么接、哪些步骤只能手动。使用者说明见 [README.md](README.md)，当前进度见 [CONTEXT.md](CONTEXT.md)。
-> 最近更新：2026-10-23
+> 最近更新：2026-10-28
 
 ## 问题与目标
 
@@ -24,6 +24,7 @@
 | git 可选 | 很多目录不是 git；git 只是部分项目为推 GitHub 才用 | 非 git 目录要自己留备份锚点 |
 | 只记关键动作 | 格式调整、错字提交对下一个 agent 没有意义；完整历史会淹没当前状态 | 查细节要去 `git show` 或旧会话 |
 | 不安装、不挂钩子、不写全局规则 | 每轮变慢的主因是常驻面 | 没有自动执行；agent 不读卡就不会生效 |
+| 触发器用任务级 `AGENTS.md` 的 3 行 | 宿主支持工作区根文件；全局规则会影响所有项目；3 行足够让 agent 读卡 | 任务目录多一份小文件；宿主不读时仍需显式调用 |
 | 打开工作区留给用户 | 当前没有 create/open workspace 工具或 CLI | 流程多一个手动停顿 |
 | README/DESIGN 按需写 | 只有外部读者/设计决策才需要；小任务写三档是纯开销 | 项目变大时要主动补文档 |
 
@@ -40,7 +41,8 @@ multi-agent-task-handoff/
 └─ assets/
    ├─ CONTEXT.md.tpl        # 默认模板
    ├─ README.md.tpl         # 工程化可选
-   └─ DESIGN.md.tpl         # 工程化可选
+   ├─ DESIGN.md.tpl         # 工程化可选
+   └─ AGENTS.md.snippet     # 任务级触发片段
 ```
 
 流程：
@@ -86,6 +88,7 @@ flowchart TD
 - **跨 agent**：文件协议通用；Qoder 的会话/工作区 API 在 Codex/Claude 上不存在，按宿主能力降级。
 - **宿主 memory 是辅助回忆，不是交接契约**：下一家需要的事实进 CONTEXT/DESIGN；Codex 官方文档同样建议必须遵守的指导写进 AGENTS.md / 已签入文档（见 [Codex memories 文档](https://learn.chatgpt.com/docs/customization/memories?surface=app)）。
 - **memory 提升与模式无关**：单档写进 CONTEXT；三档再同步 README/DESIGN；`工程化` 只决定文档集，不决定是否提升。
+- **触发器**：任务级 `AGENTS.md` 的 3 行片段（`assets/AGENTS.md.snippet`）；不写全局规则；宿主不读时回退 `/multi-agent-task-handoff`。2026-10-28 uno-webgame 试点：新会话只输入“继续”即读 `AGENTS.md` + `CONTEXT.md`。
 
 ## 版本与设计演进
 
