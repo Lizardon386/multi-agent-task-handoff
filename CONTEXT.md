@@ -64,6 +64,7 @@
 - 2026-10-28：SKILL/DESIGN 加两条评估指标（先省开场读取量、再提高自动化）与压卡步骤。
 - 2026-10-28：装薄 skill 并验证自动加载：自然语言「接手这个目录」→ 新会话读 AGENTS/CONTEXT/README/DESIGN + PROJECT_RULES、核 sha256、未写入。
 - 2026-10-28：压卡收成正式命令（`--help` 可见）；snippet 加压卡检查，uno-online / handoff-pilot-test 的 AGENTS 同步（fixture 432 字节）。
+- 2026-10-28：`接手/工程化/压卡/接续` 的任务名改为可选，默认 cwd 目录名；只有操作别的目录时才带名字。
 
 ## 给下一个 agent 的追加区
 

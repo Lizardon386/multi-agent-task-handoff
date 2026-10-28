@@ -18,12 +18,15 @@ cp assets/CONTEXT.md.tpl <任务目录>/CONTEXT.md
 或在 Qoder 里：
 
 ```text
-/multi-agent-task-handoff                  # 默认单档：确保/刷新 CONTEXT.md
-/multi-agent-task-handoff 工程化 <任务名>   # 建目录、迁移文件、三档
-/multi-agent-task-handoff 压卡 <任务名>     # 超 100 行的卡压回交接卡
+/multi-agent-task-handoff                  # 默认单档：确保/刷新当前目录的 CONTEXT.md
+/multi-agent-task-handoff 接手              # 当前目录接手
+/multi-agent-task-handoff 工程化            # 当前目录工程化（要建新目录时带名字）
+/multi-agent-task-handoff 压卡              # 当前目录卡超 100 行时压回
 /multi-agent-task-handoff 交接 <sessionId>  # 把交接卡发给指定会话
-/multi-agent-task-handoff 接续 <任务名>     # 工作区已打开时新建会话
+/multi-agent-task-handoff 接续              # 当前工作区新建会话
 ```
+
+任务名可省略，默认当前目录；操作别的目录时才写成 `工程化 <任务名>`。`交接` 必须带目标 sessionId。
 
 ## 使用说明
 
