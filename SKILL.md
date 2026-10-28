@@ -30,7 +30,7 @@ argument-hint: "[--help | 接手 <任务名> | 工程化 <任务名> | 交接 <s
 
 新会话进入任务目录时使用。
 
-1. 读 `CONTEXT.md`；`模式：三档` 时读 README/DESIGN；`USER_RULES.md` 存在就读（本机默认 `D:\agent_workspace\USER_RULES.md`）。
+1. 读 `CONTEXT.md`（没有就按 `assets/CONTEXT.md.tpl` 建）；`模式：三档` 时读 README/DESIGN；`USER_RULES.md` 存在就读（本机默认 `D:\agent_workspace\USER_RULES.md`）。
 2. 核对状态锚点，跑验证命令。
 3. 有「参考会话」且信息不足时，若宿主提供 `read_chat_session`，按旧 sessionId 读最近 N 轮；没有就问用户。
 4. 缺字段/缺交接，按「自动化失效时」给手动卡；不要猜。
@@ -39,7 +39,7 @@ argument-hint: "[--help | 接手 <任务名> | 工程化 <任务名> | 交接 <s
 
 用户明确要求时才执行；先只读自检，再按「自动 → 确认 → 手动」执行。
 
-1. **自检**：pwd/写权限、git 状态、工作区/会话/会话工具/CLI 是否可用；输出四行 ✅ 可自动 / 🟡 需确认 / 🔴 需手动 / ⛔ 不支持；不问用户“你能不能做 X”。先读工作区根 `AGENT_CAPABILITIES.md`（有就读），按表复验关键项；结果变化就地更新；未知 agent 补一行。后续失败动作按「自动化失效时」处理。
+1. **自检**：pwd/写权限、git 状态、工作区/会话/会话工具/CLI 是否可用；输出四行 ✅ 可自动 / 🟡 需确认 / 🔴 需手动 / ⛔ 不支持；不问用户“你能不能做 X”。先读 `D:\agent_workspace\AGENT_CAPABILITIES.md`（有就读），按表复验关键项；结果变化就地更新；未知 agent 补一行。后续失败动作按「自动化失效时」处理。
 2. **建目录**：cwd 已在 `D:\agent_workspace` 下则接管；否则建 `D:\agent_workspace\<任务名>`，已存在不覆盖。
 3. **迁移**：先列「源 → 目标」清单；只处理 cwd 顶层非隐藏文件，排除 `.git`、`node_modules`、应用缓存；确认后复制、校验 hash、默认不删源。
 4. **写三档**：用 `assets/*.tpl` 生成三份并删注释；三份都要有 H1 + 一句话 + `最近更新` + `## 文档` 表；CONTEXT 写 `模式：三档`。README 按 GitHub 落地页写；DESIGN 含目标/约束、拓扑 mermaid、核心流程 mermaid、4.1 包/目录文本树 + 关系图、决策表、语义/工程约束。同时确保任务目录的 `AGENTS.md` 含 `## 任务交接`（按 `assets/AGENTS.md.snippet`，只补不覆盖）。
@@ -53,13 +53,12 @@ argument-hint: "[--help | 接手 <任务名> | 工程化 <任务名> | 交接 <s
 - 质量自检：新 agent 能否只读文档回答 目标/当前/下一步/坑/验证；答不上就补。
 - 单档只维护 CONTEXT；三档才额外维护 README/DESIGN；memory 提升两种模式都做。
 - 宿主 memory 是工作记忆，不是交接契约；不做每轮 diff。
-- 交接 prompt 带用户通用规则指针（`D:\agent_workspace\USER_RULES.md`）；读不到就贴相关子集，不把整份规则复制进 CONTEXT。
 
 ## 交接 <sessionId>
 
-1. 读 CONTEXT，字段齐全：模式、目标/完成定义、现在在哪、下一步、坑、锚点、验证命令、交接记录、参考会话。
+1. 读 CONTEXT，字段齐全：模式、目标/完成定义、现在在哪、下一步、坑、锚点、验证命令、交接记录、参考会话；缺字段先按「接手」补，补不了给手动卡。
 2. 先按「维护」做 memory 提升。
-3. 生成 prompt（≤40k）：工作目录 + 文档表 + 锚点 + 验证命令 + 下一步 1–3 条 + 勿动文件 + 已决策 + 旧会话 ID + 用户通用规则指针；要求新会话按「接手」开始，先回能力自检 + 锚点一致/不一致。
+3. 生成 prompt（≤40k）：工作目录 + 文档表 + 锚点 + 验证命令 + 下一步 1–3 条 + 勿动文件 + 已决策 + 旧会话 ID + 用户通用规则指针（`D:\agent_workspace\USER_RULES.md`；读不到就贴相关子集）；要求新会话按「接手」开始，先回能力自检 + 锚点一致/不一致。
 4. `send_message_to_chat_session(sessionId, prompt)`；成功只代表接收；失败或不可用按「自动化失效时」给手动卡。
 5. `wait_chat_sessions` / `read_chat_session` 确认锚点与验证通过；否则补信息，不宣布完成。
 6. 更新「当前接手」「交接记录」；旧会话停写。
@@ -81,8 +80,6 @@ argument-hint: "[--help | 接手 <任务名> | 工程化 <任务名> | 交接 <s
 
 ## 规则
 
-- 能自动：建目录、复制、写文档、发消息给已知 sessionId、等/读。
-- 需确认：移动/删除源、覆盖、commit/push、创建会话。
-- 只能手动：打开工作区；跨宿主会话 API；复制完整历史（不做）。
-- 失败按「自动化失效时」处理；不猜 workspaceId/sessionId。一个目录同一时间一个写者。
+- 分类与降级按「自动化失效时」；不猜 workspaceId/sessionId。一个目录同一时间一个写者。
+- 不复制完整历史；细节按旧 sessionId 读。git 可选：有 git 用 HEAD，没有用备份锚点。
 - 不装钩子、不写全局规则、不铺副本、不起后台服务、不调用模型。

@@ -38,7 +38,7 @@ cp assets/CONTEXT.md.tpl <任务目录>/CONTEXT.md
 
 只在明确要求时执行。步骤：
 
-1. 只读自检：写权限、git 状态、`list_workspaces`、`list_chat_sessions`、宿主是否有会话工具、是否有 qoder CLI；先读工作区根 `AGENT_CAPABILITIES.md` 并复验关键项。
+1. 只读自检：写权限、git 状态、`list_workspaces`、`list_chat_sessions`、宿主是否有会话工具、是否有 qoder CLI；先读 `D:\agent_workspace\AGENT_CAPABILITIES.md` 并复验关键项。
 2. 输出四行：可自动 / 需确认 / 需手动 / 不支持；能做的直接做，做不到的列给用户。
 3. 建目录；从当前 cwd 迁移顶层非隐藏文件（排除 `.git`、`node_modules`、应用缓存）；先出清单，确认后复制、校验、默认不删源。
 4. 用 `assets/*.tpl` 写三档：头块 + `## 文档` 表；README 按 GitHub 落地页，DESIGN 含拓扑/流程/架构树，CONTEXT 写 `模式：三档` 且 ≤100 行；任务目录 `AGENTS.md` 加 `assets/AGENTS.md.snippet`。

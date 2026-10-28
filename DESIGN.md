@@ -120,7 +120,7 @@ flowchart TD
 | 宿主 memory | 辅助回忆，不是交接契约；下一家需要的事实进 CONTEXT/DESIGN；不做每轮 diff |
 | memory 提升 | 与模式无关；单档写进 CONTEXT，三档再同步 README/DESIGN；只在收工/交接做 |
 | 触发器 | 任务级 `AGENTS.md` 的 3 行片段；不写全局规则；宿主不读回退显式调用；best-effort |
-| 能力表 | `AGENT_CAPABILITIES.md`；一行一个 agent/版本，固定能力列，就地更新；30 天/版本变化复验；缓存不是契约 |
+| 能力表 | `D:\agent_workspace\AGENT_CAPABILITIES.md`（agent 工作区根）；一行一个 agent/版本，固定能力列，就地更新；30 天/版本变化复验；缓存不是契约 |
 | 自动化失效 | 先只读探测；四类；只能手动给手动卡（已完成/卡点/步骤/验证/回我）；用户完成后复验 |
 
 > 边界与代价已在「设计思路」表里逐条写明；这里只定义语义，避免重复。宿主 memory 的边界参考 [Codex memories 文档](https://learn.chatgpt.com/docs/customization/memories?surface=app)。
