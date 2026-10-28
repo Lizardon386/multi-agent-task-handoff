@@ -23,7 +23,7 @@ cp assets/CONTEXT.md.tpl <任务目录>/CONTEXT.md
 /multi-agent-task-handoff 工程化            # 当前目录工程化（要建新目录时带名字）
 /multi-agent-task-handoff 压卡              # 检查并精简当前目录的 CONTEXT
 /multi-agent-task-handoff 收工              # 只整理写卡，不发送
-/multi-agent-task-handoff 交接 <会话ID>  # 整理后发给指定会话
+/multi-agent-task-handoff 交接 <ID>  # 整理后发给指定会话
 ```
 
 任务名可省略，默认当前目录；操作别的目录时才写成 `工程化 <任务名>`。别名：接手=接盘，收工=交接（无 ID），压缩上下文=压卡，工程/建档=工程化。
@@ -49,7 +49,7 @@ cp assets/CONTEXT.md.tpl <任务目录>/CONTEXT.md
 2. 输出四行：可自动 / 需确认 / 需手动 / 不支持；能做的直接做，做不到的列给用户。
 3. 建目录；从当前 cwd 迁移顶层非隐藏文件（排除 `.git`、`node_modules`、应用缓存）；先出清单，确认后复制、校验、默认不删源。
 4. 用 `assets/*.tpl` 写三档：头块 + `## 文档` 表；README 按 GitHub 落地页，DESIGN 含拓扑/流程/架构树，CONTEXT 写 `模式：三档` 且 ≤100 行；已有方案设计交付文档时用其代替 DESIGN。
-5. 让用户把目录打开为工作区；之后 `交接` 准备交接信息，要发到某个会话就带会话 ID。
+5. 让用户把目录打开为工作区；之后 `交接` 准备交接信息，要发到某个会话就带 ID。
 
 ### 压卡
 
@@ -62,7 +62,7 @@ cp assets/CONTEXT.md.tpl <任务目录>/CONTEXT.md
 ### 交接 / 收工
 
 - 不带 ID（收工）：整理任务信息、扫 memory、更新 CONTEXT，把交接 prompt 或摘要给用户；不建会话、不发送。
-- 带会话 ID（交接）：在收工基础上发给该会话；目标必须已注册、未归档，`send_message_to_chat_session` 成功只代表接收。
+- 带 ID（交接）：在收工基础上发给该会话；目标必须已注册、未归档，`send_message_to_chat_session` 成功只代表接收。
 - prompt 由交接卡生成，包含：路径、锚点、验证命令、下一步、勿动文件、已决策、项目规则指针、旧会话 ID。
 - 新会话先回能力自检和锚点是否一致；旧会话用 `wait_chat_sessions` / `read_chat_session` 确认后才停写。
 - 不复制历史；细节按旧会话 ID 按需读取。
