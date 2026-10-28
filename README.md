@@ -82,6 +82,7 @@ Qoder 有 `list_workspaces` / `create_chat_session` / `send_message_to_chat_sess
 - 打开目录为工作区只能手动：当前没有 create/open workspace 工具或 CLI。
 - 不复制完整会话历史；交接卡 + 旧 sessionId 按需查。
 - 一个目录同一时间一个写者。
+- agent 能按协议和现有文档判断的，自己决定并记录依据；只在规则冲突、信息缺失或不可逆时找你确认。
 - git 不是前提；非 git 目录要留备份锚点（`.review/<任务>/` 或 zip）。
 - 卡超过 100 行说明它在写日志，不是交接。
 - 敏感内容留在本机。
