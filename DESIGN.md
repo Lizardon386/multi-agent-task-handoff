@@ -25,6 +25,7 @@
 | 只记关键动作 | 格式调整、错字提交对下一个 agent 没有意义；完整历史会淹没当前状态 | 查细节要去 `git show` 或旧会话 |
 | 不安装、不挂钩子、不写全局规则 | 每轮变慢的主因是常驻面 | 没有自动执行；agent 不读卡就不会生效 |
 | 触发器用任务级 `AGENTS.md` 的 3 行 | 宿主支持工作区根文件；全局规则会影响所有项目；3 行足够让 agent 读卡 | 任务目录多一份小文件；宿主不读时仍需显式调用 |
+| 能力表用矩阵缓存 | 避免每个 agent/每次会话重复探测；一行一个版本、固定能力列，增长有界 | 过期风险；关键项仍要复验 |
 | 打开工作区留给用户 | 当前没有 create/open workspace 工具或 CLI | 流程多一个手动停顿 |
 | README/DESIGN 按需写 | 只有外部读者/设计决策才需要；小任务写三档是纯开销 | 项目变大时要主动补文档 |
 
@@ -42,7 +43,8 @@ multi-agent-task-handoff/
    ├─ CONTEXT.md.tpl        # 默认模板
    ├─ README.md.tpl         # 工程化可选
    ├─ DESIGN.md.tpl         # 工程化可选
-   └─ AGENTS.md.snippet     # 任务级触发片段
+   ├─ AGENTS.md.snippet     # 任务级触发片段
+   └─ AGENT_CAPABILITIES.md.tpl  # 能力矩阵模板
 ```
 
 流程：
@@ -89,6 +91,7 @@ flowchart TD
 - **宿主 memory 是辅助回忆，不是交接契约**：下一家需要的事实进 CONTEXT/DESIGN；Codex 官方文档同样建议必须遵守的指导写进 AGENTS.md / 已签入文档（见 [Codex memories 文档](https://learn.chatgpt.com/docs/customization/memories?surface=app)）。
 - **memory 提升与模式无关**：单档写进 CONTEXT；三档再同步 README/DESIGN；`工程化` 只决定文档集，不决定是否提升。
 - **触发器**：任务级 `AGENTS.md` 的 3 行片段（`assets/AGENTS.md.snippet`）；不写全局规则；宿主不读时回退 `/multi-agent-task-handoff`。2026-10-28 uno-webgame 试点：新会话只输入“继续”即读 `AGENTS.md` + `CONTEXT.md`。
+- **能力表**：`AGENT_CAPABILITIES.md` 记录每个 host/版本的自动化边界；一行一个 agent/版本，就地更新，不按 workspace/能力追加；30 天或版本变化后复验；只是缓存，不是契约。
 
 ## 版本与设计演进
 
