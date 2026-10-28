@@ -26,7 +26,7 @@ set "RC=%ERRORLEVEL%"
 if not "%RC%"=="2" goto done
 
 echo.
-set /p HOST=没识别出当前宿主，请输入 qoder / claude / codex:
+set /p HOST=没识别出当前宿主，请输入 qoder / claude / codex / opencode:
 if "%HOST%"=="" goto abort
 "%BASH%" install.sh --host "%HOST%" %*
 set "RC=%ERRORLEVEL%"

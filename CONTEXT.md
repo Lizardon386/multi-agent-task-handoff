@@ -20,11 +20,11 @@
 ## 当前状态
 
 - v2 协议已落地：默认单档；`接盘` / `交接`（别名 `收工`）/ `压卡` / `工程化` / `自检`（别名 `更新`）+ 只读自检；所有任务命令只看 cwd；唯一参数是 `交接` 的 ID；`收工` 只整理，带 ID 才发送；支持 `+` 或空格串行组合（如 `压卡+收工`、`压卡 收工`）。
-- 安装：`install.sh` 按宿主环境变量只给当前 agent 装（Qoder/Claude/Codex），写 `.skill-version`、启用本地钩子、登记 `.skill-sync-paths`；`安装.bat` 是 Windows 双击入口。
-- 本机已装薄 skill（`~/.qoder-cn/skills/multi-agent-task-handoff`，实拷贝）；Qoder 不认目录 junction；提交后由钩子重新导出，或跑 `install.sh`。全局规则/钩子/计划任务仍无。
+- 安装：`install.sh` 按宿主环境变量只给当前 agent 装（Qoder/Claude/Codex/OpenCode；OpenCode 也可 `--host opencode`），写 `.skill-version`、启用本地钩子、登记 `.skill-sync-paths`；`安装.bat` 是 Windows 双击入口。
+- 本机已装薄 skill：Qoder `~/.qoder-cn/skills/multi-agent-task-handoff`、OpenCode `~/.config/opencode/skills/multi-agent-task-handoff`（均实拷贝）；Qoder 不认目录 junction；提交后由钩子重新导出，或跑 `install.sh`。全局规则/钩子/计划任务仍无。
 - 入口是命令不是文件：`接盘` 命令或 `交接` prompt（自带读卡顺序）；不在任务目录铺 `AGENTS.md`；自然语言「接盘」会加载 skill，已验。
 - 记录粒度：每次收工 1 条关键动作，交接记录 ≤10 条自动滚动；压卡只做兜底。判定标准见「关键约束」。
-- 已验证：收工回填、send/wait/read、工程化命令、压卡（uno-online 183→83 行）、skill 自动加载。
+- 已验证：收工回填、send/wait/read、工程化命令、压卡（uno-online 183→83 行）、skill 自动加载、OpenCode 实装（`OPENCODE` 自动识别 + `--host opencode`）。
 - 未验证：实际跨目录迁移；Codex 行待测；Claude/Codex 未在真宿主实装（只测环境识别 + 临时目录安装）；dsp-hal-eval 未压卡。
 - 本目录是协议真源和 git 工作树；非 git 目录靠 `压卡备份.md` 追溯。
 - 远端同步状态以 `git status` / `git log` 为准；网络异常时先推本地提交。
@@ -54,7 +54,6 @@
 
 ## 交接记录（只记关键动作，≤10 条）
 
-- 2026-10-28 Qoder：本卡压卡，状态历史/已完成/变更记录搬到 `压卡备份.md`。
 - 2026-10-28 Qoder：收工改为只记 1 条关键动作，交接记录滚动；压卡降为兜底。
 - 2026-10-28 Qoder：记录上限放宽到 10 条；写清关键判定（不知道会做错/重做才写，能从文档/git 得到的不写）。
 - 2026-10-28 Qoder：记录滚动改为“先沉降再删最旧”，避免早期决策被滚丢。
@@ -64,3 +63,4 @@
 - 2026-10-28 Qoder：dsp 压卡验收；备份统一为 `压卡备份.md`（历史 + 原件附录），不建目录；压卡不顺手改别的文档。
 - 2026-10-28 Qoder：命令改「接盘」；「接续」去掉，`收工` = 不发送的交接，`交接 <ID>` 才发；加 `自检/更新` 比对安装 commit；任务命令只看 cwd，参数只留交接 ID；支持 `+` 或空格串行组合。
 - 2026-10-28 Qoder：加 `install.sh`（只装当前宿主）+ `安装.bat`；卡里补 `gh auth status`；修正 `.skill-sync-paths` 是安装目录不是源仓库。
+- 2026-10-28 OpenCode：`install.sh` 加 OpenCode 宿主（`OPENCODE`/`OPENCODE_CONFIG_DIR`，`--host opencode`），修 Windows `--target` 路径；OpenCode 副本实装并登记 `.skill-sync-paths`。

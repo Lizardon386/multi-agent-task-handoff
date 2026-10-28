@@ -28,6 +28,8 @@ cp assets/CONTEXT.md.tpl <任务目录>/CONTEXT.md
 
 所有命令只看当前目录，目录名就是任务名；要处理别的任务先 `cd`。唯一参数是 `交接` 的 ID（Qoder 会话 UUID）。别名：接手=接盘，收工=交接（无 ID），压缩上下文=压卡，工程/建档=工程化。
 
+OpenCode / OpenChamber 里用 `$multi-agent-task-handoff <参数>` 或 `/skill multi-agent-task-handoff <参数>` 显式调用。
+
 命令可用 `+` 或空格串行组合，如 `压卡+收工`、`压卡 收工`、`工程化 交接 <ID>`、`接盘 压卡`；从左到右，前一步失败就停。空格分隔时按命令词切分，非命令词只当 `交接` 的 ID。
 
 ## 使用说明
@@ -93,20 +95,21 @@ cp assets/CONTEXT.md.tpl <任务目录>/CONTEXT.md
 
 ## 安装与同步
 
-Qoder 的技能目录是**实拷贝**，目录 junction 不被扫描（实测切成 junction 后技能直接消失）。`install.sh` 按环境变量识别**当前打开这个工作区的 agent**，只给它自己的 skill 目录安装，不替别的宿主铺副本：
+Qoder 的技能目录是**实拷贝**，目录 junction 不被扫描（实测切成 junction 后技能直接消失）。`install.sh` 按环境变量识别**当前打开这个工作区的 agent**，只给它自己的 skill 目录安装，不替别的宿主铺副本；OpenCode 也可用 `--host opencode` 显式指定：
 
 | 宿主 | 识别依据 | 安装目录 |
 |---|---|---|
 | Qoder | `QODER_CONFIG_DIR` / `QODERCN_CONFIG_DIR` | `<配置目录>/skills/multi-agent-task-handoff` |
 | Claude Code | `CLAUDECODE` / `CLAUDE_CONFIG_DIR` | 同上（默认 `~/.claude`） |
 | Codex | `CODEX_HOME` | 同上（未设置时用 `--host codex`） |
+| OpenCode | `OPENCODE` / `OPENCODE_CONFIG_DIR` | 同上（默认 `~/.config/opencode`） |
 
 ```bash
 bash install.sh --dry-run   # 只打印宿主、目标、动作
 bash install.sh             # 装到当前宿主
 ```
 
-Windows 双击 `安装.bat`；识别不出宿主时会问一次 qoder / claude / codex。选项：`--host`、`--target DIR`、`--force`（覆盖非托管非空目录）、`--no-hook`、`--no-register`、`--dry-run`。换宿主时，在新宿主里重跑一次。
+Windows 双击 `安装.bat`；识别不出宿主时会问一次 qoder / claude / codex / opencode。选项：`--host`、`--target DIR`、`--force`（覆盖非托管非空目录）、`--no-hook`、`--no-register`、`--dry-run`。换宿主时，在新宿主里重跑一次。
 
 安装会写 `.skill-version`（commit + 时间），并默认把目标追加到 `.skill-sync-paths`、启用仓库本地 `core.hooksPath=.githooks`。之后每次提交由 `post-commit` 把 HEAD 刷到清单里的目录；父目录不存在就跳过。钩子只在 commit 时跑，不常驻；没启用时重跑 `install.sh`。
 
