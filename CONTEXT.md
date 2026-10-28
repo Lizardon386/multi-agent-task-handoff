@@ -14,6 +14,7 @@
 - 2026-10-28：uno-webgame 试点通过。新会话只输入「继续」，自动读 `AGENTS.md` + `CONTEXT.md`；任务级 AGENTS.md 触发成立。3178 暂不使用。
 - 2026-10-28：建立 agent 能力矩阵 `AGENT_CAPABILITIES.md`（工作区根）：一行一个 agent/版本、固定能力列、就地更新；Qoder 行已填，Codex 待测。
 - 2026-10-28：handoff-pilot-test 闭环通过——收工自动回填 CONTEXT；接手会话读 CONTEXT + PROJECT_RULES；send/wait/read 成功。工程化迁移/三档未测（skill 未安装）。
+- 2026-10-28：P0.3 工程化模拟通过——读 SKILL/templates，接管 handoff-pilot-test，三档生成（README 58 / DESIGN 180 / CONTEXT 60），AGENTS 与 snippet 一致，素材 hash 不变，dry-run 0 迁移；真实命令未装 skill 测试。
 - 本机无本 skill 的全局规则、钩子、计划任务或技能副本；不要重装。
 - 本目录是协议真源和 git 工作树；非 git 目录用 `.review/<任务>/` 做归档/备份锚点。
 - 远端同步状态以 `git status` / `git log` 为准；网络异常时先推本地提交。
@@ -24,7 +25,8 @@
 - [x] uno-webgame 试点：任务级 AGENTS.md 触发成立（新会话只输入「继续」即读 AGENTS.md + CONTEXT.md）。
 - [x] handoff-pilot-test 闭环：收工自动回填、接手读卡、send/wait/read 通过。
 - [ ] 推广到 uno-online / dsp-hal-eval（3178 暂缓）；每个任务目录加 3 行 `AGENTS.md`。
-- [ ] 工程化迁移/三档测试（需在 Qoder 装 skill 或手动模拟）。
+- [x] 工程化模拟：三档生成 + AGENTS 一致 + dry-run 0 迁移（handoff-pilot-test）。
+- [ ] 真实 `工程化` 命令（需在 Qoder 装薄 skill 或手动调用 SKILL）。
 - [ ] 在推广后更新能力表；补 Qoder 的发交接、wait、迁移流程实测。
 - [ ] 根据试点结果补工程化的迁移清单细节（排除项、hash 校验、删源确认）。
 - [ ] 决定是否加可选 `check-handoff.sh`（只查存在/标题/日期/行数）；默认不加。
@@ -47,6 +49,7 @@
 - 2026-10-28：uno-webgame 试点通过；任务级 AGENTS.md 触发成立，新会话只输入「继续」即读 AGENTS.md + CONTEXT.md。
 - 2026-10-28：建立能力矩阵（`assets/AGENT_CAPABILITIES.md.tpl` + 工作区根 `AGENT_CAPABILITIES.md`），Qoder 行已填，Codex 待测。
 - 2026-10-28：handoff-pilot-test 闭环通过；收工自动回填、接手读卡、send/wait/read 均验；工程化未测。
+- 2026-10-28：P0.3 工程化模拟通过；三档生成、AGENTS 一致、素材 hash 不变、dry-run 0 迁移；真实命令未装 skill 测试。
 
 ## 给下一个 agent 的追加区
 
