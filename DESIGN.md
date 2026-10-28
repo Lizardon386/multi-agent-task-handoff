@@ -51,14 +51,50 @@ multi-agent-task-handoff/
 
 ```mermaid
 flowchart TD
-  A[当前会话] -->|默认| C[任务目录/CONTEXT.md]
-  A -->|工程化| S[只读自检]
-  S --> D[建目录/迁移/写三档]
-  D --> M[用户打开工作区]
-  M --> N[接续或手动建会话]
-  N --> H[交接消息 + 锚点]
-  H --> B[新会话读卡/验证]
-  B --> C
+  A[当前会话] -->|默认| B[接手]
+  A -->|工程化| M[工程化]
+
+  subgraph START[接手与收工]
+    B --> C[读 CONTEXT + USER_RULES；信息不足读旧会话]
+    C --> D{模式=三档?}
+    D -- 是 --> E[读 README/DESIGN]
+    D -- 否 --> F[只读 CONTEXT]
+    E --> G[核对锚点 + 验证命令]
+    F --> G
+    G --> H[工作]
+    H --> I[收工: 更新 CONTEXT + memory 提升]
+    I --> J{模式=三档?}
+    J -- 是 --> K[同步 README/DESIGN/文档表]
+    J -- 否 --> L[结束]
+    K --> L
+  end
+
+  subgraph ENG[工程化]
+    M --> N[读 AGENT_CAPABILITIES + 只读自检]
+    N --> N1[就地更新能力表]
+    N1 --> O[建目录 / dry-run 清单 / 复制 + hash]
+    O --> P[写三档 + 确保 AGENTS.md 片段]
+    P --> Q[用户打开工作区]
+    Q --> R[接续 / 交接]
+  end
+
+  subgraph HAND[交接与接续]
+    R --> S[读卡 + memory 提升 + 生成 prompt（含 USER_RULES 指针）]
+    S --> T{发送可用?}
+    T -- 是 --> U[send_message_to_chat_session]
+    T -- 否 --> V[手动卡：复制 prompt 给用户粘贴]
+    U --> W[wait/read 确认锚点 + 验证]
+    V --> W
+    W --> X[更新当前接手 + 交接记录；旧会话停写]
+    X --> Y[新会话接手]
+    Y --> B
+  end
+
+  N -.失败/不支持.-> Z[自动化失效时：手动卡 → 用户 → 复验 → 继续]
+  O -.需确认.-> Z
+  P -.权限/工具失败.-> Z
+  Q -.未打开.-> Z
+  U -.发送失败.-> Z
 ```
 
 关键接缝：
@@ -68,6 +104,8 @@ flowchart TD
 3. **卡 ↔ 交接 prompt**：prompt 从卡生成，不复制聊天历史；旧 sessionId 只让新会话按需查细节。
 4. **状态锚点 ↔ git/备份**：git 仓库写 HEAD + 分支 + 工作树状态；非 git 写备份路径/时间戳。锚点对不上就停。
 5. **README/DESIGN ↔ 工程化**：只有 `工程化` 才生成三档；默认单档不读这两个模板。
+6. **能力表 ↔ 自检**：先读 `AGENT_CAPABILITIES.md`，按表复验关键项；结果变化就地更新，不按探测追加行。
+7. **memory ↔ 交接**：收工/交接前只把会影响下一家的坑提升到 CONTEXT/DESIGN；宿主 memory 不做每轮 diff。
 
 自检的四类结论：
 
@@ -78,20 +116,25 @@ flowchart TD
 
 ## 已定语义与边界
 
-- **交接卡字段**：目标/完成定义、现在在哪、下一步、坑、状态锚点、验证命令、交接记录（≤5 条）、参考会话 ID。上限 100 行。
-- **关键动作**：决策、状态变化、阻塞、下一步、验证结果；日常提交、格式调整、文件清单不算。
-- **状态锚点**：git `HEAD` + 分支 + 工作树是否干净；非 git 为备份路径/时间戳。它是核对漂移的凭据，不是历史。
-- **完成定义**：每个阶段写一条可验证的标准；接手的人先跑验证命令。
-- **一个写者**：同一时间只有一个会话改 `CONTEXT.md`；交接后旧会话停写。
-- **git 只做回滚**：不用 commit 历史当交接；细节用 `git show` 查。
-- **不安装**：没有全局规则、钩子、定时任务、副本、守护进程、向量库、AI 调用。
-- **不复制历史**：新会话无历史；需要细节按旧 sessionId 查，不搬运 transcript。
-- **工作区打开是手动步骤**：没有 create/open workspace 工具或 CLI，skill 只输出路径和下一步。
-- **跨 agent**：文件协议通用；Qoder 的会话/工作区 API 在 Codex/Claude 上不存在，按宿主能力降级。
-- **宿主 memory 是辅助回忆，不是交接契约**：下一家需要的事实进 CONTEXT/DESIGN；Codex 官方文档同样建议必须遵守的指导写进 AGENTS.md / 已签入文档（见 [Codex memories 文档](https://learn.chatgpt.com/docs/customization/memories?surface=app)）。
-- **memory 提升与模式无关**：单档写进 CONTEXT；三档再同步 README/DESIGN；`工程化` 只决定文档集，不决定是否提升。
-- **触发器**：任务级 `AGENTS.md` 的 3 行片段（`assets/AGENTS.md.snippet`）；不写全局规则；宿主不读时回退 `/multi-agent-task-handoff`。2026-10-28 uno-webgame 试点：新会话只输入“继续”即读 `AGENTS.md` + `CONTEXT.md`。
-- **能力表**：`AGENT_CAPABILITIES.md` 记录每个 host/版本的自动化边界；一行一个 agent/版本，就地更新，不按 workspace/能力追加；30 天或版本变化后复验；只是缓存，不是契约。
+| 主题 | 约定 | 边界 / 代价 |
+|---|---|---|
+| 交接卡字段 | 目标/完成定义、现在在哪、下一步、坑、状态锚点、验证命令、交接记录（≤5）、参考会话；≤100 行 | 只记关键动作，不写完整历史 |
+| 关键动作 | 决策、状态变化、阻塞、下一步、验证结果 | 日常提交、格式调整、文件清单不算 |
+| 状态锚点 | git `HEAD` + 分支 + 工作树是否干净；非 git 为备份路径/时间戳 | 核对漂移的凭据，不是历史 |
+| 完成定义 | 每阶段一条可验证标准；接手的人先跑验证命令 | 没验证不算完成 |
+| 一个写者 | 同一时间只有一个会话改 `CONTEXT.md`；交接后旧会话停写 | 并行会话按文件/目录分工 |
+| git | 只做回滚；细节用 `git show` 查 | 不用 commit 历史当交接；格式提交不入卡 |
+| 不安装 | 无全局规则、钩子、定时任务、副本、守护进程、向量库、AI 调用 | 没有自动执行；靠触发器或显式调用 |
+| 不复制历史 | 新会话无历史；旧 sessionId 按需读 | 跨宿主无 `read_chat_session` 时，卡必须自包含 |
+| 工作区打开 | 手动；skill 只输出路径/下一步 | 没有 create/open workspace 工具或 CLI |
+| 跨 agent | 文件协议通用；Qoder 的会话/工作区 API 在 Codex/Claude 上不存在 | 按宿主能力降级 |
+| 宿主 memory | 辅助回忆，不是交接契约；下一家需要的事实进 CONTEXT/DESIGN | 不做每轮 diff；Codex 官方也建议规则进 AGENTS/仓库文档 |
+| memory 提升 | 与模式无关；单档写进 CONTEXT，三档再同步 README/DESIGN | 只在收工/交接做，不做常驻同步 |
+| 触发器 | 任务级 `AGENTS.md` 的 3 行片段；不写全局规则；宿主不读回退显式调用 | best-effort，不是 hook；uno-webgame 2026-10-28 试点通过 |
+| 能力表 | `AGENT_CAPABILITIES.md`；一行一个 agent/版本，固定能力列，就地更新；30 天/版本变化复验 | 缓存，不是契约；关键项仍复验 |
+| 自动化失效 | 先只读探测；四类；只能手动给手动卡（已完成/卡点/步骤/验证/回我）；用户完成后复验 | 不重复重试；不把“已接收”当完成 |
+
+> 宿主 memory 的边界参考 [Codex memories 文档](https://learn.chatgpt.com/docs/customization/memories?surface=app)。
 
 ## 版本与设计演进
 
