@@ -17,6 +17,7 @@
 - 2026-10-28：P0.3 工程化模拟通过——读 SKILL/templates，接管 handoff-pilot-test，三档生成，AGENTS 与 snippet 一致，素材 hash 不变，dry-run 0 迁移。
 - 2026-10-28：P0.3 真实命令通过——临时装薄 skill 后新会话执行 `工程化 handoff-pilot-test`，Skill 正常加载；接管后三档刷新（README 58 / DESIGN 199 / CONTEXT 68），AGENTS 未变，素材 hash 不变，dry-run 0 迁移；测试后临时 skill 已删除。
 - 2026-10-28：补回 v1 的「DESIGN 可由交付文档承担」规则（`架构设计.md`、`XX实施方案.md` 这类复合名；评审意见不算），v2 收敛时随 references 误删。dsp-hal-eval 无 DESIGN 属正常。
+- 2026-10-28：加「可逆整理可自动、内容取舍必须确认、默认只搬不删」的自动化边界；压卡按此执行。uno-online / dsp-hal-eval 的卡超 100 行，未加触发器。
 - 本机无本 skill 的全局规则、钩子、计划任务或技能副本；不要重装。
 - 本目录是协议真源和 git 工作树；非 git 目录用 `.review/<任务>/` 做归档/备份锚点。
 - 远端同步状态以 `git status` / `git log` 为准；网络异常时先推本地提交。
@@ -54,6 +55,7 @@
 - 2026-10-28：P0.3 工程化模拟通过；三档生成、AGENTS 一致、素材 hash 不变、dry-run 0 迁移。
 - 2026-10-28：P0.3 真实命令通过；薄 skill 加载、三档刷新、素材 hash 不变、dry-run 0 迁移；临时 skill 已删。
 - 2026-10-28：补回「DESIGN 可由方案设计交付文档承担」（v1 agents-rule 规则，v2 误删）；SKILL/README/DESIGN 同步。
+- 2026-10-28：SKILL/DESIGN 加自动化边界「可逆整理可自动、内容取舍必须确认、默认只搬不删」。
 
 ## 给下一个 agent 的追加区
 
