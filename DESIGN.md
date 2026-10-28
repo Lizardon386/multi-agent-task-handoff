@@ -77,19 +77,16 @@ flowchart TD
     Q --> R[交接]
   end
 
-  subgraph HAND[交接]
-    R --> R1{有 sessionId?}
-    R1 -- 是 --> S[读卡 + memory 提升 + 生成 prompt（含 PROJECT_RULES 指针）]
-    R1 -- 否 --> R2[create_chat_session]
-    R2 --> S
-    S --> T{发送可用?}
-    T -- 是 --> U[send_message_to_chat_session]
-    T -- 否 --> V[手动卡：复制 prompt 给用户粘贴]
+  subgraph HAND[交接 / 收工]
+    R --> S[读卡 + memory 提升 + 生成 prompt（含 PROJECT_RULES 指针）]
+    S --> T{有 sessionId?}
+    T -- 否 --> V0[输出 prompt / 摘要给用户，停]
+    T -- 是 --> T2{发送可用?}
+    T2 -- 是 --> U[send_message_to_chat_session]
+    T2 -- 否 --> V[手动卡：复制 prompt 给用户粘贴]
     U --> W[wait/read 确认锚点 + 验证]
     V --> W
     W --> X[更新当前接盘 + 交接记录；旧会话停写]
-    X --> Y[新会话接盘]
-    Y --> B
   end
 
   N -.失败/不支持.-> Z[自动化失效时：手动卡 → 用户 → 复验 → 继续]
