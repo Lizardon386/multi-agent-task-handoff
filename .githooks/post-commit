@@ -1,0 +1,18 @@
+#!/bin/sh
+# 提交后把当前 HEAD 同步到已安装的 skill 目录（路径见 .skill-sync-paths）。
+# 只在 commit 时跑，不常驻；目录不存在就跳过。
+
+repo=$(git rev-parse --show-toplevel) || exit 0
+[ -f "$repo/.skill-sync-paths" ] || exit 0
+
+while IFS= read -r line; do
+  case "$line" in ''|'#'*) continue ;; esac
+  path=$(printf '%s' "$line" | sed 's/[[:space:]]*$//')
+  parent=$(dirname "$path")
+  [ -d "$parent" ] || continue
+  rm -rf "$path" && mkdir -p "$path" || continue
+  git -C "$repo" archive HEAD | tar -x -C "$path" || true
+  echo "skill synced -> $path"
+done < "$repo/.skill-sync-paths"
+
+exit 0

@@ -89,13 +89,13 @@ cp assets/CONTEXT.md.tpl <任务目录>/CONTEXT.md
 
 ## 安装与同步
 
-Qoder 的技能目录是**实拷贝**，不跟随仓库；目录 junction 不被扫描（实测切成 junction 后技能直接消失）。改完协议后执行：
+Qoder 的技能目录是**实拷贝**，目录 junction 不被扫描（实测切成 junction 后技能直接消失）。仓库带 `.githooks/post-commit`，提交后自动把 HEAD 同步到 `.skill-sync-paths` 里的安装目录：
 
-```bash
-git -C D:/agent_workspace/multi-agent-task-handoff archive HEAD | tar -x -C ~/.qoder-cn/skills/multi-agent-task-handoff
-```
+- 一次性启用：`git -C D:/agent_workspace/multi-agent-task-handoff config core.hooksPath .githooks`
+- 目标目录写在 `.skill-sync-paths`，一行一个；目录不存在就跳过。换宿主时把它的 skill 目录加进去。
+- 钩子只在 commit 时跑，不常驻；没启用时手动导出：`git archive HEAD | tar -x -C <安装目录>`。
 
-换 agent 时，已装副本不会跟过去：新宿主按自己的 skill 机制另装，或直接读本仓库的 `SKILL.md`。文件协议（CONTEXT / 压卡备份）不受影响。
+换 agent 时，已装副本不会跟过去：新宿主按自己的 skill 机制另装，或直接读仓库的 `SKILL.md`。文件协议（CONTEXT / 压卡备份）不受影响。
 
 ## 限制与注意事项
 
