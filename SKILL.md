@@ -66,7 +66,7 @@ argument-hint: "[--help | 接盘 [任务名] | 交接 [ID] | 压卡 [任务名] 
 3. 写卡：只挑关键动作（不知道这条下一家会做错/重做才写；能从 CONTEXT/README/DESIGN/git 得到的不写）；更新「现在在哪 / 下一步 / 坑与约束」；交接记录加 1 条，≤10 条，超出先沉降再删最旧；README/DESIGN 只在用法或设计变化时动。
 4. 锚点：有 git 提交推送；没有 git 用时间戳，不另建备份。
 5. 生成 prompt（≤40k）：工作目录 + 文档表 + 锚点 + 验证命令 + 下一步 1–3 条 + 勿动文件 + 已决策 + 旧 ID + 项目规则指针（`D:\agent_workspace\PROJECT_RULES.md`；读不到就贴相关子集）；要求新会话按「接盘」开始，先回能力自检 + 锚点一致/不一致。
-6. 没有 ID：把 prompt 或状态摘要给用户，停，不建会话；其它 agent（Codex/Claude 等）没有发送 API，也走这条，用户自己粘贴，不伪造发送或回执。有 ID：`send_message_to_chat_session(sessionId, prompt)`；成功只代表接收，失败按「自动化失效时」给手动卡。
+6. 投递：有 ID 就用 `send_message_to_chat_session(sessionId, prompt)`，成功只代表接收。没有 ID 或宿主没有这个工具时，先探测有没有等价手段（CLI 会话恢复/执行、MCP、可写队列文件等）；能自动送达就做并验证，做不到才把 prompt 或摘要给用户粘贴。不伪造发送或回执，失败按「自动化失效时」给手动卡。
 7. 有 ID 时 `wait_chat_sessions` / `read_chat_session` 确认锚点与验证通过；更新「当前接盘」「交接记录」，旧会话停写。
 
 ## 维护（memory 与模式无关）

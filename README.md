@@ -69,7 +69,7 @@ cp assets/CONTEXT.md.tpl <任务目录>/CONTEXT.md
 
 ### 跨 agent
 
-同 agent 不同会话：Qoder 用 `send_message_to_chat_session`。跨 agent（Codex/Claude 等）没有会话 API：`收工` 生成 prompt，用户复制到新会话；文件协议通用。
+同 agent 不同会话：Qoder 用 `send_message_to_chat_session`。跨 agent（Codex/Claude 等）：先探测宿主有没有等价投递手段（CLI 会话恢复/执行、MCP、可写队列文件等），有就自动送达并验证；没有才 `收工` 生成 prompt 让用户粘贴。文件协议通用。
 
 ## 产物与目录
 
