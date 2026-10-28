@@ -76,6 +76,7 @@ argument-hint: "[--help | 接盘 [任务名] | 交接 [ID] | 压卡 [任务名] 
 - 质量自检：新 agent 能否只读文档回答 目标/当前/下一步/坑/验证；答不上就补。
 - 单档只维护 CONTEXT；三档才额外维护 README/DESIGN；memory 提升两种模式都做。
 - 宿主 memory 是工作记忆，不是交接契约；不做每轮 diff。
+- 改本 skill 后重新导出安装副本；Qoder 只认实拷贝，目录 junction 不生效。
 
 ## 自动化失效时
 

@@ -20,7 +20,7 @@
 ## 当前状态
 
 - v2 协议已落地：默认单档；`接盘` / `交接`（别名 `收工`）/ `压卡` / `工程化` + 只读自检；任务名可省，默认 cwd；`收工` 只整理，`交接 <ID>` 才发送。
-- 本机已装薄 skill（`~/.qoder-cn/skills/multi-agent-task-handoff`，来自 `git archive`，无 `.git`）；全局规则/钩子/计划任务仍无。
+- 本机已装薄 skill（`~/.qoder-cn/skills/multi-agent-task-handoff`，实拷贝）；Qoder 不认目录 junction，提交后要重新导出同步；全局规则/钩子/计划任务仍无。
 - 入口是命令不是文件：`接盘` 命令或 `交接` prompt（自带读卡顺序）；不在任务目录铺 `AGENTS.md`；自然语言「接盘」会加载 skill，已验。
 - 记录粒度：每次收工 1 条关键动作，交接记录 ≤10 条自动滚动；压卡只做兜底。判定标准见「关键约束」。
 - 已验证：收工回填、send/wait/read、工程化命令、压卡（uno-online 183→83 行）、skill 自动加载。
