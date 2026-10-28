@@ -78,13 +78,13 @@ flowchart TD
   end
 
   subgraph HAND[交接 / 收工]
-    R --> S[读卡 + memory 提升 + 生成 prompt（含 PROJECT_RULES 指针）]
+    R --> S[读卡 + memory（若有）+ 生成 prompt（含 PROJECT_RULES 指针）]
     S --> T{有会话ID?}
     T -- 否 --> V0[输出 prompt / 摘要给用户，停]
     T -- 是 --> T2{探测到可用投递手段?}
     T2 -- 是 --> U[send_message_to_chat_session]
     T2 -- 否 --> V[手动卡：复制 prompt 给用户粘贴]
-    U --> W[wait/read 确认锚点 + 验证]
+    U --> W[wait/read 或首条回复确认锚点 + 验证]
     V --> W
     W --> X[更新当前接盘 + 交接记录；旧会话停写]
   end

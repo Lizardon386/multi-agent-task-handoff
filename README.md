@@ -45,7 +45,7 @@ cp assets/CONTEXT.md.tpl <任务目录>/CONTEXT.md
 
 只在明确要求时执行。步骤：
 
-1. 只读自检：写权限、git 状态、`list_workspaces`、`list_chat_sessions`、宿主是否有会话工具、是否有 qoder CLI；先读 `D:\agent_workspace\AGENT_CAPABILITIES.md` 并复验关键项。
+1. 只读自检：写权限、git 状态与远端、工作区、发送/等待/读回手段、宿主 memory 是否可读、是否有 qoder CLI；先读 `D:\agent_workspace\AGENT_CAPABILITIES.md` 并复验关键项。
 2. 输出四行：可自动 / 需确认 / 需手动 / 不支持；能做的直接做，做不到的列给用户。
 3. 建目录；从当前 cwd 迁移顶层非隐藏文件（排除 `.git`、`node_modules`、应用缓存）；先出清单，确认后复制、校验、默认不删源。
 4. 用 `assets/*.tpl` 写三档：头块 + `## 文档` 表；README 按 GitHub 落地页，DESIGN 含拓扑/流程/架构树，CONTEXT 写 `模式：三档` 且 ≤100 行；已有方案设计交付文档时用其代替 DESIGN。
@@ -61,10 +61,11 @@ cp assets/CONTEXT.md.tpl <任务目录>/CONTEXT.md
 
 ### 交接 / 收工
 
-- 不带 ID（收工）：整理任务信息、扫 memory、更新 CONTEXT，把交接 prompt 或摘要给用户；不建会话、不发送。
+- 不带 ID（收工）：整理任务信息、按可用 memory 来源提升、更新 CONTEXT；探测到投递手段就送达，没有才把 prompt 给用户。
 - 带 ID（交接）：在收工基础上发给该会话；目标必须已注册、未归档，`send_message_to_chat_session` 成功只代表接收。
+- 投递和确认都按能力表：没有 `wait/read` 就用新会话首条回复或下次接盘核对；不伪造发送或回执。
 - prompt 由交接卡生成，包含：路径、锚点、验证命令、下一步、勿动文件、已决策、项目规则指针、旧 ID。
-- 新会话先回能力自检和锚点是否一致；旧会话用 `wait_chat_sessions` / `read_chat_session` 确认后才停写。
+- 新会话先回能力自检和锚点是否一致；旧会话有 `wait_chat_sessions` / `read_chat_session` 就确认后才停写。
 - 不复制历史；细节按旧 ID 按需读取。
 
 ### 跨 agent
