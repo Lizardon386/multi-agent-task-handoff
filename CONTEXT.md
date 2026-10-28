@@ -1,8 +1,17 @@
 # multi-agent-task-handoff · 会话上下文与进展
 
-> 本文件是交接卡，不是变更日志：只记关键动作、当前状态、下一步和坑；细节在 git。
+> 本文件是交接卡：只记当前状态、下一步、坑和交接记录；历史与逐条变更见 [工作记录.md](工作记录.md)。
 > 最近更新：2026-10-28
 > 状态锚点：接手时跑 `git log -1 --oneline`
+
+## 文档
+
+| 文档 | 阅读对象 | 内容 |
+|---|---|---|
+| [README.md](README.md) | 使用者 | 怎么用、命令、限制 |
+| [DESIGN.md](DESIGN.md) | 评审 / 二次开发 | 取舍、流程、语义与版本演进 |
+| [CONTEXT.md](CONTEXT.md) | 接手 agent | 当前状态、下一步、坑（本文） |
+| [工作记录.md](工作记录.md) | 追溯用 | 状态历史、已完成、逐条变更 |
 
 ## 背景与目标
 
@@ -10,32 +19,20 @@
 
 ## 当前状态
 
-- 2026-10-23：v2 已落地。`SKILL.md` 改为默认单档 + `工程化` / `交接` / `接续` + 只读自检；三份模板重写；当前工作树只保留 v2 的 SKILL、三份根文档和三份模板。
-- 2026-10-28：uno-webgame 试点通过。新会话只输入「继续」，自动读 `AGENTS.md` + `CONTEXT.md`；任务级 AGENTS.md 触发成立。3178 暂不使用。
-- 2026-10-28：建立 agent 能力矩阵 `AGENT_CAPABILITIES.md`（工作区根）：一行一个 agent/版本、固定能力列、就地更新；Qoder 行已填，Codex 待测。
-- 2026-10-28：handoff-pilot-test 闭环通过——收工自动回填 CONTEXT；接手会话读 CONTEXT + PROJECT_RULES；send/wait/read 成功。三档与真实命令已验；实际跨目录迁移未实测。
-- 2026-10-28：P0.3 工程化模拟通过——读 SKILL/templates，接管 handoff-pilot-test，三档生成，AGENTS 与 snippet 一致，素材 hash 不变，dry-run 0 迁移。
-- 2026-10-28：P0.3 真实命令通过——临时装薄 skill 后新会话执行 `工程化 handoff-pilot-test`，Skill 正常加载；接管后三档刷新（README 58 / DESIGN 199 / CONTEXT 68），AGENTS 未变，素材 hash 不变，dry-run 0 迁移；测试后临时 skill 已删除。
-- 2026-10-28：补回 v1 的「DESIGN 可由交付文档承担」规则（`架构设计.md`、`XX实施方案.md` 这类复合名；评审意见不算），v2 收敛时随 references 误删。dsp-hal-eval 无 DESIGN 属正常。
-- 2026-10-28：加自动化边界：可逆整理可自动；内容取舍先按证据判；默认只搬不删。同时加默认决策规则：协议/文档/锚点/能力表能判的自己决定并记依据，只在规则冲突、缺事实、不可逆时问人。uno-online / dsp-hal-eval 的卡超 100 行，未加触发器。
-- 2026-10-28：本机已装薄 skill（`~/.qoder-cn/skills/multi-agent-task-handoff`，来自 `git archive`，无 `.git`）；全局规则/钩子/计划任务仍无。
-- 2026-10-28：加 `压卡 <任务名>` 正式命令（`--help` 可见）；snippet 要求收工时卡超 100 行即调用，不再靠口述。
+- v2 协议已落地：默认单档；`工程化` / `压卡` / `交接` / `接续` + 只读自检；任务名可省，默认 cwd。
+- 本机已装薄 skill（`~/.qoder-cn/skills/multi-agent-task-handoff`，来自 `git archive`，无 `.git`）；全局规则/钩子/计划任务仍无。
+- 触发靠任务级 `AGENTS.md` 3 行片段；自然语言「接手」会加载 skill，已验。
+- 已验证：AGENTS 触发、收工回填、send/wait/read、工程化命令、压卡（uno-online 183→83 行）。
+- 未验证：实际跨目录迁移；Codex 行待测；dsp-hal-eval 未压卡。
 - 本目录是协议真源和 git 工作树；非 git 目录用 `.review/<任务>/` 做归档/备份锚点。
 - 远端同步状态以 `git status` / `git log` 为准；网络异常时先推本地提交。
 
 ## 计划 / 待办
 
-- [x] 三份文档、`SKILL.md`、三份模板按 v2 重写。
-- [x] uno-webgame 试点：任务级 AGENTS.md 触发成立（新会话只输入「继续」即读 AGENTS.md + CONTEXT.md）。
-- [x] handoff-pilot-test 闭环：收工自动回填、接手读卡、send/wait/read 通过。
-- [x] uno-online：卡 183 行 / 46 KB → 83 行 / 6.9 KB，历史原样搬到 `工作记录.md`；加 `AGENTS.md`，新会话自动读卡，未改文件。
 - [ ] dsp-hal-eval：卡 287 行 / 157 KB，用 `压卡` 处理后再加触发器；3178 暂缓。
-- [x] 工程化模拟：三档生成 + AGENTS 一致 + dry-run 0 迁移（handoff-pilot-test）。
-- [x] 真实 `工程化` 命令：临时装薄 skill 实测通过（2026-10-28）。
-- [x] 薄 skill 常驻安装；自然语言「接手这个目录」自动加载 skill 并发起接手流程，已验（会话 `<会话ID>`）。
-- [ ] 推广后复核能力表；Qoder 发交接/wait/read 已验，实际跨目录迁移仍未实测。
-- [ ] 根据试点结果补工程化的迁移清单细节（排除项、hash 校验、删源确认）。
-- [ ] 决定是否加可选 `check-handoff.sh`（只查存在/标题/日期/行数）；默认不加。
+- [ ] 推广后复核能力表；实际跨目录迁移仍未实测。
+- [ ] 补工程化的迁移清单细节（排除项、hash 校验、删源确认）。
+- [ ] 决定是否加可选 `check-handoff.sh`；默认不加。
 
 ## 关键约束与注意事项
 
@@ -49,23 +46,10 @@
 - 不安装、不挂钩子、不写全局规则、不起后台服务、不调用模型；敏感内容留在本机。
 - README / DESIGN 只在 `工程化` 或有外部读者时写，不是每个任务的合规件。
 
-## 变更记录
+## 交接记录（只记关键动作，≤5 条）
 
-- 2026-10-23：v2 落地——默认单档、`工程化`/`交接`/`接续`、只读自检；工作树只保留 v2。
-- 2026-10-28：uno-webgame 试点通过；任务级 AGENTS.md 触发成立，新会话只输入「继续」即读 AGENTS.md + CONTEXT.md。
-- 2026-10-28：建立能力矩阵（`assets/AGENT_CAPABILITIES.md.tpl` + 工作区根 `AGENT_CAPABILITIES.md`），Qoder 行已填，Codex 待测。
-- 2026-10-28：handoff-pilot-test 闭环通过；收工自动回填、接手读卡、send/wait/read 均验；工程化未测。
-- 2026-10-28：P0.3 工程化模拟通过；三档生成、AGENTS 一致、素材 hash 不变、dry-run 0 迁移。
-- 2026-10-28：P0.3 真实命令通过；薄 skill 加载、三档刷新、素材 hash 不变、dry-run 0 迁移；临时 skill 已删。
-- 2026-10-28：补回「DESIGN 可由方案设计交付文档承担」（v1 agents-rule 规则，v2 误删）；SKILL/README/DESIGN 同步。
-- 2026-10-28：SKILL/DESIGN 加自动化边界「可逆整理可自动、内容取舍按证据判、默认只搬不删」。
-- 2026-10-28：SKILL 加默认决策规则「能按协议/文档/锚点/能力表判定的自己做并记依据，例外才问」；README/DESIGN 同步。
-- 2026-10-28：uno-online 压卡 + 触发器落地：CONTEXT 183 行 / 46 KB → 83 行 / 6.9 KB，历史原样搬到 `工作记录.md`；新会话自动读 AGENTS/CONTEXT，未改文件。
-- 2026-10-28：SKILL/DESIGN 加两条评估指标（先省开场读取量、再提高自动化）与压卡步骤。
-- 2026-10-28：装薄 skill 并验证自动加载：自然语言「接手这个目录」→ 新会话读 AGENTS/CONTEXT/README/DESIGN + PROJECT_RULES、核 sha256、未写入。
-- 2026-10-28：压卡收成正式命令（`--help` 可见）；snippet 加压卡检查，uno-online / handoff-pilot-test 的 AGENTS 同步（fixture 432 字节）。
-- 2026-10-28：`接手/工程化/压卡/接续` 的任务名改为可选，默认 cwd 目录名；只有操作别的目录时才带名字。
-
-## 给下一个 agent 的追加区
-
-接手先读本卡，跑 `git log -1 --oneline` 和「验证命令」；按「下一步」做，收工更新「当前状态 / 下一步 / 坑」，并在「变更记录」加一条关键动作（≤3 行）。不要补全历史。
+- 2026-10-28 Qoder：装薄 skill 并验证自动加载（会话 `<会话ID>`），常驻安装。
+- 2026-10-28 Qoder：加 `压卡` 命令；`接手/工程化/压卡/接续` 的任务名改为可选，默认 cwd（`ea25b44`）。
+- 2026-10-28 Qoder：uno-online 卡 183→83 行，历史搬到 `工作记录.md`，加 `AGENTS.md` 触发。
+- 2026-10-28 Qoder：补回 DESIGN 可由方案文档承担、自动化边界与两条评估指标。
+- 2026-10-28 Qoder：本卡压卡，状态历史/已完成/变更记录搬到 `工作记录.md`。
