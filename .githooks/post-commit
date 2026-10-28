@@ -12,7 +12,10 @@ while IFS= read -r line; do
   [ -d "$parent" ] || continue
   rm -rf "$path" && mkdir -p "$path" || continue
   git -C "$repo" archive HEAD | tar -x -C "$path" || true
-  echo "skill synced -> $path"
+  commit=$(git -C "$repo" rev-parse HEAD)
+  date=$(git -C "$repo" log -1 --format=%cI)
+  printf 'commit=%s\ndate=%s\n' "$commit" "$date" > "$path/.skill-version"
+  echo "skill synced -> $path ($commit)"
 done < "$repo/.skill-sync-paths"
 
 exit 0

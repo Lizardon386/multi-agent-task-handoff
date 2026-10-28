@@ -2,7 +2,7 @@
 name: multi-agent-task-handoff
 description: 多 agent 任务接力协议：默认一份 CONTEXT.md 交接卡；工程化后升三档（README/DESIGN/CONTEXT），按 3178 式文档头块与文档表维护。
 when_to_use: 开始或结束一个任务、接盘别人留下的任务目录、把工作交接给另一个 agent/会话、或要把当前会话工程化到新目录时。
-argument-hint: "[--help | 接盘 [任务名] | 交接 [ID] | 压卡 [任务名] | 工程化 [任务名]]"
+argument-hint: "[--help | 接盘 [任务名] | 交接 [ID] | 压卡 [任务名] | 工程化 [任务名] | 自检/更新]"
 ---
 
 # 多 agent 任务交接
@@ -17,6 +17,7 @@ argument-hint: "[--help | 接盘 [任务名] | 交接 [ID] | 压卡 [任务名] 
 | `交接` / `收工` `[ID]` | 整理任务信息并扫 memory 写进 CONTEXT/DESIGN；有 ID 再发送 |
 | `压卡` / `压缩上下文` `[任务名]` | 检查 CONTEXT 维护情况，按本 skill 精简 |
 | `工程化` / `工程` / `建档` `[任务名]` | 建目录、迁移、三档 |
+| `自检` / `更新` | 比对安装 commit 与仓库/GitHub，落后就同步 |
 
 任务名 = 任务目录名，可省略，默认 cwd；ID = Qoder 会话的 UUID，只用于 `交接`。两者不同，不互相替代。cwd 不是任务目录（如工作区根）时省略就显示本表，不猜。未知参数 → 显示本表。
 
@@ -68,6 +69,16 @@ argument-hint: "[--help | 接盘 [任务名] | 交接 [ID] | 压卡 [任务名] 
 5. 生成 prompt（≤40k）：工作目录 + 文档表 + 锚点 + 验证命令 + 下一步 1–3 条 + 勿动文件 + 已决策 + 旧 ID + 项目规则指针（`D:\agent_workspace\PROJECT_RULES.md`；读不到就贴相关子集）；要求新会话按「接盘」开始，先回能力自检 + 锚点一致/不一致。
 6. 投递：先看 `AGENT_CAPABILITIES.md` 本行，没记录就现场探测并补一行。有 ID 就用 `send_message_to_chat_session(sessionId, prompt)`，成功只代表接收。没有 ID 或宿主没有这个工具时，探测等价手段（CLI 会话恢复/执行、MCP、可写队列文件等）；能自动送达就做并验证，做不到才把 prompt 或摘要给用户粘贴。不伪造发送或回执，失败按「自动化失效时」给手动卡。
 7. 确认：宿主有 `wait_chat_sessions` / `read_chat_session` 就核锚点与验证；没有就用新 agent 首条回复或下次接盘核对，不声称已确认。确认后更新「当前接盘」「交接记录」，旧会话停写。
+
+## 自检 / 更新
+
+比对当前安装副本与源仓库（及 GitHub），落后就同步；只做快进，不覆盖分叉。
+
+1. 安装版本：读当前 skill 目录的 `.skill-version`（commit/date）；没有就视为未知，用 SKILL.md 与源 HEAD 比对。
+2. 源版本：默认源仓库 `D:\agent_workspace\multi-agent-task-handoff`（或 `.skill-sync-paths` 指向的仓库），读 `git -C <repo> rev-parse HEAD`。
+3. 核对远端：能联网就 `git ls-remote origin HEAD`；本地落后且工作树干净就 `git pull --ff-only`；有本地改动或分叉就停，给手动卡。
+4. 安装 commit ≠ 源 HEAD：`git -C <repo> archive HEAD | tar -x -C <当前安装目录>`，按 hook 格式写 `.skill-version`，`diff -r` 校验；同机其它安装目录按 `.skill-sync-paths` 一起同步。
+5. 报告：安装 commit、源 commit、是否更新、没核对到的项（如离线）；不把“本地一致”说成“GitHub 最新”。
 
 ## 维护（memory 与模式无关）
 
