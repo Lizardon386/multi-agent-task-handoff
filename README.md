@@ -79,6 +79,8 @@ cp assets/CONTEXT.md.tpl <任务目录>/CONTEXT.md
 | 文件 | 说明 |
 |---|---|
 | [SKILL.md](SKILL.md) | 薄协议：单档、工程化、压卡、交接/收工、自检 |
+| [install.sh](install.sh) | 一键安装：按宿主环境变量装到当前 agent 的 skill 目录 |
+| [安装.bat](安装.bat) | Windows 双击入口，调 `install.sh` |
 | [README.md](README.md) | 本文件 |
 | [DESIGN.md](DESIGN.md) | 取舍与边界 |
 | [CONTEXT.md](CONTEXT.md) | 本目录交接卡（示例） |
@@ -91,26 +93,39 @@ cp assets/CONTEXT.md.tpl <任务目录>/CONTEXT.md
 
 ## 安装与同步
 
-Qoder 的技能目录是**实拷贝**，目录 junction 不被扫描（实测切成 junction 后技能直接消失）。仓库带 `.githooks/post-commit`，提交后自动把 HEAD 同步到 `.skill-sync-paths` 里的安装目录：
+Qoder 的技能目录是**实拷贝**，目录 junction 不被扫描（实测切成 junction 后技能直接消失）。`install.sh` 按环境变量识别**当前打开这个工作区的 agent**，只给它自己的 skill 目录安装，不替别的宿主铺副本：
 
-- 一次性启用：`git -C D:/agent_workspace/multi-agent-task-handoff config core.hooksPath .githooks`
-- 目标目录写在 `.skill-sync-paths`，一行一个；目录不存在就跳过。换宿主时把它的 skill 目录加进去。
-- 钩子只在 commit 时跑，不常驻；没启用时手动导出：`git archive HEAD | tar -x -C <安装目录>`。
+| 宿主 | 识别依据 | 安装目录 |
+|---|---|---|
+| Qoder | `QODER_CONFIG_DIR` / `QODERCN_CONFIG_DIR` | `<配置目录>/skills/multi-agent-task-handoff` |
+| Claude Code | `CLAUDECODE` / `CLAUDE_CONFIG_DIR` | 同上（默认 `~/.claude`） |
+| Codex | `CODEX_HOME` | 同上（未设置时用 `--host codex`） |
 
-换 agent 时，已装副本不会跟过去：新宿主按自己的 skill 机制另装，或直接读仓库的 `SKILL.md`。文件协议（CONTEXT / 压卡备份）不受影响。
+```bash
+bash install.sh --dry-run   # 只打印宿主、目标、动作
+bash install.sh             # 装到当前宿主
+```
+
+Windows 双击 `安装.bat`；识别不出宿主时会问一次 qoder / claude / codex。选项：`--host`、`--target DIR`、`--force`（覆盖非托管非空目录）、`--no-hook`、`--no-register`、`--dry-run`。换宿主时，在新宿主里重跑一次。
+
+安装会写 `.skill-version`（commit + 时间），并默认把目标追加到 `.skill-sync-paths`、启用仓库本地 `core.hooksPath=.githooks`。之后每次提交由 `post-commit` 把 HEAD 刷到清单里的目录；父目录不存在就跳过。钩子只在 commit 时跑，不常驻；没启用时重跑 `install.sh`。
+
+`.skill-sync-paths` 只列**安装目录**，不是源仓库指针；它随仓库跟踪，换机器时本机路径不存在就跳过。
+
+换 agent 时，已装副本不会跟过去：在新宿主里重跑 `install.sh`，或直接读仓库的 `SKILL.md`。文件协议（CONTEXT / 压卡备份）不受影响。
 
 ### 自检 / 更新
 
 `/multi-agent-task-handoff 自检`（别名 `更新`）比对安装目录 `.skill-version` 与源仓库 HEAD：
 
 - 一致：报已是最新；离线时注明未核对 GitHub。
-- 落后且能快进：拉取后同步到 `.skill-sync-paths` 里的目录。
+- 落后且能快进：拉取后跑 `bash install.sh`（当前宿主），或同步 `.skill-sync-paths` 里的目录。
 - 有本地改动、分叉或离线拉不动：停，列手动步骤，不覆盖。
 
 
 ## 限制与注意事项
 
-- 不自动捕获、不装钩子、不写全局规则、不起后台服务、不调用模型。
+- 不自动捕获、不在任务目录装钩子、不写全局规则、不起后台服务、不调用模型。
 - 打开目录为工作区只能手动：当前没有 create/open workspace 工具或 CLI。
 - 不复制完整会话历史；交接卡 + 旧 ID 按需查。
 - 一个目录同一时间一个写者。

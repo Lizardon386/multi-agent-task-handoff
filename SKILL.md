@@ -77,9 +77,9 @@ argument-hint: "[--help | 接盘 | 交接 [ID] | 压卡 | 工程化 | 自检/更
 比对当前安装副本与源仓库（及 GitHub），落后就同步；只做快进，不覆盖分叉。
 
 1. 安装版本：读当前 skill 目录的 `.skill-version`（commit/date）；没有就视为未知，用 SKILL.md 与源 HEAD 比对。
-2. 源版本：默认源仓库 `D:\agent_workspace\multi-agent-task-handoff`（或 `.skill-sync-paths` 指向的仓库），读 `git -C <repo> rev-parse HEAD`。
+2. 源版本：默认源仓库 `D:\agent_workspace\multi-agent-task-handoff`；`.skill-sync-paths` 只列安装目录，不是源仓库指针。读 `git -C <repo> rev-parse HEAD`。
 3. 核对远端：能联网就 `git ls-remote origin HEAD`；本地落后且工作树干净就 `git pull --ff-only`；有本地改动或分叉就停，给手动卡。
-4. 安装 commit ≠ 源 HEAD：`git -C <repo> archive HEAD | tar -x -C <当前安装目录>`，按 hook 格式写 `.skill-version`，`diff -r` 校验；同机其它安装目录按 `.skill-sync-paths` 一起同步。
+4. 安装 commit ≠ 源 HEAD：优先 `bash <repo>/install.sh`（只装当前宿主，自动写 `.skill-version` 并校验文件清单）；手动兜底 `git -C <repo> archive HEAD | tar -x -C <当前安装目录>`，按 hook 格式写 `.skill-version`，`diff -r` 校验；同机其它安装目录按 `.skill-sync-paths` 一起同步。
 5. 报告：安装 commit、源 commit、是否更新、没核对到的项（如离线）；不把“本地一致”说成“GitHub 最新”。
 
 ## 维护（memory 与模式无关）
@@ -89,7 +89,7 @@ argument-hint: "[--help | 接盘 | 交接 [ID] | 压卡 | 工程化 | 自检/更
 - 质量自检：新 agent 能否只读文档回答 目标/当前/下一步/坑/验证；答不上就补。
 - 单档只维护 CONTEXT；三档才额外维护 README/DESIGN；memory 提升两种模式都做。
 - 宿主 memory 是工作记忆，不是交接契约；不做每轮 diff。
-- 改本 skill 后提交即由 `.githooks/post-commit` 同步安装副本；没启用钩子就手动导出。Qoder 只认实拷贝，目录 junction 不生效。
+- 改本 skill 后提交即由 `.githooks/post-commit` 同步安装副本；没启用钩子就 `bash install.sh`。Qoder 只认实拷贝，目录 junction 不生效。
 
 ## 自动化失效时
 
