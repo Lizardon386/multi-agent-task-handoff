@@ -19,6 +19,7 @@
 - 2026-10-28：补回 v1 的「DESIGN 可由交付文档承担」规则（`架构设计.md`、`XX实施方案.md` 这类复合名；评审意见不算），v2 收敛时随 references 误删。dsp-hal-eval 无 DESIGN 属正常。
 - 2026-10-28：加自动化边界：可逆整理可自动；内容取舍先按证据判；默认只搬不删。同时加默认决策规则：协议/文档/锚点/能力表能判的自己决定并记依据，只在规则冲突、缺事实、不可逆时问人。uno-online / dsp-hal-eval 的卡超 100 行，未加触发器。
 - 2026-10-28：本机已装薄 skill（`~/.qoder-cn/skills/multi-agent-task-handoff`，来自 `git archive`，无 `.git`）；全局规则/钩子/计划任务仍无。
+- 2026-10-28：加 `压卡 <任务名>` 正式命令（`--help` 可见）；snippet 要求收工时卡超 100 行即调用，不再靠口述。
 - 本目录是协议真源和 git 工作树；非 git 目录用 `.review/<任务>/` 做归档/备份锚点。
 - 远端同步状态以 `git status` / `git log` 为准；网络异常时先推本地提交。
 
@@ -28,7 +29,7 @@
 - [x] uno-webgame 试点：任务级 AGENTS.md 触发成立（新会话只输入「继续」即读 AGENTS.md + CONTEXT.md）。
 - [x] handoff-pilot-test 闭环：收工自动回填、接手读卡、send/wait/read 通过。
 - [x] uno-online：卡 183 行 / 46 KB → 83 行 / 6.9 KB，历史原样搬到 `工作记录.md`；加 `AGENTS.md`，新会话自动读卡，未改文件。
-- [ ] dsp-hal-eval：卡 287 行 / 157 KB，先压卡再加触发器；3178 暂缓。
+- [ ] dsp-hal-eval：卡 287 行 / 157 KB，用 `压卡` 处理后再加触发器；3178 暂缓。
 - [x] 工程化模拟：三档生成 + AGENTS 一致 + dry-run 0 迁移（handoff-pilot-test）。
 - [x] 真实 `工程化` 命令：临时装薄 skill 实测通过（2026-10-28）。
 - [x] 薄 skill 常驻安装；自然语言「接手这个目录」自动加载 skill 并发起接手流程，已验（会话 `<会话ID>`）。
@@ -62,6 +63,7 @@
 - 2026-10-28：uno-online 压卡 + 触发器落地：CONTEXT 183 行 / 46 KB → 83 行 / 6.9 KB，历史原样搬到 `工作记录.md`；新会话自动读 AGENTS/CONTEXT，未改文件。
 - 2026-10-28：SKILL/DESIGN 加两条评估指标（先省开场读取量、再提高自动化）与压卡步骤。
 - 2026-10-28：装薄 skill 并验证自动加载：自然语言「接手这个目录」→ 新会话读 AGENTS/CONTEXT/README/DESIGN + PROJECT_RULES、核 sha256、未写入。
+- 2026-10-28：压卡收成正式命令（`--help` 可见）；snippet 加压卡检查，uno-online / handoff-pilot-test 的 AGENTS 同步（fixture 432 字节）。
 
 ## 给下一个 agent 的追加区
 

@@ -20,6 +20,7 @@ cp assets/CONTEXT.md.tpl <任务目录>/CONTEXT.md
 ```text
 /multi-agent-task-handoff                  # 默认单档：确保/刷新 CONTEXT.md
 /multi-agent-task-handoff 工程化 <任务名>   # 建目录、迁移文件、三档
+/multi-agent-task-handoff 压卡 <任务名>     # 超 100 行的卡压回交接卡
 /multi-agent-task-handoff 交接 <sessionId>  # 把交接卡发给指定会话
 /multi-agent-task-handoff 接续 <任务名>     # 工作区已打开时新建会话
 ```
@@ -44,6 +45,15 @@ cp assets/CONTEXT.md.tpl <任务目录>/CONTEXT.md
 3. 建目录；从当前 cwd 迁移顶层非隐藏文件（排除 `.git`、`node_modules`、应用缓存）；先出清单，确认后复制、校验、默认不删源。
 4. 用 `assets/*.tpl` 写三档：头块 + `## 文档` 表；README 按 GitHub 落地页，DESIGN 含拓扑/流程/架构树，CONTEXT 写 `模式：三档` 且 ≤100 行；已有方案设计交付文档时用其代替 DESIGN；任务目录 `AGENTS.md` 加 `assets/AGENTS.md.snippet`。
 5. 让用户把目录打开为工作区；之后 `接续`，或手动建会话后 `交接`。
+
+### 压卡
+
+`CONTEXT.md` 超过 100 行时把历史搬出去，卡回到「状态 / 下一步 / 坑 / 验证」：
+
+- 日志节原样搬到同目录 `工作记录.md`，逐块逐字校验，不改写内容。
+- 非 git 目录先备份到 `.review/<任务名>/` 或 zip；有 git 直接提交，旧内容能从历史找回。
+- 卡压到 ≤100 行后，才加任务级 `AGENTS.md` 触发。
+- 只搬不删；确需删除时单独确认。
 
 ### 交接
 
