@@ -33,6 +33,7 @@ cp assets/CONTEXT.md.tpl <任务目录>/CONTEXT.md
 - 收工/交接时把宿主 memory 里会影响下一家的坑写进「坑与约束」；不需要工程化。
 - 上限 100 行；只记关键动作，不写完整历史。
 - `README.md` / `DESIGN.md` 只在有外部读者或设计取舍时写，不是必填。
+- 根目录已有承担方案设计的交付文档（如 `架构设计.md`、`XX实施方案.md`）时，用它代替 `DESIGN.md`；同一件事只留一份真源。
 
 ### 工程化
 
@@ -41,7 +42,7 @@ cp assets/CONTEXT.md.tpl <任务目录>/CONTEXT.md
 1. 只读自检：写权限、git 状态、`list_workspaces`、`list_chat_sessions`、宿主是否有会话工具、是否有 qoder CLI；先读 `D:\agent_workspace\AGENT_CAPABILITIES.md` 并复验关键项。
 2. 输出四行：可自动 / 需确认 / 需手动 / 不支持；能做的直接做，做不到的列给用户。
 3. 建目录；从当前 cwd 迁移顶层非隐藏文件（排除 `.git`、`node_modules`、应用缓存）；先出清单，确认后复制、校验、默认不删源。
-4. 用 `assets/*.tpl` 写三档：头块 + `## 文档` 表；README 按 GitHub 落地页，DESIGN 含拓扑/流程/架构树，CONTEXT 写 `模式：三档` 且 ≤100 行；任务目录 `AGENTS.md` 加 `assets/AGENTS.md.snippet`。
+4. 用 `assets/*.tpl` 写三档：头块 + `## 文档` 表；README 按 GitHub 落地页，DESIGN 含拓扑/流程/架构树，CONTEXT 写 `模式：三档` 且 ≤100 行；已有方案设计交付文档时用其代替 DESIGN；任务目录 `AGENTS.md` 加 `assets/AGENTS.md.snippet`。
 5. 让用户把目录打开为工作区；之后 `接续`，或手动建会话后 `交接`。
 
 ### 交接

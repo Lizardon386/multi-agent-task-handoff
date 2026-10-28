@@ -22,7 +22,7 @@ argument-hint: "[--help | 接手 <任务名> | 工程化 <任务名> | 交接 <s
 
 ## 默认：单档
 
-每个任务目录只维护 `CONTEXT.md`（模板 `assets/CONTEXT.md.tpl`）。`模式：单档`；≤100 行。开始按「接手」；收工更新「现在在哪 / 下一步 / 坑」，把 memory 里会影响下一家的坑写进「坑与约束」，交接记录加一条关键动作。README/DESIGN 只在有外部读者或设计取舍时写。
+每个任务目录只维护 `CONTEXT.md`（模板 `assets/CONTEXT.md.tpl`）。`模式：单档`；≤100 行。开始按「接手」；收工更新「现在在哪 / 下一步 / 坑」，把 memory 里会影响下一家的坑写进「坑与约束」，交接记录加一条关键动作。README/DESIGN 只在有外部读者或设计取舍时写；根目录已有承担方案设计的交付文档（`架构设计.md`、`XX实施方案.md` 这类复合名，不是名字带“设计”就算）时，用它代替 DESIGN，不另立两份真源。
 
 - 需要自动触发时：给任务目录 `AGENTS.md` 追加 `assets/AGENTS.md.snippet` 的 3 行（只补不覆盖）；不装 skill 就手工复制。
 
@@ -30,7 +30,7 @@ argument-hint: "[--help | 接手 <任务名> | 工程化 <任务名> | 交接 <s
 
 新会话进入任务目录时使用。
 
-1. 读 `CONTEXT.md`（没有就按 `assets/CONTEXT.md.tpl` 建）；`模式：三档` 时读 README/DESIGN；`PROJECT_RULES.md` 存在就读（本机默认 `D:\agent_workspace\PROJECT_RULES.md`）。
+1. 读 `CONTEXT.md`（没有就按 `assets/CONTEXT.md.tpl` 建）；`模式：三档` 时读 README/DESIGN，DESIGN 可由根目录的方案设计交付文档承担；`PROJECT_RULES.md` 存在就读（本机默认 `D:\agent_workspace\PROJECT_RULES.md`）。
 2. 核对状态锚点，跑验证命令。
 3. 有「参考会话」且信息不足时，若宿主提供 `read_chat_session`，按旧 sessionId 读最近 N 轮；没有就问用户。
 4. 缺字段/缺交接，按「自动化失效时」给手动卡；不要猜。
@@ -42,7 +42,7 @@ argument-hint: "[--help | 接手 <任务名> | 工程化 <任务名> | 交接 <s
 1. **自检**：pwd/写权限、git 状态、工作区/会话/会话工具/CLI 是否可用；输出四行 ✅ 可自动 / 🟡 需确认 / 🔴 需手动 / ⛔ 不支持；不问用户“你能不能做 X”。先读 `D:\agent_workspace\AGENT_CAPABILITIES.md`（有就读），按表复验关键项；结果变化就地更新；未知 agent 补一行。后续失败动作按「自动化失效时」处理。
 2. **建目录**：cwd 已在 `D:\agent_workspace` 下则接管；否则建 `D:\agent_workspace\<任务名>`，已存在不覆盖。
 3. **迁移**：先列「源 → 目标」清单；只处理 cwd 顶层非隐藏文件，排除 `.git`、`node_modules`、应用缓存；确认后复制、校验 hash、默认不删源。
-4. **写三档**：用 `assets/*.tpl` 生成三份并删注释；三份都要有 H1 + 一句话 + `最近更新` + `## 文档` 表；CONTEXT 写 `模式：三档`。README 按 GitHub 落地页写；DESIGN 含目标/约束、拓扑 mermaid、核心流程 mermaid、4.1 包/目录文本树 + 关系图、决策表、语义/工程约束。同时确保任务目录的 `AGENTS.md` 含 `## 任务交接`（按 `assets/AGENTS.md.snippet`，只补不覆盖）。
+4. **写三档**：用 `assets/*.tpl` 生成三份并删注释；三份都要有 H1 + 一句话 + `最近更新` + `## 文档` 表；CONTEXT 写 `模式：三档`。README 按 GitHub 落地页写；DESIGN 含目标/约束、拓扑 mermaid、核心流程 mermaid、4.1 包/目录文本树 + 关系图、决策表、语义/工程约束。根目录已有方案设计交付文档时，不另立 DESIGN：在该文档补缺的节，或只在 CONTEXT 文档表里指向它。同时确保任务目录的 `AGENTS.md` 含 `## 任务交接`（按 `assets/AGENTS.md.snippet`，只补不覆盖）。
 5. **下一步**：让用户把目录打开为工作区；之后 `接续` 或手动建会话后 `交接`。
 
 ## 维护（memory 与模式无关）

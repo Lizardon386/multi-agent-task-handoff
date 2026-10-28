@@ -120,6 +120,7 @@ flowchart TD
 | 宿主 memory | 辅助回忆，不是交接契约；下一家需要的事实进 CONTEXT/DESIGN；不做每轮 diff |
 | 项目规则 | `PROJECT_RULES.md`（`D:\agent_workspace`）；跨项目/跨 agent 的产物、验证、交接约定；宿主专属规则留在各自全局文件；能力表是 agent 侧缓存 |
 | memory 提升 | 与模式无关；单档写进 CONTEXT，三档再同步 README/DESIGN；只在收工/交接做 |
+| DESIGN 替代 | 根目录已有承担方案设计的交付文档（`架构设计.md`、`XX实施方案.md` 这类复合名；评审意见不算）时，不另立 DESIGN，交接以该文档为准 |
 | 触发器 | 任务级 `AGENTS.md` 的 3 行片段；不写全局规则；宿主不读回退显式调用；best-effort |
 | 能力表 | `D:\agent_workspace\AGENT_CAPABILITIES.md`（agent 工作区根）；一行一个 agent/版本，固定能力列，就地更新；30 天/版本变化复验；缓存不是契约 |
 | 自动化失效 | 先只读探测；四类；只能手动给手动卡（已完成/卡点/步骤/验证/回我）；用户完成后复验 |
