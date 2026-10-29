@@ -1,6 +1,6 @@
 #!/bin/sh
 # 把当前 HEAD 安装到“当前宿主”的 skill 目录；只装一个目标。
-# 宿主靠环境变量识别：Qoder / Claude Code / Codex。识别不出就退出，不猜目录。
+# 宿主靠环境变量识别：Qoder / Claude Code / Codex / OpenCode / ZCode。识别不出就退出，不猜目录。
 
 set -u
 
@@ -22,12 +22,13 @@ usage() {
   Claude Code  CLAUDECODE / CLAUDE_CONFIG_DIR
   Codex        CODEX_HOME
   OpenCode     OPENCODE / OPENCODE_CONFIG_DIR
+  ZCode        ZCODE_CONFIG_DIR / ZCODE_APP_VERSION
 
 安装目录 = <宿主配置目录>/skills/multi-agent-task-handoff
 
 选项:
   --dry-run        只打印将要做什么，不写文件
-  --host NAME      qoder | claude | codex | opencode（识别不出时显式指定）
+  --host NAME      qoder | claude | codex | opencode | zcode（识别不出时显式指定）
   --target DIR     直接指定安装目录（与 --host 二选一）
   --force          覆盖没有 .skill-version 的非空目录
   --no-hook        不改仓库本地 core.hooksPath
@@ -107,6 +108,8 @@ default_cfg() {
       if [ -n "${OPENCODE_CONFIG_DIR:-}" ]; then printf '%s\n' "$OPENCODE_CONFIG_DIR"
       elif [ -n "${XDG_CONFIG_HOME:-}" ]; then printf '%s\n' "$XDG_CONFIG_HOME/opencode"
       else printf '%s\n' "$HOME/.config/opencode"; fi ;;
+    zcode)
+      if [ -n "${ZCODE_CONFIG_DIR:-}" ]; then printf '%s\n' "$ZCODE_CONFIG_DIR"; else printf '%s\n' "$HOME/.zcode"; fi ;;
     *) return 1 ;;
   esac
 }
@@ -133,6 +136,12 @@ detect_host() {
   if [ -n "${OPENCODE:-}" ]; then
     host=opencode; cfg=$(default_cfg opencode); cfg_src=OPENCODE; return 0
   fi
+  if [ -n "${ZCODE_CONFIG_DIR:-}" ]; then
+    host=zcode; cfg=$ZCODE_CONFIG_DIR; cfg_src=ZCODE_CONFIG_DIR; return 0
+  fi
+  if [ -n "${ZCODE_APP_VERSION:-}" ]; then
+    host=zcode; cfg=$(default_cfg zcode); cfg_src=ZCODE_APP_VERSION; return 0
+  fi
   return 1
 }
 
@@ -154,8 +163,8 @@ if [ -n "$target_arg" ]; then
   target_in=$(to_unix "$target_arg")
 elif [ -n "$host_arg" ]; then
   case "$host_arg" in
-    qoder|claude|codex|opencode) ;;
-    *) usage_die "--host 只支持 qoder/claude/codex/opencode" ;;
+    qoder|claude|codex|opencode|zcode) ;;
+    *) usage_die "--host 只支持 qoder/claude/codex/opencode/zcode" ;;
   esac
   host=$host_arg
   cfg=$(default_cfg "$host") || die "无法确定 $host 的配置目录"
@@ -165,8 +174,8 @@ elif detect_host; then
   target_in=$cfg/skills/$skill_id
 else
   cat >&2 <<'EOF'
-识别不出当前宿主。已检查: QODER_CONFIG_DIR, QODERCN_CONFIG_DIR, CLAUDE_CONFIG_DIR, CLAUDECODE, CODEX_HOME, OPENCODE, OPENCODE_CONFIG_DIR。
-请用 --host qoder|claude|codex|opencode 或 --target DIR 指定。
+识别不出当前宿主。已检查: QODER_CONFIG_DIR, QODERCN_CONFIG_DIR, CLAUDE_CONFIG_DIR, CLAUDECODE, CODEX_HOME, OPENCODE, OPENCODE_CONFIG_DIR, ZCODE_CONFIG_DIR, ZCODE_APP_VERSION。
+请用 --host qoder|claude|codex|opencode|zcode 或 --target DIR 指定。
 EOF
   exit 2
 fi

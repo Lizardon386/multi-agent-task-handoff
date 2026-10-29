@@ -3,7 +3,7 @@
 > 多 agent 任务接力的最小协议：默认一任务一份 `CONTEXT.md`；需要时用 `工程化` 升到三档，再用 `交接` 把状态交给另一个会话。
 > 标识 `multi-agent-task-handoff`。本目录是协议真源与 git 工作树。
 > 设计取舍见 [DESIGN.md](DESIGN.md)，当前进度见 [CONTEXT.md](CONTEXT.md)。
-> 最近更新：2026-10-28
+> 最近更新：2026-10-29
 
 ## 一句话说明
 
@@ -103,13 +103,14 @@ Qoder 的技能目录是**实拷贝**，目录 junction 不被扫描（实测切
 | Claude Code | `CLAUDECODE` / `CLAUDE_CONFIG_DIR` | 同上（默认 `~/.claude`） |
 | Codex | `CODEX_HOME` | 同上（未设置时用 `--host codex`） |
 | OpenCode | `OPENCODE` / `OPENCODE_CONFIG_DIR` | 同上（默认 `~/.config/opencode`） |
+| ZCode | `ZCODE_CONFIG_DIR` / `ZCODE_APP_VERSION` | 同上（默认 `~/.zcode`） |
 
 ```bash
 bash install.sh --dry-run   # 只打印宿主、目标、动作
 bash install.sh             # 装到当前宿主
 ```
 
-Windows 双击 `安装.bat`；识别不出宿主时会问一次 qoder / claude / codex / opencode。选项：`--host`、`--target DIR`、`--force`（覆盖非托管非空目录）、`--no-hook`、`--no-register`、`--dry-run`。换宿主时，在新宿主里重跑一次。
+Windows 双击 `安装.bat`；识别不出宿主时会问一次 qoder / claude / codex / opencode / zcode。选项：`--host`、`--target DIR`、`--force`（覆盖非托管非空目录）、`--no-hook`、`--no-register`、`--dry-run`。换宿主时，在新宿主里重跑一次。
 
 安装会写 `.skill-version`（commit + 时间），并默认把目标追加到 `.skill-sync-paths`、启用仓库本地 `core.hooksPath=.githooks`。之后每次提交由 `post-commit` 把 HEAD 刷到清单里的目录；父目录不存在就跳过。钩子只在 commit 时跑，不常驻；没启用时重跑 `install.sh`。
 
