@@ -1,6 +1,6 @@
 ---
 name: multi-agent-task-handoff
-description: 多 agent 任务接力协议：默认一份 CONTEXT.md 交接卡；工程化后升三档（README/DESIGN/CONTEXT），按固定文档头块与文档表维护。
+description: 多 agent 任务接力协议：接手或接盘任务目录、写交接卡、收工、压卡、工程化与自检；默认一份 CONTEXT.md，工程化后升三档（README/DESIGN/CONTEXT），按固定文档头块与文档表维护。
 when_to_use: 开始或结束一个任务、接盘别人留下的任务目录、把工作交接给另一个 agent/会话、或要把当前会话工程化到新目录时。
 argument-hint: "[--help | 接盘 | 交接 [ID] | 压卡 | 工程化 | 自检/更新]"
 ---

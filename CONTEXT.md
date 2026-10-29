@@ -29,7 +29,7 @@
 - v2 协议已落地：默认单档；`接盘` / `交接`（别名 `收工`）/ `压卡` / `工程化` / `自检`（别名 `更新`）+ 只读自检；所有任务命令只看 cwd；唯一参数是 `交接` 的 ID；`收工` 只整理，带 ID 才发送；支持 `+` 或空格串行组合（如 `压卡+收工`、`压卡 收工`）。
 - 安装：`install.sh` 按宿主环境变量只给当前 agent 装（Qoder/Claude/Codex/OpenCode/ZCode；OpenCode/ZCode 也可 `--host` 显式指定），写 `.skill-version`、启用本地钩子、登记 `.skill-sync-paths`（本地文件，已 gitignore）；`安装.bat` 是 Windows 双击入口。
 - 本机已装薄 skill：Qoder `~/.qoder-cn/skills/multi-agent-task-handoff`、OpenCode `~/.config/opencode/skills/multi-agent-task-handoff`、ZCode `~/.zcode/skills/multi-agent-task-handoff`（均实拷贝）；Qoder 不认目录 junction；提交后由钩子重新导出，或跑 `install.sh`。全局规则/钩子/计划任务仍无。
-- 入口是命令不是文件：`接盘` 命令或 `交接` prompt（自带读卡顺序）；不在任务目录铺 `AGENTS.md`；自然语言「接盘」会加载 skill，已验。
+- 入口是命令不是文件：`接盘` 命令或 `交接` prompt（自带读卡顺序）；不在任务目录铺 `AGENTS.md`；自然语言「接盘」会加载 skill，Qoder 已验；OpenCode 靠 skill description 里的触发词加载。
 - 记录粒度：每次收工 1 条关键动作，交接记录 ≤10 条自动滚动；压卡只做兜底。判定标准见「关键约束」。
 - 已验证：收工回填、send/wait/read、工程化命令、压卡（uno-online 183→83 行）、skill 自动加载、OpenCode 实装（`OPENCODE` 自动识别 + `--host opencode`）、ZCode 实装（`ZCODE_APP_VERSION` 自动识别 + `--host zcode`）、ZCode 子 agent `SendMessage` 往返。
 - 未验证：实际跨目录迁移；Codex 行待测；Claude/Codex 未在真宿主实装（只测环境识别 + 临时目录安装）。
@@ -65,12 +65,12 @@
 
 ## 交接记录（只记关键动作，≤10 条）
 
-- 2026-10-28 Qoder：dsp 压卡验收；备份统一为 `压卡备份.md`（历史 + 原件附录），不建目录；压卡不顺手改别的文档。
 - 2026-10-28 Qoder：命令改「接盘」；「接续」去掉，`收工` = 不发送的交接，`交接 <ID>` 才发；加 `自检/更新` 比对安装 commit；任务命令只看 cwd，参数只留交接 ID；支持 `+` 或空格串行组合。
 - 2026-10-28 Qoder：加 `install.sh`（只装当前宿主）+ `安装.bat`；卡里补 `gh auth status`；修正 `.skill-sync-paths` 是安装目录不是源仓库。
 - 2026-10-28 OpenCode：`install.sh` 加 OpenCode 宿主（`OPENCODE`/`OPENCODE_CONFIG_DIR`，`--host opencode`），修 Windows `--target` 路径；OpenCode 副本实装并登记 `.skill-sync-paths`。
 - 2026-10-28 OpenCode：补 OpenCode 能力行与卡字段（模式/验证/完成定义）；范围收窄为只维护本 skill，dsp-hal-eval 压卡已在别处完成。
 - 2026-10-29 OpenCode：补「现在在哪 / 参考 ID」字段；压卡检查 71 行 / 10 条，无需压卡。
+- 2026-10-29 OpenCode：SKILL description 用自然句含触发词（接手/接盘/交接/收工/压卡/工程化/自检），OpenCode 可按自然语言加载；README 补 `@` 显式调用。
 - 2026-10-29 ZCode：`install.sh` 加 ZCode 宿主（`ZCODE_APP_VERSION` 自动识别 + `--host zcode`）；`.skill-sync-paths` 加 ZCode 行，按先例随宿主支持提交；本机副本增至三份。
 - 2026-10-29 ZCode：交接投递按能力表本行选手段（去 Qoder 硬编码）；参考 ID 定为 `宿主:ID` 格式（`sess_*` 只在 ZCode 可读，实测）。
 - 2026-10-29 ZCode：实装 ZCode 宿主收工；本轮记录滚动删「片段冻结接口」条——其载体（任务级 AGENTS 片段）v2 已移除，历史见 git 与压卡备份。

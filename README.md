@@ -43,7 +43,7 @@ Qoder：
 /multi-agent-task-handoff 交接 <ID>         # 整理后发给指定会话
 ```
 
-OpenCode / OpenChamber 用 `$multi-agent-task-handoff <参数>` 或 `/skill multi-agent-task-handoff <参数>` 显式调用。其他宿主把 `SKILL.md` 放到自己的 skill 目录，或直接把这段指令交给 agent。
+OpenCode / OpenChamber 里可直接说「接盘 / 接手 / 交接 / 收工 / 压卡」触发；OpenCode 也可用 `@multi-agent-task-handoff`，OpenChamber 用 `$multi-agent-task-handoff <参数>` 显式调用。其他宿主把 `SKILL.md` 放到自己的 skill 目录，或直接把这段指令交给 agent。
 
 所有命令只看当前目录，目录名就是任务名；要处理别的任务先 `cd`。唯一参数是 `交接` 的 ID。别名：接手=接盘，收工=交接（无 ID），压缩上下文=压卡，工程/建档=工程化。命令可用 `+` 或空格串行组合，如 `压卡+收工`、`工程化 交接 <ID>`；从左到右，前一步失败就停。
 
