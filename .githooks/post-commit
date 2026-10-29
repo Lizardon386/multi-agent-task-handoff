@@ -1,7 +1,8 @@
 #!/bin/sh
 # 提交后：1) 把当前 HEAD 同步到 .skill-sync-paths 里的安装目录；
-# 2) 工作区文档快照过期时，自动同步并提交快照（防递归，不自动 push）。
-# 只在 commit 时跑，不常驻；失败不阻塞原提交。
+# 2) 工作区文档快照过期时，自动同步并提交快照（防递归）；
+# 3) 自动 push（不 force），失败重试一次并提示。
+# 只在 commit 时跑，不常驻；push 失败不阻塞原提交。
 
 repo=$(git rev-parse --show-toplevel) || exit 0
 
@@ -21,9 +22,11 @@ if [ -f "$repo/.skill-sync-paths" ]; then
 fi
 
 # 自动提交快照的子提交不再检查，防止递归
-[ "${SKIP_SNAPSHOT_HOOK:-}" = "1" ] && exit 0
+if [ "${SKIP_SNAPSHOT_HOOK:-}" = "1" ]; then
+  exit 0
+fi
 
-# amend / merge / rebase 期间不自动加提交
+# amend / merge / rebase 期间不自动加提交，也不自动 push
 case "$(git -C "$repo" reflog -1 --format=%gs 2>/dev/null || true)" in
   *amend*) exit 0 ;;
 esac
@@ -39,13 +42,35 @@ if [ -f "$snap_sync" ] && command -v bash >/dev/null 2>&1; then
       git -C "$repo" add -- "作者实机调研" || true
       if git -C "$repo" diff --cached --quiet -- "作者实机调研"; then
         echo "同步后无差异，跳过自动提交" >&2
-      elif SKIP_SNAPSHOT_HOOK=1 git -C "$repo" commit -m "docs: 自动同步作者实机调研快照" -- "作者实机调研" >/dev/null 2>&1; then
-        echo "已自动同步并提交快照: $(git -C "$repo" rev-parse --short HEAD)（记得 push）" >&2
+      elif SKIP_SNAPSHOT_HOOK=1 SKIP_AUTO_PUSH=1 git -C "$repo" commit -m "docs: 自动同步作者实机调研快照" -- "作者实机调研" >/dev/null 2>&1; then
+        echo "已自动同步并提交快照: $(git -C "$repo" rev-parse --short HEAD)" >&2
       else
         echo "自动提交失败；请运行 bash sync-作者实机调研.sh 后手动提交" >&2
       fi
     else
       echo "自动同步失败；请运行 bash sync-作者实机调研.sh 查看原因" >&2
+    fi
+  fi
+fi
+
+if [ "${SKIP_AUTO_PUSH:-}" != "1" ]; then
+  if git -C "$repo" rev-parse --abbrev-ref --symbolic-full-name '@{u}' >/dev/null 2>&1; then
+    local_head=$(git -C "$repo" rev-parse HEAD)
+    upstream_head=$(git -C "$repo" rev-parse '@{u}' 2>/dev/null || true)
+    if [ "$local_head" != "$upstream_head" ]; then
+      if ! git -C "$repo" push >/dev/null 2>&1; then
+        sleep 2
+        git -C "$repo" push >/dev/null 2>&1 || {
+          printf '%s\n' "自动 push 失败；请手动运行: git -C \"$repo\" push" >&2
+          exit 0
+        }
+      fi
+      remote_head=$(git -C "$repo" ls-remote origin HEAD 2>/dev/null | awk 'NR==1{print $1}')
+      if [ -n "$remote_head" ] && [ "$remote_head" != "$local_head" ]; then
+        printf '%s\n' "push 后远端 HEAD 与本地不一致，请检查" >&2
+      else
+        echo "已自动 push: $(git -C "$repo" rev-parse --short HEAD)"
+      fi
     fi
   fi
 fi
