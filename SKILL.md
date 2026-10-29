@@ -1,6 +1,6 @@
 ---
 name: multi-agent-task-handoff
-description: 多 agent 任务接力协议：默认一份 CONTEXT.md 交接卡；工程化后升三档（README/DESIGN/CONTEXT），按 3178 式文档头块与文档表维护。
+description: 多 agent 任务接力协议：默认一份 CONTEXT.md 交接卡；工程化后升三档（README/DESIGN/CONTEXT），按固定文档头块与文档表维护。
 when_to_use: 开始或结束一个任务、接盘别人留下的任务目录、把工作交接给另一个 agent/会话、或要把当前会话工程化到新目录时。
 argument-hint: "[--help | 接盘 | 交接 [ID] | 压卡 | 工程化 | 自检/更新]"
 ---
@@ -23,6 +23,8 @@ argument-hint: "[--help | 接盘 | 交接 [ID] | 压卡 | 工程化 | 自检/更
 
 命令可用 `+` 或**空格**串行组合，从左到右执行，前一步失败就停，逐步报结果。空格分隔时，命令词开始新命令，非命令词只当 `交接` 的 ID。例：`压卡+收工`、`压卡 收工`、`工程化 交接 <ID>`、`接盘 压卡`。
 
+**工作区根**：环境变量 `AGENT_WORKSPACE`；未设置时用 `D:\agent_workspace`。目录不存在时，只读项跳过；`工程化` 建目录前先问用户。
+
 ## 默认：单档
 
 每个任务目录只维护 `CONTEXT.md`（模板 `assets/CONTEXT.md.tpl`）。`模式：单档`；≤100 行。开始按「接盘」；收工按「交接 / 收工」更新「现在在哪 / 下一步 / 坑」，把 memory 里会影响下一家的坑写进「坑与约束」，交接记录加一条关键动作。README/DESIGN 只在有外部读者或设计取舍时写；根目录已有承担方案设计的交付文档（`架构设计.md`、`XX实施方案.md` 这类复合名，不是名字带“设计”就算）时，用它代替 DESIGN，不另立两份真源。
@@ -33,7 +35,7 @@ argument-hint: "[--help | 接盘 | 交接 [ID] | 压卡 | 工程化 | 自检/更
 
 新会话进入任务目录时使用。
 
-1. 读 `CONTEXT.md`（没有就按 `assets/CONTEXT.md.tpl` 建）；`模式：三档` 时读 README/DESIGN，DESIGN 可由根目录的方案设计交付文档承担；`PROJECT_RULES.md` 存在就读（本机默认 `D:\agent_workspace\PROJECT_RULES.md`）。
+1. 读 `CONTEXT.md`（没有就按 `assets/CONTEXT.md.tpl` 建）；`模式：三档` 时读 README/DESIGN，DESIGN 可由根目录的方案设计交付文档承担；`PROJECT_RULES.md` 存在就读（`<工作区根>/PROJECT_RULES.md`）。
 2. 核对状态锚点，跑验证命令。
 3. 有「参考 ID」且信息不足时，先查 `AGENT_CAPABILITIES.md` 本行的读回手段，再现场探测（`read_chat_session`、`ReadSessionContext`、会话导出/日志等）；能读就读最近 N 轮，读不到就问用户。
 4. 缺字段/缺交接，按「自动化失效时」给手动卡；不要猜。
@@ -42,8 +44,8 @@ argument-hint: "[--help | 接盘 | 交接 [ID] | 压卡 | 工程化 | 自检/更
 
 用户明确要求时才执行；先只读自检，再按「自动 → 确认 → 手动」执行。
 
-1. **自检**：pwd/写权限、git 状态与远端、工作区创建/打开、会话/发送/等待/读回手段、宿主 memory 是否可读、CLI 是否可用；输出四行 ✅ 可自动 / 🟡 需确认 / 🔴 需手动 / ⛔ 不支持；不问用户“你能不能做 X”。先读 `D:\agent_workspace\AGENT_CAPABILITIES.md`（有就读），按表复验关键项；结果变化就地更新；未知 agent 补一行。后续失败动作按「自动化失效时」处理。
-2. **建目录**：cwd 已在 `D:\agent_workspace` 下则接管；否则建 `D:\agent_workspace\<cwd 目录名>`，已存在不覆盖。
+1. **自检**：pwd/写权限、git 状态与远端、工作区创建/打开、会话/发送/等待/读回手段、宿主 memory 是否可读、CLI 是否可用；输出四行 ✅ 可自动 / 🟡 需确认 / 🔴 需手动 / ⛔ 不支持；不问用户“你能不能做 X”。先读 `<工作区根>/AGENT_CAPABILITIES.md`（有就读），按表复验关键项；结果变化就地更新；未知 agent 补一行。后续失败动作按「自动化失效时」处理。
+2. **建目录**：cwd 已在 `<工作区根>` 下则接管；否则建 `<工作区根>/<cwd 目录名>`，已存在不覆盖。
 3. **迁移**：先列「源 → 目标」清单；只处理 cwd 顶层非隐藏文件，排除 `.git`、`node_modules`、应用缓存；确认后复制、校验 hash、默认不删源。
 4. **写三档**：只写任务目录根，不往子目录铺（用户明确要求才例外）；用 `assets/*.tpl` 生成三份并删注释；三份都要有 H1 + 一句话 + `最近更新` + `## 文档` 表；CONTEXT 写 `模式：三档`。README 按 GitHub 落地页写；DESIGN 含目标/约束、拓扑 mermaid、核心流程 mermaid、4.1 包/目录文本树 + 关系图、决策表、语义/工程约束。根目录已有方案设计交付文档时，不另立 DESIGN：在该文档补缺的节，或只在 CONTEXT 文档表里指向它。
 5. **下一步**：先探测宿主能否创建/打开工作区；能就做，不能才让用户手动打开。之后 `交接` 准备交接信息，要发到某个会话就带 ID。
@@ -68,7 +70,7 @@ argument-hint: "[--help | 接盘 | 交接 [ID] | 压卡 | 工程化 | 自检/更
 2. memory 提升：宿主有 memory 就扫 project memory，把会影响下一家的项写进 CONTEXT/DESIGN；没有就从 CONTEXT/DESIGN/git/旧 ID 里找。冲突以 CONTEXT/DESIGN 为准。
 3. 写卡：只挑关键动作（不知道这条下一家会做错/重做才写；能从 CONTEXT/README/DESIGN/git 得到的不写）；更新「现在在哪 / 下一步 / 坑与约束」；交接记录加 1 条，≤10 条，超出先沉降再删最旧；README/DESIGN 只在用法或设计变化时动。
 4. 锚点：有 git 提交推送（推不动就留本地并说明）；没有 git 用时间戳，不另建备份。
-5. 生成 prompt（≤40k）：工作目录 + 文档表 + 锚点 + 验证命令 + 下一步 1–3 条 + 勿动文件 + 已决策 + 旧 ID + 项目规则指针（`D:\agent_workspace\PROJECT_RULES.md`；读不到就贴相关子集）；要求新会话按「接盘」开始，先回能力自检 + 锚点一致/不一致。
+5. 生成 prompt（≤40k）：工作目录 + 文档表 + 锚点 + 验证命令 + 下一步 1–3 条 + 勿动文件 + 已决策 + 旧 ID + 项目规则指针（`<工作区根>/PROJECT_RULES.md`；读不到就贴相关子集）；要求新会话按「接盘」开始，先回能力自检 + 锚点一致/不一致。
 6. 投递：先看 `AGENT_CAPABILITIES.md` 本行，没记录就现场探测并补一行；按本行选投递手段（如 Qoder 的 `send_message_to_chat_session(sessionId, prompt)`），有 ID 就投，成功只代表接收。本行不可自动投递或投递失败时，再探测等价手段（CLI 会话恢复/执行、MCP、可写队列文件等）；能自动送达就做并验证，做不到才把 prompt 或摘要给用户粘贴。不伪造发送或回执，失败按「自动化失效时」给手动卡。
 7. 确认：宿主有 `wait_chat_sessions` / `read_chat_session` 就核锚点与验证；没有就用新 agent 首条回复或下次接盘核对，不声称已确认。确认后更新「当前接盘」「交接记录」，旧会话停写。
 
@@ -77,7 +79,7 @@ argument-hint: "[--help | 接盘 | 交接 [ID] | 压卡 | 工程化 | 自检/更
 比对当前安装副本与源仓库（及 GitHub），落后就同步；只做快进，不覆盖分叉。
 
 1. 安装版本：读当前 skill 目录的 `.skill-version`（commit/date）；没有就视为未知，用 SKILL.md 与源 HEAD 比对。
-2. 源版本：默认源仓库 `D:\agent_workspace\multi-agent-task-handoff`；`.skill-sync-paths` 只列安装目录，不是源仓库指针。读 `git -C <repo> rev-parse HEAD`。
+2. 源版本：默认源仓库 `<工作区根>/multi-agent-task-handoff`；`.skill-sync-paths` 只列安装目录，不是源仓库指针。读 `git -C <repo> rev-parse HEAD`。
 3. 核对远端：能联网就 `git ls-remote origin HEAD`；本地落后且工作树干净就 `git pull --ff-only`；有本地改动或分叉就停，给手动卡。
 4. 安装 commit ≠ 源 HEAD：优先 `bash <repo>/install.sh`（只装当前宿主，自动写 `.skill-version` 并校验文件清单）；手动兜底 `git -C <repo> archive HEAD | tar -x -C <当前安装目录>`，按 hook 格式写 `.skill-version`，`diff -r` 校验；同机其它安装目录按 `.skill-sync-paths` 一起同步。
 5. 报告：安装 commit、源 commit、是否更新、没核对到的项（如离线）；不把“本地一致”说成“GitHub 最新”。

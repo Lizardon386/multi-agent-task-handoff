@@ -4,13 +4,14 @@
 > 最近更新：2026-10-29
 > 模式：三档
 > 状态锚点：接盘时跑 `git log -1 --oneline`；推 GitHub 前跑 `gh auth status`
-> 验证命令：`git status -sb`；`bash install.sh --dry-run`（本机 bash 不在 PATH，用 `D:\software\Git\bin\bash.exe`）；装完用 `diff -r` 比对安装副本
+> 验证命令：`git status -sb`；`bash install.sh --dry-run`（本机 bash 不在 PATH，用 `D:\software\Git\bin\bash.exe`）；装完用 `diff -r` 比对安装副本；`gh repo view --json visibility`
 
 ## 文档
 
 | 文档 | 阅读对象 | 内容 |
 |---|---|---|
 | [README.md](README.md) | 使用者 | 怎么用、命令、限制 |
+| [SKILL.md](SKILL.md) | agent | 协议正文 |
 | [DESIGN.md](DESIGN.md) | 评审 / 二次开发 | 取舍、流程、语义与版本演进 |
 | [CONTEXT.md](CONTEXT.md) | 接盘 agent | 当前状态、下一步、坑（本文） |
 | [压卡备份.md](压卡备份.md) | 追溯用 | 状态历史、已完成、逐条变更 |
@@ -23,9 +24,10 @@
 
 ## 当前状态
 
-- 现在：v2 + ZCode 宿主支持已落地（三份副本同 HEAD）；交接投递/读回按能力表驱动；无进行中的代码改动。
+- 现在：已公开发布（https://github.com/Lizardon386/multi-agent-task-handoff，MIT）；历史经脱敏重写，旧哈希失效；三份安装副本同 HEAD；交接投递/读回按能力表驱动；无进行中的代码改动。
+- 公开前清理：`.skill-sync-paths` 移出 git 跟踪（本地文件）；文档里的本机路径改 `~`；工作区根改由 `AGENT_WORKSPACE` 指定，默认 `D:\agent_workspace`。
 - v2 协议已落地：默认单档；`接盘` / `交接`（别名 `收工`）/ `压卡` / `工程化` / `自检`（别名 `更新`）+ 只读自检；所有任务命令只看 cwd；唯一参数是 `交接` 的 ID；`收工` 只整理，带 ID 才发送；支持 `+` 或空格串行组合（如 `压卡+收工`、`压卡 收工`）。
-- 安装：`install.sh` 按宿主环境变量只给当前 agent 装（Qoder/Claude/Codex/OpenCode/ZCode；OpenCode/ZCode 也可 `--host` 显式指定），写 `.skill-version`、启用本地钩子、登记 `.skill-sync-paths`；`安装.bat` 是 Windows 双击入口。
+- 安装：`install.sh` 按宿主环境变量只给当前 agent 装（Qoder/Claude/Codex/OpenCode/ZCode；OpenCode/ZCode 也可 `--host` 显式指定），写 `.skill-version`、启用本地钩子、登记 `.skill-sync-paths`（本地文件，已 gitignore）；`安装.bat` 是 Windows 双击入口。
 - 本机已装薄 skill：Qoder `~/.qoder-cn/skills/multi-agent-task-handoff`、OpenCode `~/.config/opencode/skills/multi-agent-task-handoff`、ZCode `~/.zcode/skills/multi-agent-task-handoff`（均实拷贝）；Qoder 不认目录 junction；提交后由钩子重新导出，或跑 `install.sh`。全局规则/钩子/计划任务仍无。
 - 入口是命令不是文件：`接盘` 命令或 `交接` prompt（自带读卡顺序）；不在任务目录铺 `AGENTS.md`；自然语言「接盘」会加载 skill，已验。
 - 记录粒度：每次收工 1 条关键动作，交接记录 ≤10 条自动滚动；压卡只做兜底。判定标准见「关键约束」。
@@ -41,10 +43,12 @@
 - [ ] 用 UI 复制的真实 `sess_*` ID 验证 ZCode `ReadSessionContext` 跨会话读取（`current`/agentId/目录名映射均不通，实测）。
 - [ ] 补工程化的迁移清单细节（排除项、hash 校验、删源确认）。
 - [ ] 决定是否加可选 `check-handoff.sh`；默认不加。
-- [ ] 评估把 `.skill-sync-paths` 移出 git 跟踪（当前随仓库分发本机路径）。
 
 ## 关键约束与注意事项
 
+- 公开仓库历史已脱敏重写（2026-10-29）：旧 commit 哈希失效，旧历史只在 `.git/pre-rewrite-2026-10-29.bundle`，不要按旧哈希查。
+- `.skill-sync-paths` 是本地文件（gitignore），install.sh 生成；不要重新跟踪。
+- 公开历史保留 v1 脚本与内部任务名（测试夹具名，默认不脱敏）。
 - 交接卡 ≤100 行；交接记录 ≤10 条；不写完整变更记录。
 - 三档只在任务目录根；没有用户明确要求，不往更深子目录铺。
 - 本目录只维护本 skill；其他任务（含 dsp-hal-eval 压卡）在各自目录处理，不在这里接。
@@ -61,7 +65,6 @@
 
 ## 交接记录（只记关键动作，≤10 条）
 
-- 2026-10-28 Qoder：去掉任务级 AGENTS，入口改为接盘命令/交接 prompt；少一份每任务副本。
 - 2026-10-28 Qoder：dsp 压卡验收；备份统一为 `压卡备份.md`（历史 + 原件附录），不建目录；压卡不顺手改别的文档。
 - 2026-10-28 Qoder：命令改「接盘」；「接续」去掉，`收工` = 不发送的交接，`交接 <ID>` 才发；加 `自检/更新` 比对安装 commit；任务命令只看 cwd，参数只留交接 ID；支持 `+` 或空格串行组合。
 - 2026-10-28 Qoder：加 `install.sh`（只装当前宿主）+ `安装.bat`；卡里补 `gh auth status`；修正 `.skill-sync-paths` 是安装目录不是源仓库。
@@ -71,6 +74,7 @@
 - 2026-10-29 ZCode：`install.sh` 加 ZCode 宿主（`ZCODE_APP_VERSION` 自动识别 + `--host zcode`）；`.skill-sync-paths` 加 ZCode 行，按先例随宿主支持提交；本机副本增至三份。
 - 2026-10-29 ZCode：交接投递按能力表本行选手段（去 Qoder 硬编码）；参考 ID 定为 `宿主:ID` 格式（`sess_*` 只在 ZCode 可读，实测）。
 - 2026-10-29 ZCode：实装 ZCode 宿主收工；本轮记录滚动删「片段冻结接口」条——其载体（任务级 AGENTS 片段）v2 已移除，历史见 git 与压卡备份。
+- 2026-10-29 Qoder：公开发布——MIT、`AGENT_WORKSPACE` 工作区根、脱敏重写历史、删旧库同名重建；`.skill-sync-paths` 改本地文件。
 
 ## 参考 ID
 
