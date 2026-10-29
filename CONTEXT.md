@@ -31,7 +31,7 @@
 - 本机已装薄 skill：Qoder `~/.qoder-cn/skills/multi-agent-task-handoff`、OpenCode `~/.config/opencode/skills/multi-agent-task-handoff`、ZCode `~/.zcode/skills/multi-agent-task-handoff`（均实拷贝）；Qoder 不认目录 junction；提交后由钩子重新导出，或跑 `install.sh`。全局规则/钩子/计划任务仍无。
 - 入口是命令不是文件：`接盘` 命令或 `交接` prompt（自带读卡顺序）；不在任务目录铺 `AGENTS.md`；自然语言「接盘」会加载 skill，Qoder 已验；OpenCode 靠 skill description 里的触发词加载。
 - 记录粒度：每次收工 1 条关键动作，交接记录 ≤10 条自动滚动；压卡只做兜底。判定标准见「关键约束」。
-- 已验证：收工回填、send/wait/read、工程化命令、压卡（uno-online 183→83 行）、skill 自动加载、OpenCode 实装（`OPENCODE` 自动识别 + `--host opencode`）、ZCode 实装（`ZCODE_APP_VERSION` 自动识别 + `--host zcode`）、ZCode 子 agent `SendMessage` 往返。
+- 已验证：收工回填、send/wait/read、工程化命令、压卡（uno-online 183→83 行）、skill 自动加载、OpenCode 实装（`OPENCODE` 自动识别 + `--host opencode`）、OpenCode 建会话/`session.send`/`status`/`messages`/API wait 实测（回复 OK，wait 204）、ZCode 实装（`ZCODE_APP_VERSION` 自动识别 + `--host zcode`）、ZCode 子 agent `SendMessage` 往返。
 - 未验证：实际跨目录迁移；Codex 行待测；Claude/Codex 未在真宿主实装（只测环境识别 + 临时目录安装）。
 - dsp-hal-eval 压卡已由其他 agent 完成，不在本目录处理。
 - 本目录是协议真源和 git 工作树；非 git 目录靠 `压卡备份.md` 追溯。
