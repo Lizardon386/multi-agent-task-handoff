@@ -1,7 +1,7 @@
 # multi-agent-task-handoff · 会话上下文与进展
 
 > 本文件是交接卡：只记当前状态、下一步、坑和交接记录；历史与逐条变更见 [压卡备份.md](压卡备份.md)。
-> 最近更新：2026-10-28
+> 最近更新：2026-10-29
 > 模式：三档
 > 状态锚点：接盘时跑 `git log -1 --oneline`；推 GitHub 前跑 `gh auth status`
 > 验证命令：`git status -sb`；`bash install.sh --dry-run`（本机 bash 不在 PATH，用 `D:\software\Git\bin\bash.exe`）；装完用 `diff -r` 比对安装副本
@@ -23,6 +23,7 @@
 
 ## 当前状态
 
+- 现在：v2 + OpenCode 宿主支持已落地；安装副本与仓库 HEAD 一致；无进行中的代码改动。
 - v2 协议已落地：默认单档；`接盘` / `交接`（别名 `收工`）/ `压卡` / `工程化` / `自检`（别名 `更新`）+ 只读自检；所有任务命令只看 cwd；唯一参数是 `交接` 的 ID；`收工` 只整理，带 ID 才发送；支持 `+` 或空格串行组合（如 `压卡+收工`、`压卡 收工`）。
 - 安装：`install.sh` 按宿主环境变量只给当前 agent 装（Qoder/Claude/Codex/OpenCode；OpenCode 也可 `--host opencode`），写 `.skill-version`、启用本地钩子、登记 `.skill-sync-paths`；`安装.bat` 是 Windows 双击入口。
 - 本机已装薄 skill：Qoder `~/.qoder-cn/skills/multi-agent-task-handoff`、OpenCode `~/.config/opencode/skills/multi-agent-task-handoff`（均实拷贝）；Qoder 不认目录 junction；提交后由钩子重新导出，或跑 `install.sh`。全局规则/钩子/计划任务仍无。
@@ -36,7 +37,7 @@
 
 ## 计划 / 待办
 
-- [ ] 推广后复核能力表；实际跨目录迁移仍未实测。
+- [ ] 其他宿主推广后复核能力表（OpenCode 行已补）；实际跨目录迁移仍未实测。
 - [ ] 补工程化的迁移清单细节（排除项、hash 校验、删源确认）。
 - [ ] 决定是否加可选 `check-handoff.sh`；默认不加。
 - [ ] 评估把 `.skill-sync-paths` 移出 git 跟踪（当前随仓库分发本机路径）。
@@ -59,7 +60,6 @@
 
 ## 交接记录（只记关键动作，≤10 条）
 
-- 2026-10-28 Qoder：记录上限放宽到 10 条；写清关键判定（不知道会做错/重做才写，能从文档/git 得到的不写）。
 - 2026-10-28 Qoder：记录滚动改为“先沉降再删最旧”，避免早期决策被滚丢。
 - 2026-10-28 Qoder：AGENTS 片段改为稳定入口，协议细则不再复制到任务目录。
 - 2026-10-28 Qoder：片段文本定为冻结接口，只在协议大版本变更时批量更新。
@@ -69,3 +69,8 @@
 - 2026-10-28 Qoder：加 `install.sh`（只装当前宿主）+ `安装.bat`；卡里补 `gh auth status`；修正 `.skill-sync-paths` 是安装目录不是源仓库。
 - 2026-10-28 OpenCode：`install.sh` 加 OpenCode 宿主（`OPENCODE`/`OPENCODE_CONFIG_DIR`，`--host opencode`），修 Windows `--target` 路径；OpenCode 副本实装并登记 `.skill-sync-paths`。
 - 2026-10-28 OpenCode：补 OpenCode 能力行与卡字段（模式/验证/完成定义）；范围收窄为只维护本 skill，dsp-hal-eval 压卡已在别处完成。
+- 2026-10-29 OpenCode：补「现在在哪 / 参考 ID」字段；压卡检查 71 行 / 10 条，无需压卡。
+
+## 参考 ID
+
+- 无；本卡自包含，细节按 `git log` 与 [压卡备份.md](压卡备份.md) 查。
