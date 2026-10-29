@@ -166,6 +166,10 @@ Windows 双击 `安装.bat`；识别不出宿主时会问一次 qoder / claude /
 - 卡超过 100 行说明它在写日志，不是交接。
 - 敏感内容留在本机。
 
+## 作者实机调研（仅供参考）
+
+[作者实机调研/](作者实机调研/) 下是作者本机的三份工作区文档快照：`AGENTS.md`、`PROJECT_RULES.md`、`AGENT_CAPABILITIES.md`。路径、账号、宿主版本都是作者环境，不是通用约定；能力表的通用模板见 [assets/AGENT_CAPABILITIES.md.tpl](assets/AGENT_CAPABILITIES.md.tpl)。
+
 ## 许可
 
 [MIT](LICENSE) © 2026 Lizardon386
