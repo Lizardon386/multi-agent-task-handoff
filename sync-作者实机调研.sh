@@ -17,6 +17,8 @@ usage() {
   --check     只比对；有差异时退出码 1
   -h, --help  显示本表
 
+退出码: 0 最新 / 1 快照过期 / 2 源文件缺失或含敏感内容
+
 安全：源文件含 token / 私钥 / 真实会话 ID / C:\Users 路径时拒绝同步。
 EOF
 }
@@ -35,13 +37,13 @@ repo=$script_dir
 snap_dir=$repo/作者实机调研
 workspace=${AGENT_WORKSPACE:-$(dirname "$repo")}
 
-[ -d "$workspace" ] || { echo "工作区根不存在: $workspace" >&2; exit 1; }
-[ -d "$snap_dir" ] || mkdir -p "$snap_dir" || exit 1
+[ -d "$workspace" ] || { echo "工作区根不存在: $workspace" >&2; exit 2; }
+[ -d "$snap_dir" ] || mkdir -p "$snap_dir" || exit 2
 
 files='AGENTS.md PROJECT_RULES.md AGENT_CAPABILITIES.md'
 status=0
 changed=0
-tmpdir=$(mktemp -d) || exit 1
+tmpdir=$(mktemp -d) || exit 2
 trap 'rm -rf "$tmpdir"' EXIT
 
 for f in $files; do
@@ -49,22 +51,22 @@ for f in $files; do
   dst=$snap_dir/$f
   if [ ! -f "$src" ]; then
     echo "缺少源文件: $src" >&2
-    status=1
+    status=2
     continue
   fi
   if grep -Eq 'gho_|ghp_|github_pat_|BEGIN (RSA|OPENSSH) PRIVATE' "$src"; then
     echo "拒绝同步：$f 含疑似凭据" >&2
-    status=1
+    status=2
     continue
   fi
   if grep -Eq 'ses_[A-Za-z0-9]{10,}' "$src"; then
     echo "拒绝同步：$f 含真实会话 ID" >&2
-    status=1
+    status=2
     continue
   fi
   if grep -Eq 'C:\\Users|C:/Users' "$src"; then
     echo "拒绝同步：$f 含 C:\\Users 本机路径，先改成 ~" >&2
-    status=1
+    status=2
     continue
   fi
 
@@ -92,7 +94,7 @@ for f in $files; do
       echo "会更新: $f"
       ;;
     sync)
-      cp "$tmp" "$dst" || { echo "写入失败: $dst" >&2; status=1; continue; }
+      cp "$tmp" "$dst" || { echo "写入失败: $dst" >&2; status=2; continue; }
       echo "已更新: $f"
       ;;
   esac
