@@ -24,7 +24,7 @@
 
 ## 当前状态
 
-- 现在：公开发布准备完成（https://github.com/Lizardon386/multi-agent-task-handoff，MIT）；历史经脱敏重写，旧哈希失效；三份安装副本同 HEAD。GitHub 仓库仍为 private，`origin` 未配置，尚未公开推送；发布会话已停。
+- 现在：已公开发布（https://github.com/Lizardon386/multi-agent-task-handoff，MIT，public）；历史经脱敏重写，旧哈希失效；origin 已接、远端 HEAD 与本地一致；三份安装副本同 HEAD。旧私有仓库已删除并同名重建。
 - 公开前清理：`.skill-sync-paths` 移出 git 跟踪（本地文件）；文档里的本机路径改 `~`；工作区根改由 `AGENT_WORKSPACE` 指定，默认 `D:\agent_workspace`。
 - v2 协议已落地：默认单档；`接盘` / `交接`（别名 `收工`）/ `压卡` / `工程化` / `自检`（别名 `更新`）+ 只读自检；所有任务命令只看 cwd；唯一参数是 `交接` 的 ID；`收工` 只整理，带 ID 才发送；支持 `+` 或空格串行组合（如 `压卡+收工`、`压卡 收工`）。
 - 安装：`install.sh` 按宿主环境变量只给当前 agent 装（Qoder/Claude/Codex/OpenCode/ZCode；OpenCode/ZCode 也可 `--host` 显式指定），写 `.skill-version`、启用本地钩子、登记 `.skill-sync-paths`（本地文件，已 gitignore）；`安装.bat` 是 Windows 双击入口。
@@ -39,7 +39,6 @@
 
 ## 计划 / 待办
 
-- [ ] 公开发布收尾：配置 `origin`、确认仓库可见性、按重写后的历史推送；发布会话恢复前不要动远端。
 - [ ] 其他宿主推广后复核能力表（OpenCode 行已补）；实际跨目录迁移仍未实测。
 - [ ] 用 UI 复制的真实 `sess_*` ID 验证 ZCode `ReadSessionContext` 跨会话读取（`current`/agentId/目录名映射均不通，实测）。
 - [ ] 补工程化的迁移清单细节（排除项、hash 校验、删源确认）。
@@ -75,7 +74,7 @@
 - 2026-10-29 ZCode：`install.sh` 加 ZCode 宿主（`ZCODE_APP_VERSION` 自动识别 + `--host zcode`）；`.skill-sync-paths` 加 ZCode 行，按先例随宿主支持提交；本机副本增至三份。
 - 2026-10-29 ZCode：交接投递按能力表本行选手段（去 Qoder 硬编码）；参考 ID 定为 `宿主:ID` 格式（`sess_*` 只在 ZCode 可读，实测）。
 - 2026-10-29 ZCode：实装 ZCode 宿主收工；本轮记录滚动删「片段冻结接口」条——其载体（任务级 AGENTS 片段）v2 已移除，历史见 git 与压卡备份。
-- 2026-10-29 Qoder：公开发布准备——MIT、`AGENT_WORKSPACE` 工作区根、脱敏重写历史；`.skill-sync-paths` 改本地文件。仓库仍 private、`origin` 未配置，发布会话已停。
+- 2026-10-29 Qoder：公开发布——MIT、`AGENT_WORKSPACE` 工作区根、脱敏重写历史；旧私有库删除后同名新建并推送，已转 public。
 
 ## 参考 ID
 
