@@ -35,7 +35,7 @@ argument-hint: "[--help | 接盘 | 交接 [ID] | 压卡 | 工程化 | 自检/更
 
 1. 读 `CONTEXT.md`（没有就按 `assets/CONTEXT.md.tpl` 建）；`模式：三档` 时读 README/DESIGN，DESIGN 可由根目录的方案设计交付文档承担；`PROJECT_RULES.md` 存在就读（本机默认 `D:\agent_workspace\PROJECT_RULES.md`）。
 2. 核对状态锚点，跑验证命令。
-3. 有「参考 ID」且信息不足时，先探测宿主能否读旧会话（`read_chat_session`、会话导出/日志等）；能读就读最近 N 轮，读不到就问用户。
+3. 有「参考 ID」且信息不足时，先查 `AGENT_CAPABILITIES.md` 本行的读回手段，再现场探测（`read_chat_session`、`ReadSessionContext`、会话导出/日志等）；能读就读最近 N 轮，读不到就问用户。
 4. 缺字段/缺交接，按「自动化失效时」给手动卡；不要猜。
 
 ## 工程化 / 工程 / 建档
@@ -64,12 +64,12 @@ argument-hint: "[--help | 接盘 | 交接 [ID] | 压卡 | 工程化 | 自检/更
 
 两种用法：不带 ID 只整理并写卡（跨 agent 先找可用投递手段，没有才把 prompt 给用户）；带 ID 整理后再发给该会话（同 agent 不同会话）。
 
-1. 整理：读 CONTEXT，字段齐全：模式、目标/完成定义、现在在哪、下一步、坑、锚点、验证命令、交接记录、参考 ID；缺字段先按「接盘」补，补不了给手动卡。
+1. 整理：读 CONTEXT，字段齐全：模式、目标/完成定义、现在在哪、下一步、坑、锚点、验证命令、交接记录、参考 ID（`宿主:ID` 格式，如 `qoder:<uuid>`、`zcode:sess_*`，跨宿主不通用）；缺字段先按「接盘」补，补不了给手动卡。
 2. memory 提升：宿主有 memory 就扫 project memory，把会影响下一家的项写进 CONTEXT/DESIGN；没有就从 CONTEXT/DESIGN/git/旧 ID 里找。冲突以 CONTEXT/DESIGN 为准。
 3. 写卡：只挑关键动作（不知道这条下一家会做错/重做才写；能从 CONTEXT/README/DESIGN/git 得到的不写）；更新「现在在哪 / 下一步 / 坑与约束」；交接记录加 1 条，≤10 条，超出先沉降再删最旧；README/DESIGN 只在用法或设计变化时动。
 4. 锚点：有 git 提交推送（推不动就留本地并说明）；没有 git 用时间戳，不另建备份。
 5. 生成 prompt（≤40k）：工作目录 + 文档表 + 锚点 + 验证命令 + 下一步 1–3 条 + 勿动文件 + 已决策 + 旧 ID + 项目规则指针（`D:\agent_workspace\PROJECT_RULES.md`；读不到就贴相关子集）；要求新会话按「接盘」开始，先回能力自检 + 锚点一致/不一致。
-6. 投递：先看 `AGENT_CAPABILITIES.md` 本行，没记录就现场探测并补一行。有 ID 就用 `send_message_to_chat_session(sessionId, prompt)`，成功只代表接收。没有 ID 或宿主没有这个工具时，探测等价手段（CLI 会话恢复/执行、MCP、可写队列文件等）；能自动送达就做并验证，做不到才把 prompt 或摘要给用户粘贴。不伪造发送或回执，失败按「自动化失效时」给手动卡。
+6. 投递：先看 `AGENT_CAPABILITIES.md` 本行，没记录就现场探测并补一行；按本行选投递手段（如 Qoder 的 `send_message_to_chat_session(sessionId, prompt)`），有 ID 就投，成功只代表接收。本行不可自动投递或投递失败时，再探测等价手段（CLI 会话恢复/执行、MCP、可写队列文件等）；能自动送达就做并验证，做不到才把 prompt 或摘要给用户粘贴。不伪造发送或回执，失败按「自动化失效时」给手动卡。
 7. 确认：宿主有 `wait_chat_sessions` / `read_chat_session` 就核锚点与验证；没有就用新 agent 首条回复或下次接盘核对，不声称已确认。确认后更新「当前接盘」「交接记录」，旧会话停写。
 
 ## 自检 / 更新

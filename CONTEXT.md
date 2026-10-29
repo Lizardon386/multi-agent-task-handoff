@@ -71,6 +71,7 @@
 - 2026-10-28 OpenCode：补 OpenCode 能力行与卡字段（模式/验证/完成定义）；范围收窄为只维护本 skill，dsp-hal-eval 压卡已在别处完成。
 - 2026-10-29 OpenCode：补「现在在哪 / 参考 ID」字段；压卡检查 71 行 / 10 条，无需压卡。
 - 2026-10-29 ZCode：`install.sh` 加 ZCode 宿主（`ZCODE_APP_VERSION` 自动识别 + `--host zcode`）；`.skill-sync-paths` 加 ZCode 行，按先例随宿主支持提交；本机副本增至三份。
+- 2026-10-29 ZCode：交接投递按能力表本行选手段（去 Qoder 硬编码）；参考 ID 定为 `宿主:ID` 格式（`sess_*` 只在 ZCode 可读，实测）。
 
 ## 参考 ID
 
