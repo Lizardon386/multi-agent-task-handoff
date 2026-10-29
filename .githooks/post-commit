@@ -53,7 +53,8 @@ if [ -f "$snap_sync" ] && command -v bash >/dev/null 2>&1; then
       echo "自动同步失败；请运行 bash sync-作者实机调研.sh 查看原因" >&2
     fi
   elif [ "$snap_rc" -ne 0 ]; then
-    echo "快照检查未通过（源文件缺失或含敏感内容），未自动同步；运行 bash sync-作者实机调研.sh 查看原因" >&2
+    echo "快照检查未通过（源文件缺失、不可读或含敏感内容），未自动同步；原因：" >&2
+    bash "$snap_sync" --check 2>&1 | sed 's/^/  /' >&2
   fi
 fi
 

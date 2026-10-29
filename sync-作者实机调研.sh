@@ -46,6 +46,23 @@ changed=0
 tmpdir=$(mktemp -d) || exit 2
 trap 'rm -rf "$tmpdir"' EXIT
 
+scan_text() {
+  pat=$1
+  msg=$2
+  file=$3
+  grep -Eq "$pat" "$file"
+  rc=$?
+  if [ "$rc" -eq 0 ]; then
+    echo "拒绝同步：$msg" >&2
+    return 1
+  fi
+  if [ "$rc" -eq 2 ]; then
+    echo "读取失败：$file" >&2
+    return 1
+  fi
+  return 0
+}
+
 for f in $files; do
   src=$workspace/$f
   dst=$snap_dir/$f
@@ -54,18 +71,15 @@ for f in $files; do
     status=2
     continue
   fi
-  if grep -Eq 'gho_|ghp_|github_pat_|BEGIN (RSA|OPENSSH) PRIVATE' "$src"; then
-    echo "拒绝同步：$f 含疑似凭据" >&2
+  if ! scan_text 'gho_|ghp_|github_pat_|BEGIN (RSA|OPENSSH) PRIVATE' "$f 含疑似凭据" "$src"; then
     status=2
     continue
   fi
-  if grep -Eq 'ses_[A-Za-z0-9]{10,}' "$src"; then
-    echo "拒绝同步：$f 含真实会话 ID" >&2
+  if ! scan_text 'ses_[A-Za-z0-9]{10,}' "$f 含真实会话 ID" "$src"; then
     status=2
     continue
   fi
-  if grep -Eq 'C:\\Users|C:/Users' "$src"; then
-    echo "拒绝同步：$f 含 C:\\Users 本机路径，先改成 ~" >&2
+  if ! scan_text 'C:\\Users|C:/Users' "$f 含 C:\\Users 本机路径，先改成 ~" "$src"; then
     status=2
     continue
   fi
