@@ -26,9 +26,18 @@ set "RC=%ERRORLEVEL%"
 if not "%RC%"=="2" goto done
 
 echo.
-set /p HOST=没识别出当前宿主，请输入 qoder / claude / codex / opencode / zcode:
+set /p HOST=没识别出当前宿主，请输入 qoder / claude / codex / opencode / zcode，或输入 target 指定目录:
 if "%HOST%"=="" goto abort
+if /i "%HOST%"=="target" goto ask_target
 "%BASH%" install.sh --host "%HOST%" %*
+set "RC=%ERRORLEVEL%"
+goto done
+
+:ask_target
+echo.
+set /p TARGET=请输入目标目录（最后的目录名必须是 multi-agent-task-handoff）:
+if "%TARGET%"=="" goto abort
+"%BASH%" install.sh --target "%TARGET%" %*
 set "RC=%ERRORLEVEL%"
 goto done
 

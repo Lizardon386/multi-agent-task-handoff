@@ -25,6 +25,7 @@ usage() {
   ZCode        ZCODE_CONFIG_DIR / ZCODE_APP_VERSION
 
 安装目录 = <宿主配置目录>/skills/multi-agent-task-handoff
+源可以是 git 克隆，也可以是解压后的非 git 副本（后者装工作树）。
 
 选项:
   --dry-run        只打印将要做什么，不写文件
@@ -194,11 +195,21 @@ case "$target" in
   /|"$HOME"|"$HOME"/) die "目标不安全: $target" ;;
 esac
 
-git -C "$repo" rev-parse --git-dir >/dev/null 2>&1 || die "不是 git 仓库: $repo"
-full_commit=$(git -C "$repo" rev-parse HEAD) || die "读不到 HEAD"
-commit=$(printf '%s' "$full_commit" | cut -c1-7)
-commit_date=$(git -C "$repo" log -1 --format=%cI)
-dirty=$(git -C "$repo" status --porcelain)
+is_git=1
+if ! git -C "$repo" rev-parse --git-dir >/dev/null 2>&1; then
+  is_git=0
+fi
+if [ "$is_git" = 1 ]; then
+  full_commit=$(git -C "$repo" rev-parse HEAD) || die "读不到 HEAD"
+  commit=$(printf '%s' "$full_commit" | cut -c1-7)
+  commit_date=$(git -C "$repo" log -1 --format=%cI)
+  dirty=$(git -C "$repo" status --porcelain)
+else
+  full_commit=unknown
+  commit=unknown
+  commit_date=$(date -Iseconds 2>/dev/null || date)
+  dirty=
+fi
 
 state=安装
 if [ -e "$target" ] && [ ! -d "$target" ]; then
@@ -217,12 +228,18 @@ fi
 
 printf '宿主: %s%s\n' "$host" "${cfg_src:+ ($cfg_src)}"
 printf '目标: %s\n' "$target"
-printf '源:   %s%s\n' "$commit" "${dirty:+（工作树有未提交改动，只装 HEAD）}"
+if [ "$is_git" = 1 ]; then
+  printf '源:   %s%s\n' "$commit" "${dirty:+（工作树有未提交改动，只装 HEAD）}"
+else
+  printf '源:   unknown（非 git 副本，装工作树）\n'
+fi
 printf '动作: %s\n' "$state"
 
 reg=$(to_reg "$target")
 if [ "$register" = 1 ]; then
-  if [ -f "$repo/.skill-sync-paths" ] && grep -Fqx "$reg" "$repo/.skill-sync-paths"; then
+  if [ "$is_git" = 0 ]; then
+    echo "登记: 跳过（非 git 源）"
+  elif [ -f "$repo/.skill-sync-paths" ] && grep -Fqx "$reg" "$repo/.skill-sync-paths"; then
     echo "登记: 已在 .skill-sync-paths"
   else
     echo "登记: 会追加到 .skill-sync-paths -> $reg"
@@ -232,13 +249,17 @@ else
 fi
 
 if [ "$hook" = 1 ]; then
-  cur=$(git -C "$repo" config --local --get core.hooksPath 2>/dev/null || true)
-  if [ -z "$cur" ]; then
-    echo "钩子: 会设 core.hooksPath=.githooks"
-  elif [ "$cur" = ".githooks" ]; then
-    echo "钩子: 已启用"
+  if [ "$is_git" = 0 ]; then
+    echo "钩子: 跳过（非 git 源）"
   else
-    echo "钩子: 未覆盖（当前 core.hooksPath=$cur）"
+    cur=$(git -C "$repo" config --local --get core.hooksPath 2>/dev/null || true)
+    if [ -z "$cur" ]; then
+      echo "钩子: 会设 core.hooksPath=.githooks"
+    elif [ "$cur" = ".githooks" ]; then
+      echo "钩子: 已启用"
+    else
+      echo "钩子: 未覆盖（当前 core.hooksPath=$cur）"
+    fi
   fi
 else
   echo "钩子: 跳过（--no-hook）"
@@ -255,13 +276,21 @@ fi
 
 rm -rf "$target" || die "删除旧目录失败: $target"
 mkdir -p "$target" || die "创建目录失败: $target"
-git -C "$repo" archive HEAD | tar -x -C "$target" || die "解包失败: $target"
+if [ "$is_git" = 1 ]; then
+  git -C "$repo" archive HEAD | tar -x -C "$target" || die "解包失败: $target"
+else
+  ( cd "$repo" && tar -cf - --exclude=.git --exclude=.skill-sync-paths --exclude=.skill-version . ) | tar -xf - -C "$target" || die "复制失败: $target"
+fi
 [ -f "$target/SKILL.md" ] || die "安装后缺少 SKILL.md: $target"
 
 exp=$(mktemp) || die "mktemp 失败"
 act=$(mktemp) || die "mktemp 失败"
 trap 'rm -f "$exp" "$act"' EXIT
-git -C "$repo" -c core.quotePath=false ls-tree -r --name-only HEAD | sort > "$exp"
+if [ "$is_git" = 1 ]; then
+  git -C "$repo" -c core.quotePath=false ls-tree -r --name-only HEAD | sort > "$exp"
+else
+  ( cd "$repo" && find . -type f ! -path './.git/*' ! -name '.git' ! -name '.skill-sync-paths' ! -name '.skill-version' | sed 's|^\./||' | sort ) > "$exp"
+fi
 ( cd "$target" && find . -type f ! -name .skill-version | sed 's|^\./||' | sort ) > "$act"
 if ! diff -u "$exp" "$act" >/dev/null; then
   diff -u "$exp" "$act" | sed -n '1,20p' >&2
@@ -270,7 +299,7 @@ fi
 
 printf 'commit=%s\ndate=%s\n' "$full_commit" "$commit_date" > "$target/.skill-version" || die "写 .skill-version 失败"
 
-if [ "$register" = 1 ]; then
+if [ "$register" = 1 ] && [ "$is_git" = 1 ]; then
   reg_file=$repo/.skill-sync-paths
   [ -f "$reg_file" ] || : > "$reg_file"
   if grep -Fqx "$reg" "$reg_file"; then
@@ -284,7 +313,7 @@ if [ "$register" = 1 ]; then
   fi
 fi
 
-if [ "$hook" = 1 ]; then
+if [ "$hook" = 1 ] && [ "$is_git" = 1 ]; then
   cur=$(git -C "$repo" config --local --get core.hooksPath 2>/dev/null || true)
   if [ -z "$cur" ]; then
     git -C "$repo" config --local core.hooksPath .githooks || die "启用钩子失败"
