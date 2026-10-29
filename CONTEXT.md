@@ -4,7 +4,7 @@
 > 最近更新：2026-10-29
 > 模式：三档
 > 状态锚点：接盘时跑 `git log -1 --oneline`；推 GitHub 前跑 `gh auth status`
-> 验证命令：`git status -sb`；`bash install.sh --dry-run`（本机 bash 不在 PATH，用 `D:\software\Git\bin\bash.exe`）；装完用 `diff -r` 比对安装副本；`gh repo view --json visibility`
+> 验证命令：`git status -sb`；`bash install.sh --dry-run`（本机 bash 不在 PATH，用 `D:\software\Git\bin\bash.exe`）；装完用 `diff -r` 比对安装副本；`gh repo view --json visibility`；`"D:\software\Git\bin\bash.exe" sync-作者实机调研.sh --check`
 
 ## 文档
 
@@ -61,7 +61,7 @@
 - 打开工作区只能手动：没有 create/open workspace 工具或 CLI。
 - 入口靠指令：接盘命令/交接 prompt；不铺任务级 `AGENTS.md`，不写全局规则。
 - 压卡只改 CONTEXT 和 `压卡备份.md`；其他文档的过期链接先报告，确需改先说明确认。
-- 不安装、不挂钩子、不写全局规则、不起后台服务、不调用模型；敏感内容留在本机。
+- 不安装、不装常驻/全局钩子、不写全局规则、不起后台服务、不调用模型；仓库本地 `post-commit` 只做安装副本同步、快照检查和自动 push；敏感内容留在本机。
 - README / DESIGN 只在 `工程化` 或有外部读者时写，不是每个任务的合规件。
 
 ## 交接记录（只记关键动作，≤10 条）
