@@ -1,21 +1,29 @@
 #!/bin/sh
-# 提交后把当前 HEAD 同步到已安装的 skill 目录（路径见 .skill-sync-paths）。
-# 只在 commit 时跑，不常驻；目录不存在就跳过。
+# 提交后：1) 把当前 HEAD 同步到 .skill-sync-paths 里的安装目录；2) 只读检查工作区文档快照是否过期。
+# 只在 commit 时跑，不常驻；失败不阻塞提交。
 
 repo=$(git rev-parse --show-toplevel) || exit 0
-[ -f "$repo/.skill-sync-paths" ] || exit 0
 
-while IFS= read -r line; do
-  case "$line" in ''|'#'*) continue ;; esac
-  path=$(printf '%s' "$line" | sed 's/[[:space:]]*$//')
-  parent=$(dirname "$path")
-  [ -d "$parent" ] || continue
-  rm -rf "$path" && mkdir -p "$path" || continue
-  git -C "$repo" archive HEAD | tar -x -C "$path" || true
-  commit=$(git -C "$repo" rev-parse HEAD)
-  date=$(git -C "$repo" log -1 --format=%cI)
-  printf 'commit=%s\ndate=%s\n' "$commit" "$date" > "$path/.skill-version"
-  echo "skill synced -> $path ($commit)"
-done < "$repo/.skill-sync-paths"
+if [ -f "$repo/.skill-sync-paths" ]; then
+  while IFS= read -r line; do
+    case "$line" in ''|'#'*) continue ;; esac
+    path=$(printf '%s' "$line" | sed 's/[[:space:]]*$//')
+    parent=$(dirname "$path")
+    [ -d "$parent" ] || continue
+    rm -rf "$path" && mkdir -p "$path" || continue
+    git -C "$repo" archive HEAD | tar -x -C "$path" || true
+    commit=$(git -C "$repo" rev-parse HEAD)
+    date=$(git -C "$repo" log -1 --format=%cI)
+    printf 'commit=%s\ndate=%s\n' "$commit" "$date" > "$path/.skill-version"
+    echo "skill synced -> $path ($commit)"
+  done < "$repo/.skill-sync-paths"
+fi
+
+snap_sync=$repo/sync-作者实机调研.sh
+if [ -f "$snap_sync" ] && command -v bash >/dev/null 2>&1; then
+  if ! bash "$snap_sync" --check >/dev/null 2>&1; then
+    printf '%s\n' "提醒: 工作区文档快照已过期。运行: bash sync-作者实机调研.sh（再提交推送）" >&2
+  fi
+fi
 
 exit 0
