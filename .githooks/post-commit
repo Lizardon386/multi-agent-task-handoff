@@ -1,6 +1,7 @@
 #!/bin/sh
-# 提交后：1) 把当前 HEAD 同步到 .skill-sync-paths 里的安装目录；2) 只读检查工作区文档快照是否过期。
-# 只在 commit 时跑，不常驻；失败不阻塞提交。
+# 提交后：1) 把当前 HEAD 同步到 .skill-sync-paths 里的安装目录；
+# 2) 工作区文档快照过期时，自动同步并提交快照（防递归，不自动 push）。
+# 只在 commit 时跑，不常驻；失败不阻塞原提交。
 
 repo=$(git rev-parse --show-toplevel) || exit 0
 
@@ -19,10 +20,33 @@ if [ -f "$repo/.skill-sync-paths" ]; then
   done < "$repo/.skill-sync-paths"
 fi
 
+# 自动提交快照的子提交不再检查，防止递归
+[ "${SKIP_SNAPSHOT_HOOK:-}" = "1" ] && exit 0
+
+# amend / merge / rebase 期间不自动加提交
+case "$(git -C "$repo" reflog -1 --format=%gs 2>/dev/null || true)" in
+  *amend*) exit 0 ;;
+esac
+for f in MERGE_HEAD REBASE_HEAD CHERRY_PICK_HEAD REVERT_HEAD; do
+  [ -f "$(git -C "$repo" rev-parse --git-path "$f" 2>/dev/null)" ] && exit 0
+done
+
 snap_sync=$repo/sync-作者实机调研.sh
 if [ -f "$snap_sync" ] && command -v bash >/dev/null 2>&1; then
   if ! bash "$snap_sync" --check >/dev/null 2>&1; then
-    printf '%s\n' "提醒: 工作区文档快照已过期。运行: bash sync-作者实机调研.sh（再提交推送）" >&2
+    echo "检测到工作区文档快照过期，自动同步并提交..." >&2
+    if bash "$snap_sync" >/dev/null 2>&1; then
+      git -C "$repo" add -- "作者实机调研" || true
+      if git -C "$repo" diff --cached --quiet -- "作者实机调研"; then
+        echo "同步后无差异，跳过自动提交" >&2
+      elif SKIP_SNAPSHOT_HOOK=1 git -C "$repo" commit -m "docs: 自动同步作者实机调研快照" -- "作者实机调研" >/dev/null 2>&1; then
+        echo "已自动同步并提交快照: $(git -C "$repo" rev-parse --short HEAD)（记得 push）" >&2
+      else
+        echo "自动提交失败；请运行 bash sync-作者实机调研.sh 后手动提交" >&2
+      fi
+    else
+      echo "自动同步失败；请运行 bash sync-作者实机调研.sh 查看原因" >&2
+    fi
   fi
 fi
 

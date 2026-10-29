@@ -141,7 +141,7 @@ bash install.sh             # 装到当前宿主
 
 Windows 双击 `安装.bat`；识别不出宿主时会问一次 qoder / claude / codex / opencode / zcode。选项：`--host`、`--target DIR`、`--force`（覆盖非托管非空目录）、`--no-hook`、`--no-register`、`--dry-run`。换宿主时，在新宿主里重跑一次。
 
-安装会写 `.skill-version`（commit + 时间），并默认把目标追加到 `.skill-sync-paths`、启用仓库本地 `core.hooksPath=.githooks`。之后每次提交由 `post-commit` 把 HEAD 刷到清单里的目录；父目录不存在就跳过。同时只读检查 `作者实机调研/` 快照是否过期，过期只提示，不自动提交。钩子只在 commit 时跑，不常驻；没启用时重跑 `install.sh`。
+安装会写 `.skill-version`（commit + 时间），并默认把目标追加到 `.skill-sync-paths`、启用仓库本地 `core.hooksPath=.githooks`。之后每次提交由 `post-commit` 把 HEAD 刷到清单里的目录；父目录不存在就跳过。同时检查 `作者实机调研/` 快照，过期时自动同步并提交快照（不自动 push）。钩子只在 commit 时跑，不常驻；没启用时重跑 `install.sh`。
 
 `.skill-sync-paths` 是**本地文件**（已 gitignore），记录本机安装目录，不随仓库分发；换机器跑一次 `install.sh` 即生成。
 
