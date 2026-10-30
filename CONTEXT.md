@@ -52,7 +52,7 @@
 - 仓库历史已脱敏重写（2026-10-29）：旧 commit 哈希失效，旧历史只在 `.git/pre-rewrite-2026-10-29.bundle`，不要按旧哈希查。
 - `.skill-sync-paths` 是本地文件（gitignore），install.sh 生成；不要重新跟踪。
 - 副本同步走 `bash install.sh --sync-all`（幂等，只补落后的；没跑完也不留后患，再跑一次即可）。实测钩子里常只完成前两份（后两份的 `rm -rf` 被 safe-delete shim 拒，sync-all 随即 `die`，钩子仍会继续 push），所以**提交后补跑一次 `--sync-all`**。`.skill-sync-paths` 里是 `C:/...` 原始路径，必须经 install.sh 转换后再删。
-- 提交后必查 `git status -sb`：commit 成功 ≠ 已推送。`post-commit` 曾因耗时 28 秒被超时杀在同步阶段（Git Bash 在 Windows 上每启一个外部进程约 0.9 秒），已优化到约 7 秒。再出现 ahead 时，先 `time sh .githooks/post-commit` 量耗时，再手动 `git push` 补。
+- 提交后必查 `git status -sb`：commit 成功 ≠ 已推送。`post-commit` 曾因耗时 28 秒被超时杀在同步阶段（Git Bash 在 Windows 上每启一个外部进程约 0.9 秒），已优化到约 7 秒。再出现 ahead 时，先 `time sh .githooks/post-commit` 量耗时（**验证钩子别用 `| tail` 这类管道**——SIGPIPE 会把钩子杀掉，得到"钩子有问题"的假结论），再手动 `git push` 补。
 - 改协议的三条红线：`SKILL.md` ≤120 行；流程步骤数不增（现 28 步：接盘 4 / 工程化 5 / 压卡 7 / 交接 7 / 自检 5）；新护栏优先放 `PROJECT_RULES` / README，不进 `SKILL.md`。
 - 跨宿主/换机时唯一可靠载体是 `CONTEXT.md`（进版本库、所有宿主都读）；宿主 memory（如 `.workbuddy-ai/memory/`）只对同宿主同项目有效，且已 gitignore。
 - 重写后的历史保留 v1 脚本与内部任务名（测试夹具名，默认不脱敏）。
@@ -72,7 +72,7 @@
 
 ## 交接记录（只记关键动作，≤10 条）
 
-- 2026-10-28 OpenCode：补 OpenCode 能力行与卡字段（模式/验证/完成定义）；范围收窄为只维护本 skill，dsp-hal-eval 压卡已在别处完成。
+- 2026-10-30 WorkBuddy：收尾写实——三条坑（自动 push、副本同步、验证方法）全部改成实测表述，删掉「被打断」等推测；验证钩子勿用管道，SIGPIPE 会杀钩子并得出假结论。
 - 2026-10-29 OpenCode：补「现在在哪 / 参考 ID」字段；压卡检查 71 行 / 10 条，无需压卡。
 - 2026-10-29 OpenCode：SKILL description 用自然句含触发词（接手/接盘/交接/收工/压卡/工程化/自检），OpenCode 可按自然语言加载；README 补 `@` 显式调用。
 - 2026-10-29 ZCode：`install.sh` 加 ZCode 宿主（`ZCODE_APP_VERSION` 自动识别 + `--host zcode`）；`.skill-sync-paths` 加 ZCode 行，按先例随宿主支持提交；本机副本增至三份。
