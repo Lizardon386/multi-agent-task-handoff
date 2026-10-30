@@ -36,7 +36,7 @@ argument-hint: "[--help | 接盘 | 交接 [ID] | 压卡 | 工程化 | 自检/更
 新会话进入任务目录时使用。
 
 1. 读 `CONTEXT.md`（没有就按 `assets/CONTEXT.md.tpl` 建）；`模式：三档` 时读 README/DESIGN，DESIGN 可由根目录的方案设计交付文档承担；`PROJECT_RULES.md` 存在就读（`<工作区根>/PROJECT_RULES.md`）。
-2. 核对状态锚点，跑验证命令。副本 `.skill-version` 落后于 HEAD 时直接 `bash install.sh --sync-all` 补齐（幂等，只动本机副本，可逆）；不靠“上次提交时同步成功”。
+2. 核对状态锚点，跑验证命令。
 3. 有「参考 ID」且信息不足时，先查 `AGENT_CAPABILITIES.md` 本行的读回手段，再现场探测（`read_chat_session`、`ReadSessionContext`、会话导出/日志等）；能读就读最近 N 轮，读不到就问用户。
 4. 缺字段/缺交接，按「自动化失效时」给手动卡；不要猜。
 

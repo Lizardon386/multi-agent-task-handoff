@@ -4,7 +4,7 @@
 > 最近更新：2026-10-30
 > 模式：三档
 > 状态锚点：接盘时跑 `git log -1 --oneline`；推 GitHub 前跑 `gh auth status`
-> 验证命令：`git status -sb`；`bash install.sh --dry-run`（应识别为 workbuddy）；`bash install.sh --sync-all --dry-run`（四份副本应全部「已最新」）；装完用 `diff -r` 比对安装副本；`gh repo view --json visibility`；`bash sync-作者实机调研.sh --check`
+> 验证命令：`git status -sb`；`bash install.sh --dry-run`（应识别为 workbuddy）；装完用 `diff -r` 比对安装副本；`gh repo view --json visibility`；`bash sync-作者实机调研.sh --check`
 
 ## 文档
 
@@ -49,7 +49,7 @@
 
 - 仓库历史已脱敏重写（2026-10-29）：旧 commit 哈希失效，旧历史只在 `.git/pre-rewrite-2026-10-29.bundle`，不要按旧哈希查。
 - `.skill-sync-paths` 是本地文件（gitignore），install.sh 生成；不要重新跟踪。
-- 副本同步统一走 `bash install.sh --sync-all`：按 `.skill-sync-paths` 逐份比对 `.skill-version` 与 HEAD，只补落后的，幂等可重跑。`.skill-sync-paths` 里是 `C:/...` 原始路径，直接 `rm -rf` 会被 safe-delete shim 拒（`SAFE_DELETE_INVALID_PATH`），所以必须经 install.sh 的路径转换。同步被打断不留后患——下次提交或手动再跑一次就补齐；`--sync-all --dry-run` 可只读查漂移。
+- 副本同步走 `bash install.sh --sync-all`（幂等，只补落后的，被打断也不留后患）；`.skill-sync-paths` 里是 `C:/...` 原始路径，直接 `rm -rf` 会被 safe-delete shim 拒（`SAFE_DELETE_INVALID_PATH`），必须经 install.sh 转换。
 - 重写后的历史保留 v1 脚本与内部任务名（测试夹具名，默认不脱敏）。
 - 交接卡 ≤100 行；交接记录 ≤10 条；不写完整变更记录。
 - 三档只在任务目录根；没有用户明确要求，不往更深子目录铺。
