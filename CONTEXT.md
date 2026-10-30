@@ -49,6 +49,7 @@
 
 - 仓库历史已脱敏重写（2026-10-29）：旧 commit 哈希失效，旧历史只在 `.git/pre-rewrite-2026-10-29.bundle`，不要按旧哈希查。
 - `.skill-sync-paths` 是本地文件（gitignore），install.sh 生成；不要重新跟踪。
+- 副本同步走 `install.sh --target <目录>`：`.skill-sync-paths` 里是 `C:/...` 原始路径，直接 `rm -rf` 会被 safe-delete shim 拒（`SAFE_DELETE_INVALID_PATH`），表现为部分副本静默停在旧 commit；2026-10-30 已把 `post-commit` 改成优先调 install.sh，兜底保留旧逻辑。
 - 重写后的历史保留 v1 脚本与内部任务名（测试夹具名，默认不脱敏）。
 - 交接卡 ≤100 行；交接记录 ≤10 条；不写完整变更记录。
 - 三档只在任务目录根；没有用户明确要求，不往更深子目录铺。

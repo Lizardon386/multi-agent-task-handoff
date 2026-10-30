@@ -12,7 +12,15 @@ if [ -f "$repo/.skill-sync-paths" ]; then
     path=$(printf '%s' "$line" | sed 's/[[:space:]]*$//')
     parent=$(dirname "$path")
     [ -d "$parent" ] || continue
-    rm -rf "$path" && mkdir -p "$path" || continue
+    # 优先复用 install.sh：它会把 C:/... 转成 /c/... 再删再装，
+    # 直接对带盘符的原始路径 rm 会被 safe-delete shim 拒（SAFE_DELETE_INVALID_PATH），
+    # 结果就是部分副本静默停在旧 commit。
+    if [ -f "$repo/install.sh" ] && command -v bash >/dev/null 2>&1 \
+       && bash "$repo/install.sh" --target "$path" --no-hook --no-register >/dev/null 2>&1; then
+      echo "skill synced -> $path ($(git -C "$repo" rev-parse --short HEAD))"
+      continue
+    fi
+    rm -rf "$path" && mkdir -p "$path" || { echo "skill 同步失败 -> $path" >&2; continue; }
     git -C "$repo" archive HEAD | tar -x -C "$path" || true
     commit=$(git -C "$repo" rev-parse HEAD)
     date=$(git -C "$repo" log -1 --format=%cI)
