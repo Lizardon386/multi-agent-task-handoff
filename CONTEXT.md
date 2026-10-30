@@ -67,7 +67,6 @@
 
 ## 交接记录（只记关键动作，≤10 条）
 
-- 2026-10-28 Qoder：加 `install.sh`（只装当前宿主）+ `安装.bat`；卡里补 `gh auth status`；修正 `.skill-sync-paths` 是安装目录不是源仓库。
 - 2026-10-28 OpenCode：`install.sh` 加 OpenCode 宿主（`OPENCODE`/`OPENCODE_CONFIG_DIR`，`--host opencode`），修 Windows `--target` 路径；OpenCode 副本实装并登记 `.skill-sync-paths`。
 - 2026-10-28 OpenCode：补 OpenCode 能力行与卡字段（模式/验证/完成定义）；范围收窄为只维护本 skill，dsp-hal-eval 压卡已在别处完成。
 - 2026-10-29 OpenCode：补「现在在哪 / 参考 ID」字段；压卡检查 71 行 / 10 条，无需压卡。
@@ -77,6 +76,7 @@
 - 2026-10-29 ZCode：实装 ZCode 宿主收工；本轮记录滚动删「片段冻结接口」条——其载体（任务级 AGENTS 片段）v2 已移除，历史见 git 与压卡备份。
 - 2026-10-29 Qoder：公开发布——MIT、`AGENT_WORKSPACE` 工作区根、脱敏重写历史；旧私有库删除后同名新建并推送，已转 public。
 - 2026-10-30 WorkBuddy：加 workbuddy 宿主（`CODEBUDDY_HOST=workbuddy*` 优先识别，`WORKBUDDY_CONFIG_DIR`/`CODEBUDDY_CONFIG_DIR` 兜底，`--host workbuddy`），本机副本增至四份；能力表补 WorkBuddy 行——建独立上下文子会话/投 prompt/读回实测可用，无跨会话投递与 `read_chat_session`；`.workbuddy-ai/` 进 gitignore。
+- 2026-10-30 WorkBuddy：收尾——能力表拆「能力矩阵 + 投递与读回手段」两张表（备注定 ≤120 字上限），PROJECT_RULES 定「宿主差异只进能力表，通用文档不写单宿主特例」；清掉 SKILL/README 里 3 处单宿主特例；`.workbuddy-ai/` 加全局忽略。
 
 ## 参考 ID
 

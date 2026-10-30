@@ -1,7 +1,7 @@
 # multi-agent-task-handoff · 方案设计
 
 > 面向改这套协议的人：为什么只留一份交接卡、工程化与交接怎么接、哪些步骤只能手动。使用者说明见 [README.md](README.md)，当前进度见 [CONTEXT.md](CONTEXT.md)。
-> 最近更新：2026-10-29
+> 最近更新：2026-10-30
 
 ## 问题与目标
 
@@ -40,14 +40,24 @@ multi-agent-task-handoff/
 ├─ README.md                # 使用说明
 ├─ DESIGN.md                # 本文件
 ├─ CONTEXT.md               # 本目录的示例交接卡
-├─ install.sh               # 一键安装：只装当前宿主
+├─ 压卡备份.md               # 压卡搬出去的历史，用于追溯
+├─ install.sh               # 一键安装：只装当前宿主；--sync-all 对齐所有副本
 ├─ 安装.bat                 # Windows 双击入口
+├─ sync-作者实机调研.sh       # 工作区根三份文档 -> 作者实机调研/ 快照
+├─ 作者实机调研/             # 作者本机环境快照，仅供参考
+├─ LICENSE                  # MIT
+├─ .githooks/post-commit    # 提交后：同步副本 + 检查快照 + auto push
+├─ .gitattributes
+├─ .gitignore               # .skill-sync-paths、.workbuddy-ai/
+├─ .skill-sync-paths        # 本机安装目录清单（本地文件，不入库）
 └─ assets/
    ├─ CONTEXT.md.tpl        # 默认模板
    ├─ README.md.tpl         # 工程化可选
    ├─ DESIGN.md.tpl         # 工程化可选
    └─ AGENT_CAPABILITIES.md.tpl  # 能力矩阵模板
 ```
+
+`作者实机调研/` 与 `.skill-sync-paths` 都只反映作者本机：前者是工作区三份文档的快照，换机要按模板重填；后者是安装目录清单，换机跑一次 `install.sh` 即重新生成。
 
 流程：
 
