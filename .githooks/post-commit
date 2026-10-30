@@ -7,26 +7,39 @@
 repo=$(git rev-parse --show-toplevel) || exit 0
 
 if [ -f "$repo/.skill-sync-paths" ]; then
-  while IFS= read -r line; do
+  # 用 fd 3 读清单：循环体里的 git/tar 会继承 stdin，用默认 stdin 读会在中途被吃掉，
+  # 表现就是后面的副本静默停在旧 commit。
+  head_commit=$(git -C "$repo" rev-parse HEAD)
+  while IFS= read -r line <&3; do
     case "$line" in ''|'#'*) continue ;; esac
     path=$(printf '%s' "$line" | sed 's/[[:space:]]*$//')
     parent=$(dirname "$path")
     [ -d "$parent" ] || continue
-    # 优先复用 install.sh：它会把 C:/... 转成 /c/... 再删再装，
-    # 直接对带盘符的原始路径 rm 会被 safe-delete shim 拒（SAFE_DELETE_INVALID_PATH），
-    # 结果就是部分副本静默停在旧 commit。
+    # 优先复用 install.sh：它会把 C:/... 转成 /c/... 再删再装；
+    # 直接对带盘符的原始路径 rm 会被 safe-delete shim 拒（SAFE_DELETE_INVALID_PATH）。
+    # 钩子环境带 GIT_DIR 等变量，清掉再调，避免 install.sh 误判仓库状态。
     if [ -f "$repo/install.sh" ] && command -v bash >/dev/null 2>&1 \
-       && bash "$repo/install.sh" --target "$path" --no-hook --no-register >/dev/null 2>&1; then
-      echo "skill synced -> $path ($(git -C "$repo" rev-parse --short HEAD))"
+       && env -u GIT_DIR -u GIT_WORK_TREE -u GIT_INDEX_FILE \
+            bash "$repo/install.sh" --target "$path" --no-hook --no-register </dev/null >/dev/null 2>&1; then
+      echo "skill synced -> $path ($head_commit)"
       continue
     fi
     rm -rf "$path" && mkdir -p "$path" || { echo "skill 同步失败 -> $path" >&2; continue; }
-    git -C "$repo" archive HEAD | tar -x -C "$path" || true
-    commit=$(git -C "$repo" rev-parse HEAD)
+    git -C "$repo" archive HEAD | tar -x -C "$path" </dev/null || true
     date=$(git -C "$repo" log -1 --format=%cI)
-    printf 'commit=%s\ndate=%s\n' "$commit" "$date" > "$path/.skill-version"
-    echo "skill synced -> $path ($commit)"
-  done < "$repo/.skill-sync-paths"
+    printf 'commit=%s\ndate=%s\n' "$head_commit" "$date" > "$path/.skill-version"
+    echo "skill synced -> $path ($head_commit)"
+  done 3< "$repo/.skill-sync-paths"
+
+  # 收尾校验：副本还停在旧 commit 就明确报出来，不让它静默漂移
+  while IFS= read -r line <&3; do
+    case "$line" in ''|'#'*) continue ;; esac
+    path=$(printf '%s' "$line" | sed 's/[[:space:]]*$//')
+    [ -d "$path" ] || continue
+    got=$(sed -n 's/^commit=//p' "$path/.skill-version" 2>/dev/null)
+    [ "$got" = "$head_commit" ] || \
+      printf '%s\n' "副本未同步: $path（$got != $head_commit）；手动补: bash install.sh --target \"$path\"" >&2
+  done 3< "$repo/.skill-sync-paths"
 fi
 
 # 自动提交快照的子提交不再检查，防止递归
