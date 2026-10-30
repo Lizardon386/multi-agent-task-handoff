@@ -83,20 +83,26 @@ name=$(sed -n 's/^name:[[:space:]]*//p' "$repo/SKILL.md" | head -1 | tr -d '\r')
 if [ "$sync_all" = 1 ]; then
   paths_file=$repo/.skill-sync-paths
   [ -f "$paths_file" ] || die "找不到 $paths_file（先跑一次 install.sh 生成）"
-  if git -C "$repo" rev-parse --git-dir >/dev/null 2>&1; then
-    head_commit=$(git -C "$repo" rev-parse HEAD)
-  else
-    head_commit=unknown
-  fi
+  # 一次 git 调用同时拿到 commit；失败才退回 unknown（少一次进程 ≈ 0.7 秒）
+  head_commit=$(git -C "$repo" rev-parse HEAD 2>/dev/null) || head_commit=unknown
   printf '对齐目标: %s\n' "$head_commit"
   total=0
   bad=0
   while IFS= read -r line <&3; do
     case "$line" in ''|'#'*) continue ;; esac
-    dest=$(printf '%s' "$line" | sed 's/[[:space:]]*$//')
-    [ -d "$(dirname -- "$dest")" ] || { printf '跳过（父目录不存在）: %s\n' "$dest"; continue; }
+    # 去尾部空白、取父目录、读 commit，全用 shell 内建：
+    # Git Bash 在 Windows 上每启动一个 sed/dirname 约 0.9 秒，四份累积能把钩子拖到 8 秒以上。
+    dest=$line
+    while :; do case "$dest" in *' ') dest=${dest% } ;; *) break ;; esac; done
+    parent=${dest%/*}
+    [ -n "$parent" ] && [ -d "$parent" ] || { printf '跳过（父目录不存在）: %s\n' "$dest"; continue; }
     total=$((total + 1))
-    cur=$(sed -n 's/^commit=//p' "$dest/.skill-version" 2>/dev/null | head -1)
+    cur=
+    if [ -f "$dest/.skill-version" ]; then
+      while IFS= read -r kv; do
+        case "$kv" in commit=*) cur=${kv#commit=}; break ;; esac
+      done < "$dest/.skill-version"
+    fi
     if [ "$cur" = "$head_commit" ]; then
       printf '已最新: %s\n' "$dest"
       continue
