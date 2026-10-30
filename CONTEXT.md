@@ -51,7 +51,7 @@
 
 - 仓库历史已脱敏重写（2026-10-29）：旧 commit 哈希失效，旧历史只在 `.git/pre-rewrite-2026-10-29.bundle`，不要按旧哈希查。
 - `.skill-sync-paths` 是本地文件（gitignore），install.sh 生成；不要重新跟踪。
-- 副本同步走 `bash install.sh --sync-all`（幂等，只补落后的，被打断也不留后患）；`.skill-sync-paths` 里是 `C:/...` 原始路径，直接 `rm -rf` 会被 safe-delete shim 拒（`SAFE_DELETE_INVALID_PATH`），必须经 install.sh 转换。
+- 副本同步走 `bash install.sh --sync-all`（幂等，只补落后的；没跑完也不留后患，再跑一次即可）。实测钩子里常只完成前两份（后两份的 `rm -rf` 被 safe-delete shim 拒，sync-all 随即 `die`，钩子仍会继续 push），所以**提交后补跑一次 `--sync-all`**。`.skill-sync-paths` 里是 `C:/...` 原始路径，必须经 install.sh 转换后再删。
 - 提交后必查 `git status -sb`：commit 成功 ≠ 已推送。`post-commit` 曾因耗时 28 秒被超时杀在同步阶段（Git Bash 在 Windows 上每启一个外部进程约 0.9 秒），已优化到约 7 秒。再出现 ahead 时，先 `time sh .githooks/post-commit` 量耗时，再手动 `git push` 补。
 - 改协议的三条红线：`SKILL.md` ≤120 行；流程步骤数不增（现 28 步：接盘 4 / 工程化 5 / 压卡 7 / 交接 7 / 自检 5）；新护栏优先放 `PROJECT_RULES` / README，不进 `SKILL.md`。
 - 跨宿主/换机时唯一可靠载体是 `CONTEXT.md`（进版本库、所有宿主都读）；宿主 memory（如 `.workbuddy-ai/memory/`）只对同宿主同项目有效，且已 gitignore。
