@@ -24,7 +24,7 @@
 
 ## 当前状态
 
-- 现在：已公开发布（https://github.com/Lizardon386/multi-agent-task-handoff，MIT，public）；历史经脱敏重写，旧哈希失效；origin 已接、远端 HEAD 与本地一致；三份安装副本同 HEAD。旧私有仓库已删除并同名重建。
+- 现在：已公开发布（https://github.com/Lizardon386/multi-agent-task-handoff，MIT，public）；历史经脱敏重写，旧哈希失效；origin 已接、远端 HEAD 与本地一致；四份安装副本同 HEAD。旧私有仓库已删除并同名重建。
 - 公开前清理：`.skill-sync-paths` 移出 git 跟踪（本地文件）；文档里的本机路径改 `~`；工作区根改由 `AGENT_WORKSPACE` 指定，默认 `D:\agent_workspace`。
 - 工作区三份文档快照：`sync-作者实机调研.sh` 从工作区根同步到 `作者实机调研/`；`--check` 只读；`post-commit` 发现过期会自动同步并提交快照，随后自动 push（不 force，失败重试一次）。
 - v2 协议已落地：默认单档；`接盘` / `交接`（别名 `收工`）/ `压卡` / `工程化` / `自检`（别名 `更新`）+ 只读自检；所有任务命令只看 cwd；唯一参数是 `交接` 的 ID；`收工` 只整理，带 ID 才发送；支持 `+` 或空格串行组合（如 `压卡+收工`、`压卡 收工`）。
