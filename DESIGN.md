@@ -74,7 +74,7 @@ flowchart TD
     E --> G[核对锚点 + 验证命令]
     F --> G
     G --> H[工作]
-    H --> I[收工: 更新 CONTEXT + memory 提升]
+    H --> I[收工: 更新 CONTEXT + memory 提升 + 通用文档审计]
     I --> J{模式=三档?}
     J -- 是 --> K[同步 README/DESIGN/文档表]
     J -- 否 --> L[结束]
