@@ -37,6 +37,7 @@
 - dsp-hal-eval 压卡已由其他 agent 完成，不在本目录处理。
 - 本目录是协议真源和 git 工作树；非 git 目录靠 `压卡备份.md` 追溯。
 - 远端同步状态以 `git status` / `git log` 为准；网络异常时先推本地提交。
+- 2026-10-30 收工状态：WorkBuddy 宿主已支持（`CODEBUDDY_HOST=workbuddy*` 识别）；副本同步幂等化（`install.sh --sync-all`）；能力表拆「能力矩阵 + 投递与读回手段」两张表；`PROJECT_RULES` 加「改文档前自查」（三条自问 + 审计 grep），挡单宿主特例进通用文档。
 
 ## 计划 / 待办
 
@@ -44,6 +45,7 @@
 - [ ] 用 UI 复制的真实 `sess_*` ID 验证 ZCode `ReadSessionContext` 跨会话读取（`current`/agentId/目录名映射均不通，实测）。
 - [ ] 补工程化的迁移清单细节（排除项、hash 校验、删源确认）。
 - [ ] 决定是否加可选 `check-handoff.sh`；默认不加。
+- [ ] 自动 push 连续 3 次未跑完（提交后 `git status -sb` 显示 ahead）；若持续，考虑把 push 从 `post-commit` 挪出，改手动或独立脚本。
 
 ## 关键约束与注意事项
 
@@ -51,6 +53,8 @@
 - `.skill-sync-paths` 是本地文件（gitignore），install.sh 生成；不要重新跟踪。
 - 副本同步走 `bash install.sh --sync-all`（幂等，只补落后的，被打断也不留后患）；`.skill-sync-paths` 里是 `C:/...` 原始路径，直接 `rm -rf` 会被 safe-delete shim 拒（`SAFE_DELETE_INVALID_PATH`），必须经 install.sh 转换。
 - 提交后必查 `git status -sb`：`post-commit` 的自动 push 可能在钩子被打断时没跑完（本地 ahead、远端落后）；commit 成功 ≠ 已推送。
+- 改协议的三条红线：`SKILL.md` ≤120 行；流程步骤数不增（现 28 步：接盘 4 / 工程化 5 / 压卡 7 / 交接 7 / 自检 5）；新护栏优先放 `PROJECT_RULES` / README，不进 `SKILL.md`。
+- 跨宿主/换机时唯一可靠载体是 `CONTEXT.md`（进版本库、所有宿主都读）；宿主 memory（如 `.workbuddy-ai/memory/`）只对同宿主同项目有效，且已 gitignore。
 - 重写后的历史保留 v1 脚本与内部任务名（测试夹具名，默认不脱敏）。
 - 交接卡 ≤100 行；交接记录 ≤10 条；不写完整变更记录。
 - 三档只在任务目录根；没有用户明确要求，不往更深子目录铺。
@@ -68,7 +72,6 @@
 
 ## 交接记录（只记关键动作，≤10 条）
 
-- 2026-10-28 OpenCode：`install.sh` 加 OpenCode 宿主（`OPENCODE`/`OPENCODE_CONFIG_DIR`，`--host opencode`），修 Windows `--target` 路径；OpenCode 副本实装并登记 `.skill-sync-paths`。
 - 2026-10-28 OpenCode：补 OpenCode 能力行与卡字段（模式/验证/完成定义）；范围收窄为只维护本 skill，dsp-hal-eval 压卡已在别处完成。
 - 2026-10-29 OpenCode：补「现在在哪 / 参考 ID」字段；压卡检查 71 行 / 10 条，无需压卡。
 - 2026-10-29 OpenCode：SKILL description 用自然句含触发词（接手/接盘/交接/收工/压卡/工程化/自检），OpenCode 可按自然语言加载；README 补 `@` 显式调用。
@@ -78,6 +81,7 @@
 - 2026-10-29 Qoder：公开发布——MIT、`AGENT_WORKSPACE` 工作区根、脱敏重写历史；旧私有库删除后同名新建并推送，已转 public。
 - 2026-10-30 WorkBuddy：加 workbuddy 宿主（`CODEBUDDY_HOST=workbuddy*` 优先识别，`WORKBUDDY_CONFIG_DIR`/`CODEBUDDY_CONFIG_DIR` 兜底，`--host workbuddy`），本机副本增至四份；能力表补 WorkBuddy 行——建独立上下文子会话/投 prompt/读回实测可用，无跨会话投递与 `read_chat_session`；`.workbuddy-ai/` 进 gitignore。
 - 2026-10-30 WorkBuddy：收尾——能力表拆「能力矩阵 + 投递与读回手段」两张表（备注定 ≤120 字上限），PROJECT_RULES 定「宿主差异只进能力表，通用文档不写单宿主特例」；清掉 SKILL/README 里 3 处单宿主特例；`.workbuddy-ai/` 加全局忽略。
+- 2026-10-30 WorkBuddy：收工——压卡 84 行 / 10 条无需压卡；新增护栏三条红线（`SKILL.md` ≤120 行、步骤数不增、新护栏不进协议正文）；跨宿主唯一可靠载体是 `CONTEXT.md`，宿主 memory 只对同宿主同项目有效；提交后必查 `git status -sb`（自动 push 已连续 3 次未跑完）。
 
 ## 参考 ID
 
