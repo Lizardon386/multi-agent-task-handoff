@@ -45,14 +45,14 @@
 - [ ] 用 UI 复制的真实 `sess_*` ID 验证 ZCode `ReadSessionContext` 跨会话读取（`current`/agentId/目录名映射均不通，实测）。
 - [ ] 补工程化的迁移清单细节（排除项、hash 校验、删源确认）。
 - [ ] 决定是否加可选 `check-handoff.sh`；默认不加。
-- [ ] 自动 push 连续 3 次未跑完（提交后 `git status -sb` 显示 ahead）；若持续，考虑把 push 从 `post-commit` 挪出，改手动或独立脚本。
+- [x] 自动 push 未跑完的根因已定位并修复：钩子耗时 28s → ~7s（去掉多余外部进程、`rm` 改有条件调用）；继续观察是否再出现 ahead。
 
 ## 关键约束与注意事项
 
 - 仓库历史已脱敏重写（2026-10-29）：旧 commit 哈希失效，旧历史只在 `.git/pre-rewrite-2026-10-29.bundle`，不要按旧哈希查。
 - `.skill-sync-paths` 是本地文件（gitignore），install.sh 生成；不要重新跟踪。
 - 副本同步走 `bash install.sh --sync-all`（幂等，只补落后的，被打断也不留后患）；`.skill-sync-paths` 里是 `C:/...` 原始路径，直接 `rm -rf` 会被 safe-delete shim 拒（`SAFE_DELETE_INVALID_PATH`），必须经 install.sh 转换。
-- 提交后必查 `git status -sb`：`post-commit` 的自动 push 可能在钩子被打断时没跑完（本地 ahead、远端落后）；commit 成功 ≠ 已推送。
+- 提交后必查 `git status -sb`：commit 成功 ≠ 已推送。`post-commit` 曾因耗时 28 秒被超时杀在同步阶段（Git Bash 在 Windows 上每启一个外部进程约 0.9 秒），已优化到约 7 秒。再出现 ahead 时，先 `time sh .githooks/post-commit` 量耗时，再手动 `git push` 补。
 - 改协议的三条红线：`SKILL.md` ≤120 行；流程步骤数不增（现 28 步：接盘 4 / 工程化 5 / 压卡 7 / 交接 7 / 自检 5）；新护栏优先放 `PROJECT_RULES` / README，不进 `SKILL.md`。
 - 跨宿主/换机时唯一可靠载体是 `CONTEXT.md`（进版本库、所有宿主都读）；宿主 memory（如 `.workbuddy-ai/memory/`）只对同宿主同项目有效，且已 gitignore。
 - 重写后的历史保留 v1 脚本与内部任务名（测试夹具名，默认不脱敏）。
