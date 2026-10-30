@@ -195,7 +195,6 @@ Windows 双击 `安装.bat`；识别不出宿主时会问一次 qoder / claude /
 - git 不是前提；非 git 目录把压卡前原文附在 `压卡备份.md` 末尾，不另建备份目录。
 - 卡超过 100 行说明它在写日志，不是交接。
 - 敏感内容留在本机。
-- 宿主 memory 目录（如 WorkBuddy / CodeBuddy 的 `.workbuddy-ai/`）是**本机工作记忆**，不进版本库：在项目 `.gitignore` 或全局 `core.excludesFile` 里忽略。它只在收工时被筛选提升进 `CONTEXT.md`；交接契约始终是版本库里的 `CONTEXT.md`，换机后 memory 丢了不影响接盘。
 
 ## 作者实机调研（仅供参考）
 
