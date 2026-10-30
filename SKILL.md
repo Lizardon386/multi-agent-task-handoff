@@ -81,7 +81,7 @@ argument-hint: "[--help | 接盘 | 交接 [ID] | 压卡 | 工程化 | 自检/更
 1. 安装版本：读当前 skill 目录的 `.skill-version`（commit/date）；没有就视为未知，用 SKILL.md 与源 HEAD 比对。
 2. 源版本：默认源仓库 `<工作区根>/multi-agent-task-handoff`；`.skill-sync-paths` 只列安装目录，不是源仓库指针。读 `git -C <repo> rev-parse HEAD`。
 3. 核对远端：能联网就 `git ls-remote origin HEAD`；本地落后且工作树干净就 `git pull --ff-only`；有本地改动或分叉就停，给手动卡。
-4. 安装 commit ≠ 源 HEAD：优先 `bash <repo>/install.sh`（只装当前宿主，自动写 `.skill-version` 并校验文件清单）；手动兜底 `git -C <repo> archive HEAD | tar -x -C <当前安装目录>`，按 hook 格式写 `.skill-version`，`diff -r` 校验；同机其它安装目录按 `.skill-sync-paths` 一起同步。
+4. 安装 commit ≠ 源 HEAD：优先 `bash <repo>/install.sh`（只装当前宿主），或 `bash <repo>/install.sh --sync-all`（按 `.skill-sync-paths` 一次对齐所有副本，幂等，只补落后的）；自动写 `.skill-version` 并校验文件清单；手动兜底 `git -C <repo> archive HEAD | tar -x -C <当前安装目录>`，按 hook 格式写 `.skill-version`，`diff -r` 校验；同机其它安装目录按 `.skill-sync-paths` 一起同步。
 5. 报告：安装 commit、源 commit、是否更新、没核对到的项（如离线）；不把“本地一致”说成“GitHub 最新”。
 
 ## 维护（memory 与模式无关）

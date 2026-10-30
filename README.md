@@ -162,11 +162,15 @@ Qoder 的技能目录是**实拷贝**，目录 junction 不被扫描。`install.
 ```bash
 bash install.sh --dry-run   # 只打印宿主、目标、动作
 bash install.sh             # 装到当前宿主
+bash install.sh --sync-all            # 按 .skill-sync-paths 逐份对齐到当前 HEAD，只补落后的
+bash install.sh --sync-all --dry-run  # 只报哪几份落后，不写文件
 ```
+
+`--sync-all` 是幂等的：已最新的副本直接跳过，所以可以随便重复跑。它也是 `post-commit` 用的同步方式——就算某次同步被打断，下一次提交会自动把剩下的补齐，不需要人工兜底。
 
 Windows 双击 `安装.bat`；识别不出宿主时会问一次 qoder / claude / codex / opencode / zcode / workbuddy，或输入 target 指定目录。选项：`--host`、`--target DIR`、`--force`（覆盖非托管非空目录）、`--no-hook`、`--no-register`、`--dry-run`。换宿主时，在新宿主里重跑一次。
 
-安装会写 `.skill-version`（commit + 时间），并默认把目标追加到 `.skill-sync-paths`、启用仓库本地 `core.hooksPath=.githooks`。之后每次提交由 `post-commit` 把 HEAD 刷到清单里的目录；父目录不存在就跳过。同时检查 `作者实机调研/` 快照，过期时自动同步并提交快照；最后自动 push（失败重试一次，不 force）。钩子只在 commit 时跑，不常驻；没启用时重跑 `install.sh`。
+安装会写 `.skill-version`（commit + 时间），并默认把目标追加到 `.skill-sync-paths`、启用仓库本地 `core.hooksPath=.githooks`。之后每次提交由 `post-commit` 跑一次 `install.sh --sync-all`，把清单里所有副本对齐到 HEAD；父目录不存在就跳过。同时检查 `作者实机调研/` 快照，过期时自动同步并提交快照；最后自动 push（失败重试一次，不 force）。钩子只在 commit 时跑，不常驻；没启用时重跑 `install.sh`。
 
 `.skill-sync-paths` 是**本地文件**（已 gitignore），记录本机安装目录，不随仓库分发；换机器跑一次 `install.sh` 即生成。
 

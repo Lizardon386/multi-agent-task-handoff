@@ -10,6 +10,7 @@ dry=0
 force=0
 hook=1
 register=1
+sync_all=0
 host_arg=
 target_arg=
 
@@ -32,6 +33,7 @@ usage() {
   --dry-run        只打印将要做什么，不写文件
   --host NAME      qoder | claude | codex | opencode | zcode | workbuddy（识别不出时显式指定）
   --target DIR     直接指定安装目录（与 --host 二选一）
+  --sync-all       按 .skill-sync-paths 逐份对齐到当前 HEAD，只补落后的；幂等，可重复跑
   --force          覆盖没有 .skill-version 的非空目录
   --no-hook        不改仓库本地 core.hooksPath
   --no-register    不把目标写进 .skill-sync-paths
@@ -50,6 +52,7 @@ while [ $# -gt 0 ]; do
     --force) force=1 ;;
     --no-hook) hook=0 ;;
     --no-register) register=0 ;;
+    --sync-all) sync_all=1 ;;
     --host) [ $# -ge 2 ] || usage_die "--host 需要一个值"; host_arg=$2; shift ;;
     --host=*) host_arg=${1#*=} ;;
     --target) [ $# -ge 2 ] || usage_die "--target 需要一个值"; target_arg=$2; shift ;;
@@ -63,6 +66,9 @@ done
 if [ -n "$target_arg" ] && [ -n "$host_arg" ]; then
   usage_die "--host 与 --target 只能用一个"
 fi
+if [ "$sync_all" = 1 ] && { [ -n "$target_arg" ] || [ -n "$host_arg" ]; }; then
+  usage_die "--sync-all 不能与 --host / --target 一起用"
+fi
 
 script_dir=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd -P) || die "找不到脚本所在目录"
 repo=$script_dir
@@ -71,6 +77,46 @@ repo_real=$(CDPATH= cd -- "$repo" && pwd -P)
 
 name=$(sed -n 's/^name:[[:space:]]*//p' "$repo/SKILL.md" | head -1 | tr -d '\r')
 [ "$name" = "$skill_id" ] || die "SKILL.md 的 name 应为 $skill_id（实际: ${name:-空}）"
+
+# --sync-all：按 .skill-sync-paths 逐份对齐到当前 HEAD。
+# 只补落后的，已最新直接跳过，所以可以随便重复跑 —— 被打断也没关系，下次再跑一次就补齐。
+if [ "$sync_all" = 1 ]; then
+  paths_file=$repo/.skill-sync-paths
+  [ -f "$paths_file" ] || die "找不到 $paths_file（先跑一次 install.sh 生成）"
+  if git -C "$repo" rev-parse --git-dir >/dev/null 2>&1; then
+    head_commit=$(git -C "$repo" rev-parse HEAD)
+  else
+    head_commit=unknown
+  fi
+  printf '对齐目标: %s\n' "$head_commit"
+  total=0
+  bad=0
+  while IFS= read -r line <&3; do
+    case "$line" in ''|'#'*) continue ;; esac
+    dest=$(printf '%s' "$line" | sed 's/[[:space:]]*$//')
+    [ -d "$(dirname -- "$dest")" ] || { printf '跳过（父目录不存在）: %s\n' "$dest"; continue; }
+    total=$((total + 1))
+    cur=$(sed -n 's/^commit=//p' "$dest/.skill-version" 2>/dev/null | head -1)
+    if [ "$cur" = "$head_commit" ]; then
+      printf '已最新: %s\n' "$dest"
+      continue
+    fi
+    if [ "$dry" = 1 ]; then
+      printf '需更新: %s（%s -> %s）\n' "$dest" "${cur:-未知}" "$head_commit"
+      continue
+    fi
+    # 子进程单独跑，stdin 接 /dev/null：循环体读的是 fd 3，不会被吃掉
+    if sh "$repo/install.sh" --target "$dest" --no-hook --no-register </dev/null >/dev/null 2>&1; then
+      printf '已同步: %s\n' "$dest"
+    else
+      printf '同步失败: %s（手动: sh %s/install.sh --target "%s"）\n' "$dest" "$repo" "$dest" >&2
+      bad=$((bad + 1))
+    fi
+  done 3< "$paths_file"
+  [ "$total" -eq 0 ] && printf '清单里没有可处理的目录\n'
+  [ "$bad" -gt 0 ] && die "$bad 份同步失败"
+  exit 0
+fi
 
 to_unix() {
   case "$1" in
