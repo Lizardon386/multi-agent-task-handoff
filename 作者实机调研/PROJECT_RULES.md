@@ -13,7 +13,13 @@
 - 除 `README.md` / `DESIGN.md` / `CONTEXT.md` / `AGENTS.md` / `SKILL.md` 外，输出文档用中文名；用户指定文件名时从其指定。非 `.md` 交付物、机器产物、`archive/`、`inputs/` 豁免。
 - 用工程师的直述句：少口号、少破折号、少排比；术语先用一句人话定义。
 - 改完贴变更；大改文档给 before/after 行数/字节 + 核心文件全文，别只说“已完成”。
-- 宿主差异（memory 位置、会话 ID 格式、投递/读回手段、安装目录）只记 `AGENT_CAPABILITIES.md` 对应行；`SKILL.md` / `README.md` / `DESIGN.md` 只写跨宿主成立的规则，不写单宿主特例。改通用文档前先问：这条换个宿主还成立吗？不成立就写进能力表。
+
+## 改文档前自查
+
+- 宿主差异（memory 位置、会话 ID 格式、投递/读回手段、安装目录）只记 `AGENT_CAPABILITIES.md` 对应行。改通用文档前先问：**这条换个宿主还成立吗？** 不成立就写进能力表。
+- 任务卡 `CONTEXT.md` 只记跨机有用的状态与坑。再问一句：**换台机器、换个 agent 还用得上吗？** 本机路径、本机副本数、本机安装状态一律不写。
+- 不改协议适配本机环境。本机缺某个能力，就在能力表标 🟡/⛔，不改 `SKILL.md` 流程去绕。
+- 审计：`cd multi-agent-task-handoff && grep -n "Qoder\|ZCode\|OpenCode\|Codex\|WorkBuddy\|Claude" SKILL.md README.md DESIGN.md`——命中只应有两种形态：跨宿主枚举、举例。出现第三种（给单个宿主立规矩）就是违规。
 
 ## 工作方式
 

@@ -68,7 +68,7 @@ argument-hint: "[--help | 接盘 | 交接 [ID] | 压卡 | 工程化 | 自检/更
 
 1. 整理：读 CONTEXT，字段齐全：模式、目标/完成定义、现在在哪、下一步、坑、锚点、验证命令、交接记录、参考 ID（`宿主:ID` 格式，如 `qoder:<uuid>`、`zcode:sess_*`，跨宿主不通用）；缺字段先按「接盘」补，补不了给手动卡。
 2. memory 提升：宿主有 memory 就扫 project memory，把会影响下一家的项写进 CONTEXT/DESIGN；没有就从 CONTEXT/DESIGN/git/旧 ID 里找。冲突以 CONTEXT/DESIGN 为准。
-3. 写卡：只挑关键动作（不知道这条下一家会做错/重做才写；能从 CONTEXT/README/DESIGN/git 得到的不写）；更新「现在在哪 / 下一步 / 坑与约束」；交接记录加 1 条，≤10 条，超出先沉降再删最旧；README/DESIGN 只在用法或设计变化时动。
+3. 写卡：只挑关键动作（不知道这条下一家会做错/重做才写；能从 CONTEXT/README/DESIGN/git 得到的不写）；更新「现在在哪 / 下一步 / 坑与约束」；交接记录加 1 条，≤10 条，超出先沉降再删最旧；README/DESIGN 只在用法或设计变化时动。改过 SKILL/README/DESIGN 就跑一次审计（见 `<工作区根>/PROJECT_RULES.md`「改文档前自查」），确认没把单宿主特例写进通用文档。
 4. 锚点：有 git 提交推送（推不动就留本地并说明）；没有 git 用时间戳，不另建备份。
 5. 生成 prompt（≤40k）：工作目录 + 文档表 + 锚点 + 验证命令 + 下一步 1–3 条 + 勿动文件 + 已决策 + 旧 ID + 项目规则指针（`<工作区根>/PROJECT_RULES.md`；读不到就贴相关子集）；要求新会话按「接盘」开始，先回能力自检 + 锚点一致/不一致。
 6. 投递：先看 `AGENT_CAPABILITIES.md` 本行，没记录就现场探测并补一行；按本行选投递手段（如 Qoder 的 `send_message_to_chat_session(sessionId, prompt)`），有 ID 就投，成功只代表接收。本行不可自动投递或投递失败时，再探测等价手段（CLI 会话恢复/执行、MCP、可写队列文件等）；能自动送达就做并验证，做不到才把 prompt 或摘要给用户粘贴。不伪造发送或回执，失败按「自动化失效时」给手动卡。
