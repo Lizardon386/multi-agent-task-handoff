@@ -37,7 +37,7 @@
 - dsp-hal-eval 压卡已由其他 agent 完成，不在本目录处理。
 - 本目录是协议真源和 git 工作树；非 git 目录靠 `压卡备份.md` 追溯。
 - 远端同步状态以 `git status` / `git log` 为准；网络异常时先推本地提交。
-- 2026-10-30 收工状态：WorkBuddy 宿主已支持（`CODEBUDDY_HOST=workbuddy*` 识别）；副本同步幂等化（`install.sh --sync-all`）；能力表拆「能力矩阵 + 投递与读回手段」两张表；`PROJECT_RULES` 加「改文档前自查」（三条自问 + 审计 grep），挡单宿主特例进通用文档。
+- 收工状态（2026-10-30）：WorkBuddy 宿主已支持（`CODEBUDDY_HOST=workbuddy*` 识别）；副本同步幂等化（`install.sh --sync-all`）；能力表拆「能力矩阵 + 投递与读回手段」两张表；`PROJECT_RULES` 加「改文档前自查」（三条自问 + 审计 grep），挡单宿主特例进通用文档。
 
 ## 计划 / 待办
 
