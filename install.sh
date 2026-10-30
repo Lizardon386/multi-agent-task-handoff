@@ -23,13 +23,14 @@ usage() {
   Codex        CODEX_HOME
   OpenCode     OPENCODE / OPENCODE_CONFIG_DIR
   ZCode        ZCODE_CONFIG_DIR / ZCODE_APP_VERSION
+  WorkBuddy    CODEBUDDY_HOST=workbuddy* / WORKBUDDY_CONFIG_DIR / CODEBUDDY_CONFIG_DIR
 
 安装目录 = <宿主配置目录>/skills/multi-agent-task-handoff
 源可以是 git 克隆，也可以是解压后的非 git 副本（后者装工作树）。
 
 选项:
   --dry-run        只打印将要做什么，不写文件
-  --host NAME      qoder | claude | codex | opencode | zcode（识别不出时显式指定）
+  --host NAME      qoder | claude | codex | opencode | zcode | workbuddy（识别不出时显式指定）
   --target DIR     直接指定安装目录（与 --host 二选一）
   --force          覆盖没有 .skill-version 的非空目录
   --no-hook        不改仓库本地 core.hooksPath
@@ -111,11 +112,28 @@ default_cfg() {
       else printf '%s\n' "$HOME/.config/opencode"; fi ;;
     zcode)
       if [ -n "${ZCODE_CONFIG_DIR:-}" ]; then printf '%s\n' "$ZCODE_CONFIG_DIR"; else printf '%s\n' "$HOME/.zcode"; fi ;;
+    workbuddy)
+      if [ -n "${WORKBUDDY_CONFIG_DIR:-}" ]; then printf '%s\n' "$WORKBUDDY_CONFIG_DIR"
+      elif [ -n "${CODEBUDDY_CONFIG_DIR:-}" ]; then printf '%s\n' "$CODEBUDDY_CONFIG_DIR"
+      else printf '%s\n' "$HOME/.workbuddy-ai"; fi ;;
     *) return 1 ;;
   esac
 }
 
 detect_host() {
+  # WorkBuddy 放在最前：它同时会带 CODEBUDDY_CONFIG_DIR / CLAUDE_* 等通用变量，
+  # 靠 CODEBUDDY_HOST 前缀和 WORKBUDDY_* 先认，避免被后面的通用变量误判成别的宿主。
+  if [ -n "${CODEBUDDY_HOST:-}" ]; then
+    case "$CODEBUDDY_HOST" in
+      workbuddy*) host=workbuddy; cfg=$(default_cfg workbuddy); cfg_src=CODEBUDDY_HOST; return 0 ;;
+    esac
+  fi
+  if [ -n "${WORKBUDDY_CONFIG_DIR:-}" ]; then
+    host=workbuddy; cfg=$WORKBUDDY_CONFIG_DIR; cfg_src=WORKBUDDY_CONFIG_DIR; return 0
+  fi
+  if [ -n "${CODEBUDDY_CONFIG_DIR:-}" ]; then
+    host=workbuddy; cfg=$CODEBUDDY_CONFIG_DIR; cfg_src=CODEBUDDY_CONFIG_DIR; return 0
+  fi
   if [ -n "${QODER_CONFIG_DIR:-}" ]; then
     host=qoder; cfg=$QODER_CONFIG_DIR; cfg_src=QODER_CONFIG_DIR; return 0
   fi
@@ -164,8 +182,8 @@ if [ -n "$target_arg" ]; then
   target_in=$(to_unix "$target_arg")
 elif [ -n "$host_arg" ]; then
   case "$host_arg" in
-    qoder|claude|codex|opencode|zcode) ;;
-    *) usage_die "--host 只支持 qoder/claude/codex/opencode/zcode" ;;
+    qoder|claude|codex|opencode|zcode|workbuddy) ;;
+    *) usage_die "--host 只支持 qoder/claude/codex/opencode/zcode/workbuddy" ;;
   esac
   host=$host_arg
   cfg=$(default_cfg "$host") || die "无法确定 $host 的配置目录"
@@ -175,8 +193,8 @@ elif detect_host; then
   target_in=$cfg/skills/$skill_id
 else
   cat >&2 <<'EOF'
-识别不出当前宿主。已检查: QODER_CONFIG_DIR, QODERCN_CONFIG_DIR, CLAUDE_CONFIG_DIR, CLAUDECODE, CODEX_HOME, OPENCODE, OPENCODE_CONFIG_DIR, ZCODE_CONFIG_DIR, ZCODE_APP_VERSION。
-请用 --host qoder|claude|codex|opencode|zcode 或 --target DIR 指定。
+识别不出当前宿主。已检查: CODEBUDDY_HOST, WORKBUDDY_CONFIG_DIR, CODEBUDDY_CONFIG_DIR, QODER_CONFIG_DIR, QODERCN_CONFIG_DIR, CLAUDE_CONFIG_DIR, CLAUDECODE, CODEX_HOME, OPENCODE, OPENCODE_CONFIG_DIR, ZCODE_CONFIG_DIR, ZCODE_APP_VERSION。
+请用 --host qoder|claude|codex|opencode|zcode|workbuddy 或 --target DIR 指定。
 EOF
   exit 2
 fi

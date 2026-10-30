@@ -1,10 +1,10 @@
 # multi-agent-task-handoff · 会话上下文与进展
 
 > 本文件是交接卡：只记当前状态、下一步、坑和交接记录；历史与逐条变更见 [压卡备份.md](压卡备份.md)。
-> 最近更新：2026-10-29
+> 最近更新：2026-10-30
 > 模式：三档
 > 状态锚点：接盘时跑 `git log -1 --oneline`；推 GitHub 前跑 `gh auth status`
-> 验证命令：`git status -sb`；`bash install.sh --dry-run`（本机 bash 不在 PATH，用 `D:\software\Git\bin\bash.exe`）；装完用 `diff -r` 比对安装副本；`gh repo view --json visibility`；`"D:\software\Git\bin\bash.exe" sync-作者实机调研.sh --check`
+> 验证命令：`git status -sb`；`bash install.sh --dry-run`（应识别为 workbuddy）；装完用 `diff -r` 比对安装副本；`gh repo view --json visibility`；`bash sync-作者实机调研.sh --check`
 
 ## 文档
 
@@ -28,11 +28,11 @@
 - 公开前清理：`.skill-sync-paths` 移出 git 跟踪（本地文件）；文档里的本机路径改 `~`；工作区根改由 `AGENT_WORKSPACE` 指定，默认 `D:\agent_workspace`。
 - 工作区三份文档快照：`sync-作者实机调研.sh` 从工作区根同步到 `作者实机调研/`；`--check` 只读；`post-commit` 发现过期会自动同步并提交快照，随后自动 push（不 force，失败重试一次）。
 - v2 协议已落地：默认单档；`接盘` / `交接`（别名 `收工`）/ `压卡` / `工程化` / `自检`（别名 `更新`）+ 只读自检；所有任务命令只看 cwd；唯一参数是 `交接` 的 ID；`收工` 只整理，带 ID 才发送；支持 `+` 或空格串行组合（如 `压卡+收工`、`压卡 收工`）。
-- 安装：`install.sh` 按宿主环境变量只给当前 agent 装（Qoder/Claude/Codex/OpenCode/ZCode；OpenCode/ZCode 也可 `--host` 显式指定），写 `.skill-version`、启用本地钩子、登记 `.skill-sync-paths`（本地文件，已 gitignore）；也支持非 git 副本（ZIP），装工作树、写 `commit=unknown`、跳过钩子和登记；`安装.bat` 是 Windows 双击入口。
-- 本机已装薄 skill：Qoder `~/.qoder-cn/skills/multi-agent-task-handoff`、OpenCode `~/.config/opencode/skills/multi-agent-task-handoff`、ZCode `~/.zcode/skills/multi-agent-task-handoff`（均实拷贝）；Qoder 不认目录 junction；提交后由钩子重新导出，或跑 `install.sh`。全局规则/钩子/计划任务仍无。
+- 安装：`install.sh` 按宿主环境变量只给当前 agent 装（Qoder/Claude/Codex/OpenCode/ZCode/WorkBuddy；OpenCode/ZCode/WorkBuddy 也可 `--host` 显式指定），写 `.skill-version`、启用本地钩子、登记 `.skill-sync-paths`（本地文件，已 gitignore）；也支持非 git 副本（ZIP），装工作树、写 `commit=unknown`、跳过钩子和登记；`安装.bat` 是 Windows 双击入口。
+- 本机已装薄 skill 四份：Qoder `~/.qoder-cn/skills/multi-agent-task-handoff`、OpenCode `~/.config/opencode/skills/multi-agent-task-handoff`、ZCode `~/.zcode/skills/multi-agent-task-handoff`、WorkBuddy `~/.workbuddy-ai/skills/multi-agent-task-handoff`（均实拷贝）；Qoder 不认目录 junction；提交后由钩子重新导出，或跑 `install.sh`。全局规则/钩子/计划任务仍无。
 - 入口是命令不是文件：`接盘` 命令或 `交接` prompt（自带读卡顺序）；不在任务目录铺 `AGENTS.md`；自然语言「接盘」会加载 skill，Qoder 已验；OpenCode 靠 skill description 里的触发词加载。
 - 记录粒度：每次收工 1 条关键动作，交接记录 ≤10 条自动滚动；压卡只做兜底。判定标准见「关键约束」。
-- 已验证：收工回填、send/wait/read、工程化命令、压卡（uno-online 183→83 行）、skill 自动加载、OpenCode 实装（`OPENCODE` 自动识别 + `--host opencode`）、OpenCode 建会话/`session.send`/`status`/`messages`/API wait 实测（回复 OK，wait 204）、ZCode 实装（`ZCODE_APP_VERSION` 自动识别 + `--host zcode`）、ZCode 子 agent `SendMessage` 往返。
+- 已验证：收工回填、send/wait/read、工程化命令、压卡（uno-online 183→83 行）、skill 自动加载、OpenCode 实装（`OPENCODE` 自动识别 + `--host opencode`）、OpenCode 建会话/`session.send`/`status`/`messages`/API wait 实测（回复 OK，wait 204）、ZCode 实装（`ZCODE_APP_VERSION` 自动识别 + `--host zcode`）、ZCode 子 agent `SendMessage` 往返、WorkBuddy 实装（`CODEBUDDY_HOST` 自动识别 + `--host workbuddy`，第四份副本已装）、WorkBuddy 建子会话投 prompt 读回实测。
 - 未验证：实际跨目录迁移；Codex 行待测；Claude/Codex 未在真宿主实装（只测环境识别 + 临时目录安装）。
 - dsp-hal-eval 压卡已由其他 agent 完成，不在本目录处理。
 - 本目录是协议真源和 git 工作树；非 git 目录靠 `压卡备份.md` 追溯。
@@ -66,7 +66,6 @@
 
 ## 交接记录（只记关键动作，≤10 条）
 
-- 2026-10-28 Qoder：命令改「接盘」；「接续」去掉，`收工` = 不发送的交接，`交接 <ID>` 才发；加 `自检/更新` 比对安装 commit；任务命令只看 cwd，参数只留交接 ID；支持 `+` 或空格串行组合。
 - 2026-10-28 Qoder：加 `install.sh`（只装当前宿主）+ `安装.bat`；卡里补 `gh auth status`；修正 `.skill-sync-paths` 是安装目录不是源仓库。
 - 2026-10-28 OpenCode：`install.sh` 加 OpenCode 宿主（`OPENCODE`/`OPENCODE_CONFIG_DIR`，`--host opencode`），修 Windows `--target` 路径；OpenCode 副本实装并登记 `.skill-sync-paths`。
 - 2026-10-28 OpenCode：补 OpenCode 能力行与卡字段（模式/验证/完成定义）；范围收窄为只维护本 skill，dsp-hal-eval 压卡已在别处完成。
@@ -76,6 +75,7 @@
 - 2026-10-29 ZCode：交接投递按能力表本行选手段（去 Qoder 硬编码）；参考 ID 定为 `宿主:ID` 格式（`sess_*` 只在 ZCode 可读，实测）。
 - 2026-10-29 ZCode：实装 ZCode 宿主收工；本轮记录滚动删「片段冻结接口」条——其载体（任务级 AGENTS 片段）v2 已移除，历史见 git 与压卡备份。
 - 2026-10-29 Qoder：公开发布——MIT、`AGENT_WORKSPACE` 工作区根、脱敏重写历史；旧私有库删除后同名新建并推送，已转 public。
+- 2026-10-30 WorkBuddy：加 workbuddy 宿主（`CODEBUDDY_HOST=workbuddy*` 优先识别，`WORKBUDDY_CONFIG_DIR`/`CODEBUDDY_CONFIG_DIR` 兜底，`--host workbuddy`），本机副本增至四份；能力表补 WorkBuddy 行——建独立上下文子会话/投 prompt/读回实测可用，无跨会话投递与 `read_chat_session`；`.workbuddy-ai/` 进 gitignore。
 
 ## 参考 ID
 

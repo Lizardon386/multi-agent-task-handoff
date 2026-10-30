@@ -3,7 +3,7 @@
 > 一份 `CONTEXT.md` 交接卡，让下一个会话或另一个 agent 接着干；需要时用 `工程化` 升三档，`交接` 只发状态、不复制聊天历史。
 > 标识 `multi-agent-task-handoff`；本目录是协议真源。MIT 许可。
 > 设计取舍见 [DESIGN.md](DESIGN.md)，当前进度见 [CONTEXT.md](CONTEXT.md)。
-> 最近更新：2026-10-29
+> 最近更新：2026-10-30
 
 ## 文档
 
@@ -33,7 +33,7 @@
 git clone https://github.com/Lizardon386/multi-agent-task-handoff.git
 cd multi-agent-task-handoff
 bash install.sh --dry-run
-bash install.sh                    # 自动识别 Qoder / Claude Code / Codex / OpenCode / ZCode
+bash install.sh                    # 自动识别 Qoder / Claude Code / Codex / OpenCode / ZCode / WorkBuddy
 bash install.sh --target <宿主 skills 目录>/multi-agent-task-handoff   # 未知宿主
 ```
 
@@ -67,6 +67,7 @@ Qoder 示例（其他宿主命令相同）：
 - Qoder / Claude Code / Codex / ZCode / OpenChamber：`/multi-agent-task-handoff <参数>`
 - Codex / ZCode 也支持：`$multi-agent-task-handoff`
 - OpenCode 核心：没有 `/`、`$`、`@` 入口（`@` 是文件引用，不是 skill 调用）；直接说「接盘 / 交接 / 压卡」，或用它的 skill 工具
+- WorkBuddy：装好后出现在 skill 列表里即启用；直接说「接盘 / 交接 / 压卡」，或用 `@skill:"<skills 目录>/multi-agent-task-handoff/SKILL.md" 接盘` 显式调用
 - 其他宿主：按宿主文档；不确定就直接说命令
 
 所有命令只看当前目录，目录名就是任务名；要处理别的任务先 `cd`。唯一参数是 `交接` 的 ID。别名：接手=接盘，收工=交接（无 ID），压缩上下文=压卡，工程/建档=工程化。命令可用 `+` 或空格串行组合，如 `压卡+收工`、`工程化 交接 <ID>`；从左到右，前一步失败就停。
@@ -156,13 +157,14 @@ Qoder 的技能目录是**实拷贝**，目录 junction 不被扫描。`install.
 | Codex | `CODEX_HOME` | 同上（未设置时用 `--host codex`） |
 | OpenCode | `OPENCODE` / `OPENCODE_CONFIG_DIR` | 同上（默认 `~/.config/opencode`） |
 | ZCode | `ZCODE_CONFIG_DIR` / `ZCODE_APP_VERSION` | 同上（默认 `~/.zcode`） |
+| WorkBuddy | `CODEBUDDY_HOST=workbuddy*` / `WORKBUDDY_CONFIG_DIR` / `CODEBUDDY_CONFIG_DIR` | 同上（默认 `~/.workbuddy-ai`） |
 
 ```bash
 bash install.sh --dry-run   # 只打印宿主、目标、动作
 bash install.sh             # 装到当前宿主
 ```
 
-Windows 双击 `安装.bat`；识别不出宿主时会问一次 qoder / claude / codex / opencode / zcode，或输入 target 指定目录。选项：`--host`、`--target DIR`、`--force`（覆盖非托管非空目录）、`--no-hook`、`--no-register`、`--dry-run`。换宿主时，在新宿主里重跑一次。
+Windows 双击 `安装.bat`；识别不出宿主时会问一次 qoder / claude / codex / opencode / zcode / workbuddy，或输入 target 指定目录。选项：`--host`、`--target DIR`、`--force`（覆盖非托管非空目录）、`--no-hook`、`--no-register`、`--dry-run`。换宿主时，在新宿主里重跑一次。
 
 安装会写 `.skill-version`（commit + 时间），并默认把目标追加到 `.skill-sync-paths`、启用仓库本地 `core.hooksPath=.githooks`。之后每次提交由 `post-commit` 把 HEAD 刷到清单里的目录；父目录不存在就跳过。同时检查 `作者实机调研/` 快照，过期时自动同步并提交快照；最后自动 push（失败重试一次，不 force）。钩子只在 commit 时跑，不常驻；没启用时重跑 `install.sh`。
 
