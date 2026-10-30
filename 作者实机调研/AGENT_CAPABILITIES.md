@@ -4,9 +4,10 @@
 
 > 用途：记录每个 agent / host / 版本能自动做什么，避免重复探测；表是实测缓存，不是契约。
 > 迁移：整表带走（结论 + 验证方法）；换机只重填「本机环境」，按「复验成本」跑必要项，不从头重测。
-> 规则：一行一个 agent+host+版本；只就地更新，不追加；没测过留“待测”，不建空行；备注不写真实会话 ID/凭据。
+> 规则：一行一个 agent+host+版本；只就地更新，不追加；没测过留“待测”，不建空行；不写真实会话 ID/凭据。
 > 状态：✅ 已验证可用 / 🟡 部分或需确认 / 🔴 只能手动 / ⛔ 不支持 / 待测。
 > 复验：版本一致且「最近验证」在 30 天内，只跑低成本项；版本变化或超期，按「验证方法」重跑，先低后中，高成本按需。
+> 备注：只写该宿主**独有、无法归列**的事实，单行 ≤120 字；超出说明该拆列。履历（在哪些任务上验过）不进本表，进 git 与各任务 `CONTEXT.md`。
 > 最近更新：2026-10-30
 
 ## 本机环境（换机重填，不计入能力结论）
@@ -20,8 +21,21 @@
 
 | Agent | Host/版本 | 最近验证 | 验证方法 | 复验成本 | 读 AGENTS/CONTEXT | 文件/迁移 | 建会话 | 发交接 | 等/读会话 | 打开工作区 | git/CLI | 备注 |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|
-| Qoder Desktop | Qoder Desktop CN 1.0.97 | 2026-10-28 | 读文件；`send_message_to_chat_session` + `wait_chat_sessions`；`install.sh --dry-run` | 低/中 | ✅ | 🟡 | ✅ | ✅ | ✅ | 🔴 | 🟡 | uno-webgame 读卡；handoff-pilot-test 收工回填 + 接手中继 + send/wait/read、工程化命令（三档复核、dry-run 0 迁移）已验；uno-online 压卡 + 任务级 AGENTS 触发已验；2026-10-28 color-duel 交接：双仓发送，send/wait 已验，目标会话停在等用户批工具权限（首轮未完成）；无头 Edge 截图 + CDP 可用；实际跨目录迁移未实测；Qoder CLI 未安装；技能目录只认实拷贝，目录 junction 不生效 |
-| OpenCode (OpenChamber 桌面) | OpenChamber 2.5.2 + OpenCode 2.1.2 | 2026-10-29 | `session.create` → `session.send` → `status`/`messages`；`POST /api/experimental/session/{id}/wait` | 中 | ✅ | ✅ 文件；跨目录迁移未测 | ✅ 实测 `session.create` | ✅ 实测 `session.send` | ✅ `status`/`messages` + API wait（工具无 wait） | 🔴 | ✅ | 2026-10-29 本机实测：建会话（不传 prompt 也建，测试会话已删除）→ send（status busy）→ status idle → messages 读回 "OK"；`opencode api post /api/experimental/session/{id}/wait` 返回 204；子会话收在父会话下 |
-| ZCode Desktop | ZCode 3.16.3 | 2026-10-29 | `ReadSessionContext sess_*`（须显式 ID）；子 agent `SendMessage` 往返 | 高 | ✅ | 🟡 文件可；跨目录迁移未测 | ⛔ 子 agent 非用户会话 | ⛔ 跨会话不可达；子 agent SendMessage 往返 ✅ 实测（spawn→续跑→回执） | 🟡 ReadSessionContext 须显式 sess_* ID（current 被拒）；agentId UUID 与 session_ 目录名都映射不上；无 wait | 🔴 | ✅ | 安装副本 `~/.zcode/skills/multi-agent-task-handoff`；Git Bash 宿主；install.sh 按 `ZCODE_APP_VERSION` 识别；子 agent 输出落 `~/.zcode/cli/agents/session_<hex>/agent_<uuid>/` |
-| WorkBuddy AI（桌面） | WorkBuddy AI 5.8.4 | 2026-10-30 | 读 CONTEXT + `git log -1`；Agent 工具 spawn 子会话投 prompt 并读回；`install.sh --dry-run` 自动识别；`conversation_search` 检索历史 | 低 | ✅ | ✅ 文件；跨目录迁移未测 | ✅ Agent 工具建独立上下文子会话（实测） | 🟡 只能投给新建子会话，prompt 完整送达并执行；无 SendMessage 类工具，不能投给用户已开的另一个会话 | 🟡 前台同步返回结果可读；无 `read_chat_session`；`conversation_search` 只查历史记忆（查当日会话返回 0 条） | 🔴 | ✅ | 安装副本 `~/.workbuddy-ai/skills/multi-agent-task-handoff`；install.sh 按 `CODEBUDDY_HOST=workbuddy*` 识别，`WORKBUDDY_CONFIG_DIR`/`CODEBUDDY_CONFIG_DIR` 兜底；skill 出现在 `skill_management list` 即视为启用；memory 落项目目录 `.workbuddy-ai/memory/`（其余宿主在主目录）；子会话看不到父会话历史（实测）；`resume` 续跑同一 agent ID 返回成功，但子 agent 自述不保留上轮内容、回答里又出现上轮取值，证据矛盾，上下文延续性待测 |
+| Qoder Desktop | Qoder Desktop CN 1.0.97 | 2026-10-28 | 见「投递与读回手段」；`install.sh --dry-run` | 低/中 | ✅ | 🟡 | ✅ | ✅ | ✅ | 🔴 | 🟡 | 跨目录迁移未实测；Qoder CLI 未安装；无头 Edge + CDP 可用；技能目录只认实拷贝，junction 不生效；多任务已验（详见 git 与各任务 CONTEXT） |
+| OpenCode (OpenChamber 桌面) | OpenChamber 2.5.2 + OpenCode 2.1.2 | 2026-10-29 | 见「投递与读回手段」 | 中 | ✅ | ✅ 文件；跨目录迁移未测 | ✅ 实测 `session.create` | ✅ 实测 `session.send` | ✅ `status`/`messages` + API wait（工具无 wait） | 🔴 | ✅ | 建会话不传 prompt 也能建（测试会话已删）；子会话收在父会话下 |
+| ZCode Desktop | ZCode 3.16.3 | 2026-10-29 | 见「投递与读回手段」 | 高 | ✅ | 🟡 文件可；跨目录迁移未测 | ⛔ 子 agent 非用户会话 | ⛔ 跨会话不可达；子 agent SendMessage 往返 ✅ 实测 | 🟡 须显式 `sess_*` ID（current 被拒）；agentId 与 session_ 目录名映射不上 | 🔴 | ✅ | 子 agent 输出落 `~/.zcode/cli/agents/session_<hex>/agent_<uuid>/`；Git Bash 宿主 |
+| WorkBuddy AI（桌面） | WorkBuddy AI 5.8.4 | 2026-10-30 | 见「投递与读回手段」；`install.sh --dry-run` 自动识别 | 低 | ✅ | ✅ 文件；跨目录迁移未测 | ✅ Agent 工具建独立上下文子会话 | 🟡 只能投给新建子会话；无 SendMessage 类工具 | 🟡 前台同步返回可读；无 `read_chat_session` | 🔴 | ✅ | 子会话看不到父会话历史；`resume` 续跑返回成功但上下文延续性未确认（自述与行为矛盾，待测）；启用判据：出现在 `skill_management list` |
 | Codex | 待测 | — | — | 待测 | 待测 | 待测 | 待测 | 待测 | 待测 | 待测 | 待测 | 未实测 |
+
+## 投递与读回手段
+
+> SKILL.md 接盘第 3 步查「读回手段」、交接第 6 步查「投递手段」，**都从本表取，别处不记**，避免多份真源。
+> memory 位置一栏：标宿主 memory 是否落在项目目录；落项目目录的要在 `.gitignore` 忽略。
+
+| Agent | 投递手段 | 读回手段 | memory 位置 |
+|---|---|---|---|
+| Qoder | `send_message_to_chat_session(sessionId, prompt)` | `wait_chat_sessions` / `read_chat_session` | 主目录（宿主内部，不进项目） |
+| OpenCode | `session.send`（先 `session.create`） | `messages` + `POST /api/experimental/session/{id}/wait`（返回 204） | 主目录 |
+| ZCode | 跨会话不可达；仅子 agent `SendMessage` 往返 | `ReadSessionContext sess_*`（须显式 ID，无 wait） | 主目录 |
+| WorkBuddy | Agent 工具 spawn 新子会话投 prompt（无跨会话投递） | 前台同步返回；`conversation_search` 只检索已沉淀历史 | 项目目录 `.workbuddy-ai/memory/`（需 gitignore） |
+| Codex | 待测 | 待测 | 待测 |
