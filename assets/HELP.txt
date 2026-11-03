@@ -1,0 +1,44 @@
+multi-agent-task-handoff — 多 agent 任务交接
+
+用法:
+  multi-agent-task-handoff [--workspace <PATH>] [--nosave] [--help | --resume | --suspend [ID] [--commit] [--push] | --doc | --check | --fix | --probe [--live]]
+
+命令:
+  --resume                  接盘 / 接手：读 handoff/PROMPT.md → handoff/CONTEXT.md，
+                            冲突以 CONTEXT 为准；核锚点、跑验证
+  --suspend [ID] [--commit] [--push]
+                            压卡（按需）+ 收工 + 写 handoff/PROMPT.md
+                              --commit  只提交 handoff/ 下的文件
+                              --push    提交并推送（隐含 commit）
+                            有 ID 发送指针；无 ID 停手
+  --doc                     工程化 / 建档：补全 handoff/ 三档文档
+  --check                   自检 / 更新：只读检查，报告 ✅ / 🟡 / ⛔
+  --fix                     修复：先检查，再修可自动修复项；冲突/不可逆项询问
+  --probe [--live]          摸底 / 探测：先检查，再实测当前 agent 并更新能力表
+                              --live  实际执行建会话 / 发送 / 读回（需确认）
+  --workspace <PATH> [--nosave]
+                            全局：指定工作区根；默认写回 config.toml；
+                            --nosave 只本次生效，不写回
+  --help                    显示本表
+
+规则:
+  一次只用一个命令；不支持命令叠加
+  --workspace 可与一个命令同用；--nosave 只跟 --workspace
+  --commit / --push 只能跟 --suspend
+  --live 只能跟 --probe
+  --help 单独使用
+  无参数等同 --resume
+
+中文别名:
+  接盘/接手、压卡/收工/交接、工程化/工程/建档、自检/更新、修复、摸底/探测、帮助
+
+样例:
+  --workspace D:/agent_workspace --resume
+  --workspace "C:/My Workspace" --resume
+  --suspend 123 --commit
+  --fix
+  --probe --live
+  --doc
+
+安装与路径诊断:
+  install.sh --print-paths   不属于本命令，打印 config / workspace / capabilities / 安装目录

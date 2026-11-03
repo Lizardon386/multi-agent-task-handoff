@@ -1,8 +1,9 @@
-# <任务目录名>（<别名>）· 使用说明
+# <项目名>（<别名>）· 使用说明
 
-<!-- 没有别名就写 # <任务目录名> · 使用说明。按 GitHub 落地页写，不管是否推送。 -->
+<!-- 本文件是 handoff/README.md，任务 README 的唯一源；根 README 是项目 README，不是本文件。 -->
 
-> <一句话：这是什么、给谁用、解决什么问题>
+> 有 GitHub remote 时，`.github/README.md` 由本文件生成；不要手改生成物。
+> 指项目根文件用 `../`，例如 `../INTEGRATION_GUIDE.md`。
 > 最近更新：YYYY-MM-DD
 
 ## 文档
@@ -12,6 +13,7 @@
 | [README.md](README.md) | 使用者 | 这是什么、怎么跑、限制 |
 | [DESIGN.md](DESIGN.md) | 评审 / 开发 | 目标、架构、流程、决策 |
 | [CONTEXT.md](CONTEXT.md) | 接手 agent | 当前状态、下一步、坑、验证 |
+| [PROMPT.md](PROMPT.md) | 接手 agent | 交接指针，自动生成 |
 
 <!-- 有其他交付文档时，在表里加行。 -->
 

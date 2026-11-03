@@ -11,6 +11,7 @@ force=0
 hook=1
 register=1
 sync_all=0
+print_paths=0
 host_arg=
 target_arg=
 
@@ -34,6 +35,7 @@ usage() {
   --host NAME      qoder | claude | codex | opencode | zcode | workbuddy（识别不出时显式指定）
   --target DIR     直接指定安装目录（与 --host 二选一）
   --sync-all       按 .skill-sync-paths 逐份对齐到当前 HEAD，只补落后的；幂等，可重复跑
+  --print-paths    打印 config / workspace / capabilities / 安装目录及其来源，不写文件
   --force          覆盖没有 .skill-version 的非空目录
   --no-hook        不改仓库本地 core.hooksPath
   --no-register    不把目标写进 .skill-sync-paths
@@ -53,6 +55,7 @@ while [ $# -gt 0 ]; do
     --no-hook) hook=0 ;;
     --no-register) register=0 ;;
     --sync-all) sync_all=1 ;;
+    --print-paths) print_paths=1 ;;
     --host) [ $# -ge 2 ] || usage_die "--host 需要一个值"; host_arg=$2; shift ;;
     --host=*) host_arg=${1#*=} ;;
     --target) [ $# -ge 2 ] || usage_die "--target 需要一个值"; target_arg=$2; shift ;;
@@ -74,6 +77,46 @@ script_dir=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd -P) || die "找不到脚�
 repo=$script_dir
 [ -f "$repo/SKILL.md" ] || die "脚本必须放在仓库根目录（找不到 SKILL.md）"
 repo_real=$(CDPATH= cd -- "$repo" && pwd -P)
+
+# 机器级配置目录：$AGENT_CONFIG > %APPDATA% > $XDG_CONFIG_HOME > ~/.config
+agent_config_dir() {
+  if [ -n "${AGENT_CONFIG:-}" ]; then printf '%s\n' "$AGENT_CONFIG"
+  elif [ -n "${APPDATA:-}" ]; then printf '%s\n' "$APPDATA/multi-agent-task-handoff" | sed 's|\\|/|g'
+  elif [ -n "${XDG_CONFIG_HOME:-}" ]; then printf '%s\n' "$XDG_CONFIG_HOME/multi-agent-task-handoff"
+  else printf '%s\n' "$HOME/.config/multi-agent-task-handoff"
+  fi
+}
+
+expand_path() {
+  p=$1
+  case "$p" in
+    '~') p=$HOME ;;
+    '~/'*) p=$HOME/${p#\~/} ;;
+  esac
+  case "$p" in
+    *'%USERPROFILE%'*) p=$(printf '%s' "$p" | sed "s|%USERPROFILE%|$HOME|g") ;;
+  esac
+  printf '%s\n' "$p"
+}
+
+config_get() {
+  key=$1
+  file=$2
+  [ -f "$file" ] || return 1
+  sed -n "s/^[[:space:]]*$key[[:space:]]*=[[:space:]]*\"\\(.*\\)\"[[:space:]]*$/\1/p" "$file" | head -1
+}
+
+resolve_workspace() {
+  if [ -n "${AGENT_WORKSPACE:-}" ]; then
+    workspace=$(expand_path "$AGENT_WORKSPACE"); workspace_src=AGENT_WORKSPACE; return
+  fi
+  cfg_file=$(agent_config_dir)/config.toml
+  v=$(config_get workspace "$cfg_file" 2>/dev/null || true)
+  if [ -n "$v" ]; then
+    workspace=$(expand_path "$v"); workspace_src=config.toml; return
+  fi
+  workspace=$HOME/agent_workspace; workspace_src=default
+}
 
 name=$(sed -n 's/^name:[[:space:]]*//p' "$repo/SKILL.md" | head -1 | tr -d '\r')
 [ "$name" = "$skill_id" ] || die "SKILL.md 的 name 应为 $skill_id（实际: ${name:-空}）"
@@ -216,6 +259,33 @@ detect_host() {
   return 1
 }
 
+if [ "$print_paths" = 1 ]; then
+  config_dir=$(agent_config_dir)
+  resolve_workspace
+  caps=${AGENT_CAPABILITIES:-$config_dir/AGENT_CAPABILITIES.md}
+  cfg_file=$config_dir/config.toml
+  printf 'AGENT_CONFIG: %s\n' "$config_dir"
+  if [ -f "$cfg_file" ]; then
+    printf 'config: %s（已存在）\n' "$cfg_file"
+  else
+    printf 'config: %s（不存在，安装时会创建）\n' "$cfg_file"
+  fi
+  printf 'workspace: %s（来源: %s）\n' "$workspace" "$workspace_src"
+  printf 'capabilities: %s\n' "$caps"
+  if [ -n "$target_arg" ]; then
+    t=$(to_unix "$target_arg")
+  elif [ -n "$host_arg" ]; then
+    cfg=$(default_cfg "$host_arg" 2>/dev/null) || cfg=
+    [ -n "$cfg" ] && t=$(to_unix "$cfg")/skills/$skill_id || t=未知宿主
+  elif detect_host; then
+    t=$(to_unix "$cfg")/skills/$skill_id
+  else
+    t=未识别宿主
+  fi
+  printf 'install target: %s\n' "$t"
+  exit 0
+fi
+
 target_abs() {
   d=$(dirname -- "$1")
   b=$(basename -- "$1")
@@ -335,6 +405,14 @@ else
   echo "钩子: 跳过（--no-hook）"
 fi
 
+config_dir=$(agent_config_dir)
+cfg_file=$config_dir/config.toml
+if [ -f "$cfg_file" ]; then
+  echo "配置: 已存在 $cfg_file（不覆盖）"
+else
+  echo "配置: 会创建 $cfg_file"
+fi
+
 if [ "$dry" = 1 ]; then
   echo "（dry-run，未写文件）"
   exit 0
@@ -367,7 +445,20 @@ if ! diff -u "$exp" "$act" >/dev/null; then
   die "安装校验失败：文件清单与 HEAD 不一致"
 fi
 
-printf 'commit=%s\ndate=%s\n' "$full_commit" "$commit_date" > "$target/.skill-version" || die "写 .skill-version 失败"
+printf 'commit=%s\ndate=%s\nsource=%s\n' "$full_commit" "$commit_date" "$repo_real" > "$target/.skill-version" || die "写 .skill-version 失败"
+
+if mkdir -p "$config_dir" 2>/dev/null; then
+  if [ -f "$cfg_file" ]; then
+    echo "配置: 已存在 $cfg_file（不覆盖）"
+  elif [ -f "$repo/assets/config.toml.tpl" ]; then
+    cp "$repo/assets/config.toml.tpl" "$cfg_file" || echo "警告: 写配置失败 $cfg_file" >&2
+    echo "配置: 已创建 $cfg_file"
+  else
+    echo "警告: 缺少 assets/config.toml.tpl" >&2
+  fi
+else
+  echo "警告: 无法创建配置目录 $config_dir" >&2
+fi
 
 if [ "$register" = 1 ] && [ "$is_git" = 1 ]; then
   reg_file=$repo/.skill-sync-paths

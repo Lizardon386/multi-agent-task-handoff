@@ -1,117 +1,118 @@
 ---
 name: multi-agent-task-handoff
-description: 多 agent 任务接力协议：接手或接盘任务目录、写交接卡、收工、压卡、工程化与自检；默认一份 CONTEXT.md，工程化后升三档（README/DESIGN/CONTEXT），按固定文档头块与文档表维护。
-when_to_use: 开始或结束一个任务、接盘别人留下的任务目录、把工作交接给另一个 agent/会话、或要把当前会话工程化到新目录时。
-argument-hint: "[--help | 接盘 | 交接 [ID] | 压卡 | 工程化 | 自检/更新]"
+description: 多 agent 任务接力协议：接手/接盘/交接项目、写交接卡、收工/压卡、工程化/补全 handoff 文档、自检/修复/摸底宿主能力；交接文件固定在项目目录的 handoff/ 下。
+when_to_use: 开始或结束一个任务、接盘别人留下的项目、把工作交接给另一个 agent/会话、或需要检查/修复交接文档与宿主能力时。
+argument-hint: "[--help | --resume | --suspend [ID] [--commit] [--push] | --doc | --check | --fix | --probe [--live]]"
 ---
 
 # 多 agent 任务交接
 
+## 术语
+
+- **项目**：宿主打开的那个目录/仓库（Claude 项目、Qoder 工作区、WorkBuddy 空间、OpenCode/ZCode/Codex 项目）。
+- **项目目录**：项目的绝对路径，**唯一写入根**；来自宿主已打开的目录，或无项目时新建的目录。
+- **工作区根**：`AGENT_WORKSPACE` 容器；只用来新建项目目录，**不是写入目标**。
+- **当前目录**：`pwd`；可 `cd`，不改变项目。
+- 任务文档只在 `<项目目录>/handoff/`；不写工作区根，不往子目录铺。
+- 宿主差异与项目目录来源查 `$AGENT_CONFIG/AGENT_CAPABILITIES.md`；SKILL 不写宿主分支。
+
 ## 用法
 
-| 参数 | 动作 |
+一次只用一个命令；`--workspace` / `--nosave` 是全局选项，可与一个命令同用。
+
+| 参数 | 作用 |
 |---|---|
-| 无 | 默认单档：按「接盘」读写当前任务的 CONTEXT |
-| `--help` / `帮助` | 显示本表 |
-| `接盘` / `接手` | 当前目录接盘：读 CONTEXT、核锚点、跑验证 |
-| `交接` / `收工` `[ID]` | 整理当前任务并扫 memory 写进 CONTEXT/DESIGN；有 ID 再发送 |
-| `压卡` / `压缩上下文` | 检查当前目录的 CONTEXT 维护情况 |
-| `工程化` / `工程` / `建档` | 当前目录建/迁移/三档 |
-| `自检` / `更新` | 比对安装 commit 与仓库/GitHub，落后就同步 |
+| 无 / `--resume` | 接盘：读 PROMPT → CONTEXT，核锚点、跑验证 |
+| `--suspend [ID] [--commit] [--push]` | 压卡（按需）+ 收工 + 写 PROMPT；有 ID 发指针 |
+| `--doc` | 补全 `handoff/` 三档 |
+| `--check` | 只读检查 |
+| `--fix` | 检查 + 修可自动修复项 |
+| `--probe [--live]` | 检查 + 实测能力；`--live` 实际建会话/发送/读回 |
+| `--workspace <PATH> [--nosave]` | 指定工作区根；默认写回 `config.toml` |
+| `--help` | 输出完整帮助 |
 
-所有任务命令只看当前目录（cwd），目录名就是任务名；要处理别的任务，先 cd。唯一参数是 `交接` 的会话 ID。cwd 不是任务目录（如工作区根）时显示本表，不猜。未知参数 → 显示本表。
+中文别名：接盘/接手、压卡/收工/交接、工程化/工程/建档、自检/更新、修复、摸底/探测、帮助。
 
-命令可用 `+` 或**空格**串行组合，从左到右执行，前一步失败就停，逐步报结果。空格分隔时，命令词开始新命令，非命令词只当 `交接` 的 ID。例：`压卡+收工`、`压卡 收工`、`工程化 交接 <ID>`、`接盘 压卡`。
+## 路径与配置
 
-**工作区根**：环境变量 `AGENT_WORKSPACE`；未设置时用 `D:\agent_workspace`。目录不存在时，只读项跳过；`工程化` 建目录前先问用户。
+1. `$AGENT_CONFIG`：Linux/macOS `${XDG_CONFIG_HOME:-$HOME/.config}/multi-agent-task-handoff`；Windows `%APPDATA%\multi-agent-task-handoff`；可用 `AGENT_CONFIG` 覆盖。
+2. 工作区根：本次 `--workspace` > `AGENT_WORKSPACE` > `config.toml` 的 `[paths].workspace` > `$HOME/agent_workspace`。
+3. `--workspace <PATH>` 默认写回 `[paths].workspace`；`--nosave` 只本次。路径含空格加引号。
+4. 能力表：`$AGENT_CONFIG/AGENT_CAPABILITIES.md`；跨任务规则：项目目录 → 父目录 → `$AGENT_CONFIG/PROJECT_RULES.md`。
+5. 配置只解析简单 `key = "value"`；不 `source`，不依赖 Python。
 
-## 默认：单档
+## 确定项目目录
 
-每个任务目录只维护 `CONTEXT.md`（模板 `assets/CONTEXT.md.tpl`）。`模式：单档`；≤100 行。开始按「接盘」；收工按「交接 / 收工」更新「现在在哪 / 下一步 / 坑」，把 memory 里会影响下一家的坑写进「坑与约束」，交接记录加一条关键动作。README/DESIGN 只在有外部读者或设计取舍时写；根目录已有承担方案设计的交付文档（`架构设计.md`、`XX实施方案.md` 这类复合名，不是名字带“设计”就算）时，用它代替 DESIGN，不另立两份真源。
+1. 宿主给出打开目录（Claude `workDir` / OpenChamber checkout 等）→ 用它。
+2. 否则用会话启动时的 `pwd`。
+3. 打开的目录等于工作区根 / `$HOME` / 盘根 / 临时目录 → 不算项目：
+   - 报默认/配置的工作区根与来源，问是否修改；
+   - 确认后建 `<工作区根>/<项目名>/`，项目名默认取 cwd 名或 `task-YYYYMMDD-HHMM`；
+   - 未确认前不建目录、不写文件。
+4. 不按 git 根自动上溯；要子仓级文档，就在子仓打开会话。
+5. 不搬运活会话；建会话/打开目录按能力表，能自动则确认后做，否则给手动卡。
 
-- 入口：`接盘` 命令，或前一家的 `交接` prompt（prompt 自带读卡顺序）。不在任务目录铺 `AGENTS.md`；宿主不读文件时靠显式调用。
+## --resume
 
-## 接盘 / 接手
+1. 读 `handoff/PROMPT.md`；没有再读 `handoff/CONTEXT.md`；冲突以 CONTEXT 为准。
+2. 读跨任务规则；三档时读 `handoff/README.md` / `handoff/DESIGN.md`。
+3. 核状态锚点，跑验证命令；有参考 ID 且信息不足时按能力表读回。
+4. 旧根 `CONTEXT.md` 或根 `README/DESIGN` 带协议标记 → 提示 `--check` / `--fix`，不静默迁移。
 
-新会话进入任务目录时使用。
+## --suspend
 
-1. 读 `CONTEXT.md`（没有就按 `assets/CONTEXT.md.tpl` 建）；`模式：三档` 时读 README/DESIGN，DESIGN 可由根目录的方案设计交付文档承担；`PROJECT_RULES.md` 存在就读（`<工作区根>/PROJECT_RULES.md`）。
-2. 核对状态锚点，跑验证命令。
-3. 有「参考 ID」且信息不足时，先查 `AGENT_CAPABILITIES.md` 本行的读回手段，再现场探测（`read_chat_session`、`ReadSessionContext`、会话导出/日志等）；能读就读最近 N 轮，读不到就问用户。
-4. 缺字段/缺交接，按「自动化失效时」给手动卡；不要猜。
+1. 确保 `handoff/CONTEXT.md`；只在 >100 行或 >10 条记录时压卡；没超报“无需压卡”。
+2. 先压卡，再写本次「现在/下一步/坑/交接记录」；报告 before/after。
+3. 覆盖写 `handoff/PROMPT.md`：项目目录、读卡顺序、文档表、锚点、验证命令、下一步 1–3 条、勿动文件、已决策、旧 ID、规则指针；文件头注明自动生成。
+4. 有 ID：发短指针“请读 `<项目目录>/handoff/PROMPT.md` 接盘”；目标读不到文件时才附全文。
+5. 无 ID：写完就停，报告路径。
+6. 默认不操作 git；`--commit` 只提交 `handoff/` 下的文件；`--push` 隐含 commit；失败留本地并报告。
+7. memory：只读提升；不复制、不写回；项目内 memory 必须 gitignore。
+8. 不强制结束会话；可当 checkpoint 用。
 
-## 工程化 / 工程 / 建档
+## --doc
 
-用户明确要求时才执行；先只读自检，再按「自动 → 确认 → 手动」执行。
+1. 确保 `handoff/CONTEXT.md`；补 `handoff/README.md` + `handoff/DESIGN.md`；CONTEXT 写 `模式：三档`。
+2. 路径固定 `handoff/`，无 `docs/` 兜底；目标已存在且非本协议生成 → 停。
+3. 已有协议文件只更新文档表/日期/链接，不重写正文。
+4. 根 `README.md` / `DESIGN.md` 视为项目文档，不自动搬；旧任务根带协议标记的才迁。
+5. 不跑完整能力矩阵；只查写权限、git 状态、文档冲突。
+6. `--doc` 在项目 `.gitignore` 追加 `handoff/PROMPT.md`（git 仓、未忽略、用户同意）。
 
-1. **自检**：pwd/写权限、git 状态与远端、工作区创建/打开、会话/发送/等待/读回手段、宿主 memory 是否可读、CLI 是否可用；输出四行 ✅ 可自动 / 🟡 需确认 / 🔴 需手动 / ⛔ 不支持；不问用户“你能不能做 X”。先读 `<工作区根>/AGENT_CAPABILITIES.md`（有就读），按表复验关键项；结果变化就地更新；未知 agent 补一行。后续失败动作按「自动化失效时」处理。
-2. **建目录**：cwd 已在 `<工作区根>` 下则接管；否则建 `<工作区根>/<cwd 目录名>`，已存在不覆盖。
-3. **迁移**：先列「源 → 目标」清单；只处理 cwd 顶层非隐藏文件，排除 `.git`、`node_modules`、应用缓存；确认后复制、校验 hash、默认不删源。
-4. **写三档**：只写任务目录根，不往子目录铺（用户明确要求才例外）；用 `assets/*.tpl` 生成三份并删注释；三份都要有 H1 + 一句话 + `最近更新` + `## 文档` 表；CONTEXT 写 `模式：三档`。README 按 GitHub 落地页写；DESIGN 含目标/约束、拓扑 mermaid、核心流程 mermaid、4.1 包/目录文本树 + 关系图、决策表、语义/工程约束。根目录已有方案设计交付文档时，不另立 DESIGN：在该文档补缺的节，或只在 CONTEXT 文档表里指向它。
-5. **下一步**：先探测宿主能否创建/打开工作区；能就做，不能才让用户手动打开。之后 `交接` 准备交接信息，要发到某个会话就带 ID。
+## --check / --fix
 
-## 压卡 / 压缩上下文
+- `--check` 只读：安装版本、布局、config/workspace、能力表日期、memory gitignore、`.github/README.md` 链接与 drift、PROMPT 是否过期；不改文件。
+- `--fix`：先跑同一套检查，再修可自动修复项；冲突/不可逆项询问。
+- 可修：安装副本快进（分叉停）、根 CONTEXT/压卡备份迁入 `handoff/`、协议标记的 README/DESIGN 迁入 `handoff/`、`.github/README.md` 重新生成。
+- 默认不提交；由 `--suspend --commit` 一起提交。
+- 无 `handoff/` 且无旧文档 → 提示 `--doc`，不自动建。
 
-检查 CONTEXT 维护情况：行数、交接记录条数、过期项；都在限内就报「无需压卡」。超限时按下面精简，全程只搬不删，不逐条问用户。
+## --probe [--live]
 
-1. 读 CONTEXT，统计行数/字节/各节占比、交接记录条数；≤100 行且记录 ≤10 条、无过期项，直接回「无需压卡」并给数字，不改文件。
-2. 标出日志节（变更记录、追加区、已完成摘要、长验证明细等），清单写进回复。
-3. 有 git 靠提交回滚；非 git 不另建备份，把原 CONTEXT 原样附到 `压卡备份.md` 末尾。
-4. 日志原样搬进同目录 `压卡备份.md`，逐块核对逐字一致，不改写内容。
-5. 重写 CONTEXT：目标/当前状态/下一步/坑/验证/交接记录（≤10 条，超出搬进记录文件），补 `模式`，同步 `## 文档` 表；只改因本次搬移而失效的链接，其他过期链接先报告，不顺手改；确需改别的文件，先说明并确认。
-6. 校验：行数 ≤100、链接存在、验证命令可跑、搬运块逐字一致；有 git 提交推送（推不动就留本地并说明）；无 git 原件已在记录文件里。
-7. 最后报 before/after 行数和字节、搬移清单。
+- `--probe`：先检查，再做低成本实测（工作区根来源、会话列表、memory 路径、文件读写、git/CLI、config 解析）；更新能力表。
+- `--probe --live`：先检查，再实际建会话/发送/读回；需确认；可能留测试会话，报告并尝试删除。
+- 结果只记可用/不可用，不写会话 ID。
 
-## 交接 / 收工 [ID]
+## --help
 
-两种用法：不带 ID 只整理并写卡（跨 agent 先找可用投递手段，没有才把 prompt 给用户）；带 ID 整理后再发给该会话（同 agent 不同会话）。
+输出同安装目录的 `assets/HELP.txt`；找不到时输出本文件的用法表和边界。
 
-1. 整理：读 CONTEXT，字段齐全：模式、目标/完成定义、现在在哪、下一步、坑、锚点、验证命令、交接记录、参考 ID（`宿主:ID` 格式，如 `qoder:<uuid>`、`zcode:sess_*`，跨宿主不通用）；缺字段先按「接盘」补，补不了给手动卡。
-2. memory 提升：宿主有 memory 就扫 project memory，把会影响下一家的项写进 CONTEXT/DESIGN；没有就从 CONTEXT/DESIGN/git/旧 ID 里找。冲突以 CONTEXT/DESIGN 为准。
-3. 写卡：只挑关键动作（不知道这条下一家会做错/重做才写；能从 CONTEXT/README/DESIGN/git 得到的不写）；更新「现在在哪 / 下一步 / 坑与约束」；交接记录加 1 条，≤10 条，超出先沉降再删最旧；README/DESIGN 只在用法或设计变化时动。改过 SKILL/README/DESIGN 就跑一次审计（见 `<工作区根>/PROJECT_RULES.md`「改文档前自查」），确认没把单宿主特例写进通用文档。
-4. 锚点：有 git 提交推送（推不动就留本地并说明）；没有 git 用时间戳，不另建备份。
-5. 生成 prompt（≤40k）：工作目录 + 文档表 + 锚点 + 验证命令 + 下一步 1–3 条 + 勿动文件 + 已决策 + 旧 ID + 项目规则指针（`<工作区根>/PROJECT_RULES.md`；读不到就贴相关子集）；要求新会话按「接盘」开始，先回能力自检 + 锚点一致/不一致。
-6. 投递：先看 `AGENT_CAPABILITIES.md` 本行，没记录就现场探测并补一行；按本行选投递手段（如 Qoder 的 `send_message_to_chat_session(sessionId, prompt)`），有 ID 就投，成功只代表接收。本行不可自动投递或投递失败时，再探测等价手段（CLI 会话恢复/执行、MCP、可写队列文件等）；能自动送达就做并验证，做不到才把 prompt 或摘要给用户粘贴。不伪造发送或回执，失败按「自动化失效时」给手动卡。
-7. 确认：宿主有 `wait_chat_sessions` / `read_chat_session` 就核锚点与验证；没有就用新 agent 首条回复或下次接盘核对，不声称已确认。确认后更新「当前接盘」「交接记录」，旧会话停写。
+## GitHub
 
-## 自检 / 更新
+- `handoff/README.md` 是任务 README 源；根 README 不新建为任务 README。
+- 有 GitHub remote 就生成 `.github/README.md`；无 remote 不生成；已存在且非本协议生成 → 停。
+- 生成物文件头注明自动生成，链接用 `/handoff/...`；不碰根 README，不用 symlink。
 
-比对当前安装副本与源仓库（及 GitHub），落后就同步；只做快进，不覆盖分叉。
+## 边界
 
-1. 安装版本：读当前 skill 目录的 `.skill-version`（commit/date）；没有就视为未知，用 SKILL.md 与源 HEAD 比对。
-2. 源版本：默认源仓库 `<工作区根>/multi-agent-task-handoff`；`.skill-sync-paths` 只列安装目录，不是源仓库指针。读 `git -C <repo> rev-parse HEAD`。
-3. 核对远端：能联网就 `git ls-remote origin HEAD`；本地落后且工作树干净就 `git pull --ff-only`；有本地改动或分叉就停，给手动卡。
-4. 安装 commit ≠ 源 HEAD：优先 `bash <repo>/install.sh`（只装当前宿主），或 `bash <repo>/install.sh --sync-all`（按 `.skill-sync-paths` 一次对齐所有副本，幂等，只补落后的）；自动写 `.skill-version` 并校验文件清单；手动兜底 `git -C <repo> archive HEAD | tar -x -C <当前安装目录>`，按 hook 格式写 `.skill-version`，`diff -r` 校验；同机其它安装目录按 `.skill-sync-paths` 一起同步。
-5. 报告：安装 commit、源 commit、是否更新、没核对到的项（如离线）；不把“本地一致”说成“GitHub 最新”。
-
-## 维护（memory 与模式无关）
-
-- 开始按「接盘」；`模式：三档` 时再读 README/DESIGN。
-- README 仅在用法/产物变化时更新；DESIGN 仅在设计/架构变化时更新；三档同步 `## 文档` 表和日期。
-- 质量自检：新 agent 能否只读文档回答 目标/当前/下一步/坑/验证；答不上就补。
-- 单档只维护 CONTEXT；三档才额外维护 README/DESIGN；memory 提升两种模式都做。
-- 宿主 memory 是工作记忆，不是交接契约；不做每轮 diff。
-- 改本 skill 后提交即由 `.githooks/post-commit` 同步安装副本；没启用钩子就 `bash install.sh`。
+- 一个项目一个写者；交接后旧会话停写。
+- 冲突停，不覆盖、不换路径。
+- 文件迁移默认不做；用户明确要求才复制顶层非隐藏文件。
+- 会话不搬运；用新会话 + PROMPT 指针。
+- 不装常驻钩子、不写全局规则、不起后台服务、不调用模型。
+- 敏感信息不提交；PROMPT 默认 gitignore。
+- 宿主差异进能力表；SKILL 不写宿主分支。
 
 ## 自动化失效时
 
-任何可能失败的动作，先只读探测工具/权限/路径/网络/宿主支持，再分四类：
-
-- ✅ 能自动：直接做，做完验证。
-- 🟡 需确认：给清单/影响，等用户确认。
-- 🔴 只能手动：停下，给「手动操作卡」：已完成 / 卡点 / 具体步骤（可粘贴命令、链接、UI 路径；有时效写有效期）/ 验证方法 / 完成后回我。
-- ⛔ 不支持：明说，给替代方案，不伪造成功。
-
-可逆整理（搬移、拆分、重排、备份）可自动做并验证。内容取舍先按证据判：与现有 CONTEXT/DESIGN/git 重复、已被覆盖或明确过期的，自己处理并记依据；证据不足或不可逆时才让用户确认。默认只搬不删。
-
-用户完成后先复验再继续；不重复重试同一失败动作，不把“已接收”当完成。
-
-## 规则
-
-- 默认自己决策：本协议、CONTEXT/DESIGN、状态锚点、能力表能支撑的，直接做并把依据写进交接记录；只在规则冲突、事实缺失或动作不可逆时问人。
-- 优化顺序：先压开场读取量（卡与触发器），再提高自动化覆盖率；不为结构完整增加必读文件。
-- 分类与降级按「自动化失效时」；不猜工作区或会话的 ID。一个目录同一时间一个写者。
-- 不复制完整历史；细节按旧 ID 读。git 可选：有 git 用 HEAD，没有用时间戳。
-- 不装常驻/全局钩子、不写全局规则、不在任务目录铺副本、不起后台服务、不调用模型；仓库本地 `post-commit` 只做安装副本同步、工作区快照过期检查（过期时自动同步并提交）和自动 push（不 force），不在每轮运行。
-- 三档只建在任务目录根；没有用户明确要求，不在更深的子目录建 CONTEXT/DESIGN，避免多份真源和维护失控。子目录项目自带的 README 不算三档。
-- 组合命令用 `+` 或空格：按顺序执行，前一步失败即停；空格分隔时命令词切分，非命令词只作 `交接` 的 ID；不并行、不跨目录。
+先只读探测；分四类：✅ 能自动（做完验证）/ 🟡 需确认（给清单）/ 🔴 只能手动（手动卡：卡点、步骤、验证）/ ⛔ 不支持（给替代）。不伪造成功；用户完成后复验再继续。

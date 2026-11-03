@@ -1,2 +1,5 @@
 .skill-sync-paths
 .workbuddy-ai/
+.claude/
+handoff/PROMPT.md
+接手skill-*.md

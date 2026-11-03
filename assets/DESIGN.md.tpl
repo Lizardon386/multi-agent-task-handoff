@@ -1,6 +1,6 @@
-# <任务目录名>（<别名>）· 方案设计
+# <项目名>（<别名>）· 方案设计
 
-<!-- 没有别名就写 # <任务目录名> · 方案设计。不适用节可删。 -->
+<!-- 本文件是 handoff/DESIGN.md；指项目根文件用 ../。不适用节可删。 -->
 
 > <一句话：设计目标 / 范围>
 > 最近更新：YYYY-MM-DD
@@ -12,6 +12,7 @@
 | [README.md](README.md) | 使用者 | 这是什么、怎么跑、限制 |
 | [DESIGN.md](DESIGN.md) | 评审 / 开发 | 本文件 |
 | [CONTEXT.md](CONTEXT.md) | 接手 agent | 当前状态、下一步、坑、验证 |
+| [PROMPT.md](PROMPT.md) | 接手 agent | 交接指针，自动生成 |
 
 ## 1. 目标与约束
 
@@ -24,8 +25,6 @@ flowchart LR
 ```
 
 ## 3. 核心流程
-
-<!-- 有时序交互用 sequenceDiagram；没有就用 flowchart。 -->
 
 ```mermaid
 sequenceDiagram
