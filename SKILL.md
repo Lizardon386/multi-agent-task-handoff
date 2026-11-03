@@ -90,9 +90,9 @@ argument-hint: "[--help | --resume | --suspend [ID] [--commit] [--push] | --doc 
 
 ## --check / --fix
 
-- `--check` 只读：安装版本、布局、config/workspace、能力表日期、`sync-paths`、memory gitignore、`.github/README.md` 链接与 drift、PROMPT 是否过期；不改文件。
+- `--check` 只读：安装版本、布局、config/workspace、能力表日期、`sync-paths`、git 钩子（`core.hooksPath`）、memory gitignore、`.github/README.md` 链接与 drift、PROMPT 是否过期；不改文件。
 - `--fix`：先跑同一套检查，再修可自动修复项；冲突/不可逆项询问。
-- 可修：安装副本快进（分叉停）、根 CONTEXT/压卡备份迁入 `handoff/`、协议标记的 README/DESIGN 迁入 `handoff/`、`.github/README.md` 重新生成。
+- 可修：安装副本快进（分叉停）、根 CONTEXT/压卡备份迁入 `handoff/`、协议标记的 README/DESIGN 迁入 `handoff/`、`.github/README.md` 重新生成、`core.hooksPath` 不是 `.githooks` 时恢复（仅当 `.githooks/post-commit` 存在）。
 - 默认不提交；由 `--suspend --commit` 一起提交。
 - 无 `handoff/` 且无旧文档 → 提示 `--doc`，不自动建。
 

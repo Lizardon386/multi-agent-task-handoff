@@ -159,6 +159,7 @@ multi-agent-task-handoff/
 - `.github/README.md` 覆盖根 README 的首页展示是预期行为；要求项目 README 当首页的仓不适用。
 - 安装只装 HEAD；工作树未提交时只装上一个 commit。
 - 机器级状态只放 `$AGENT_CONFIG`，不放仓库；仓库里不留 `.skill-sync-paths`。
+- worktree 会话可能修改共享的 `core.hooksPath`；`--check` 校验，`--fix` 恢复，不静默接受。
 
 ## 9. 版本与设计演进
 

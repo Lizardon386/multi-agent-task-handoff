@@ -56,6 +56,7 @@
 - 有 GitHub remote 才生成 `.github/README.md`；它会覆盖根 README 的首页展示，属预期行为。
 - 包文件（`SKILL.md`、`install.sh`、`安装.bat`、`assets/`、`LICENSE`、`.githooks/`）必须留根。
 - `install.sh` 只装 HEAD：工作树未提交时，安装副本仍是上一个 commit。
+- worktree 会话可能把共享的 `core.hooksPath` 改成 `.git/hooks`，导致提交时钩子静默不跑；提交前 `--check` 看钩子，`--fix` 可恢复。
 - 安装注册表在 `$AGENT_CONFIG/sync-paths`（旧仓库内 `.skill-sync-paths` 已迁走并删除）；提交后补跑 `bash install.sh --sync-all`。
 - 能力表只在 `$AGENT_CONFIG/AGENT_CAPABILITIES.md`；工作区根副本已删，不再双份。
 

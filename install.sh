@@ -280,6 +280,13 @@ if [ "$print_paths" = 1 ]; then
   fi
   printf 'workspace: %s（来源: %s）\n' "$workspace" "$workspace_src"
   printf 'capabilities: %s\n' "$caps"
+  hooks_path=$(git -C "$repo" config --local --get core.hooksPath 2>/dev/null || true)
+  case "$hooks_path" in
+    .githooks) hooks_status='已启用' ;;
+    '') hooks_status='未设置，钩子不会跑' ;;
+    *) hooks_status="未指向 .githooks，提交时钩子不会跑" ;;
+  esac
+  printf 'hooksPath: %s（%s）\n' "${hooks_path:-未设置}" "$hooks_status"
   if [ -n "$target_arg" ]; then
     t=$(to_unix "$target_arg")
   elif [ -n "$host_arg" ]; then
