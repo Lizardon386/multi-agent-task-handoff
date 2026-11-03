@@ -13,7 +13,7 @@
 
 ## 改文档前自查
 
-- 宿主差异（memory 位置、会话 ID 格式、投递/读回手段、安装目录）只记 `AGENT_CAPABILITIES.md`。
+- 宿主差异（memory 位置、会话 ID 格式、投递/读回手段、安装目录）只记 `$AGENT_CONFIG/AGENT_CAPABILITIES.md`。
 - 改通用文档前问：**这条换个宿主还成立吗？** 不成立就写进能力表。
 - 不改协议适配本机环境；缺能力就在能力表标 🟡/⛔，不改 `SKILL.md` 流程去绕。
 
@@ -27,8 +27,9 @@
 ## 工作区与产物
 
 - 产物落在 `<工作区根>/<项目名>/`；纯问答可留临时目录；不搬 agent 应用内部缓存。
-- 换机/交接：复制本文件与能力表；设置 `AGENT_WORKSPACE`；按能力表低成本项先复验。
+- 换机/交接：复制本文件；设置 `AGENT_WORKSPACE`；能力表本机另存 `$AGENT_CONFIG/AGENT_CAPABILITIES.md`，按其低成本项先复验。
 - 工作区根只存放项目目录，不直接写 `handoff/`。
+- 机器级状态（`config.toml`、`AGENT_CAPABILITIES.md`、`sync-paths`）只在 `$AGENT_CONFIG`，不进工作区根或仓库。
 
 ## 维护
 

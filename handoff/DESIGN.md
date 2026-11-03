@@ -44,7 +44,7 @@ flowchart LR
   D --> R[README/DESIGN 文档]
   D --> M[PROMPT.md 指针]
   W[工作区根 AGENT_WORKSPACE] -. 只在无项目时.-> P
-  G[$AGENT_CONFIG] --> K[能力差异表 / 跨任务规则]
+  G[$AGENT_CONFIG] --> K[能力差异表 / config.toml / sync-paths / 可选 PROJECT_RULES]
 ```
 
 ## 4. 核心流程
@@ -68,7 +68,7 @@ flowchart LR
 multi-agent-task-handoff/
 ├─ SKILL.md                 # 协议正文（包文件，必须在根）
 ├─ install.sh               # 安装：宿主识别、config、--print-paths、--sync-all
-├─ 安装.bat                  # Windows 入口
+├─ 安装.bat                  # Windows 双击入口，调用 install.sh
 ├─ LICENSE
 ├─ assets/                  # HELP / 模板 / 示例
 ├─ .github/README.md        # 由 handoff/README.md 生成
@@ -83,6 +83,23 @@ multi-agent-task-handoff/
 ```
 
 包文件（`SKILL.md`、`install.sh`、`安装.bat`、`assets/`、`LICENSE`、`.githooks/`）必须在根；任务文档进 `handoff/`。
+
+#### 5.1.1 机器级状态统一放 `$AGENT_CONFIG`
+
+按作用域归属，不按文件类型：
+
+| 文件 | 归属 | 位置 |
+|---|---|---|
+| `config.toml` | 用户/机器偏好 | `$AGENT_CONFIG/` |
+| `AGENT_CAPABILITIES.md` | 各宿主能力实测缓存 | `$AGENT_CONFIG/` |
+| `sync-paths` | 本机安装目录注册表 | `$AGENT_CONFIG/` |
+| `PROJECT_RULES.md` / `AGENTS.md` | 工作区跨任务规则与入口指针 | 工作区根 |
+| `handoff/*` | 任务状态 | 项目目录 |
+
+- `$AGENT_CONFIG`：Linux/macOS `${XDG_CONFIG_HOME:-$HOME/.config}/multi-agent-task-handoff`；Windows `%APPDATA%\multi-agent-task-handoff`；可用 `AGENT_CONFIG` 覆盖。
+- `sync-paths` 是“一行一个安装目录”的纯文本，由 `install.sh` 追加；`--sync-all` 与 `post-commit` 都读它。
+- 旧位置 `<repo>/.skill-sync-paths` 由 `install.sh` / `post-commit` 一次性迁到新位置后删除。
+- 三者不合并成一个文件：偏好（低频编辑）、能力缓存（Markdown 表）、注册表（高频追加）的读写方式不同，合并会让 bash 解析变脆。
 
 ### 5.2 关键接缝
 
@@ -126,6 +143,9 @@ multi-agent-task-handoff/
 | 一个写者 | 同一项目同一时间一个会话写；交接后旧会话停写 |
 | 跨任务规则 | 项目目录 → 父目录 → `$AGENT_CONFIG/PROJECT_RULES.md` |
 | 能力表 | `$AGENT_CONFIG/AGENT_CAPABILITIES.md`；差异表驱动，协议不写宿主分支 |
+| 机器级状态 | `config.toml`、`AGENT_CAPABILITIES.md`、`sync-paths` 统一放 `$AGENT_CONFIG`；工作区根只放规则与入口 |
+| 迁移范围 | 只迁符合模版的同名任务文档（`CONTEXT` / `README` / `DESIGN` / `压卡备份`）；客制化名文档（`实施方案`、`架构设计` 等）留根，由 `CONTEXT` 的文档表用 `../` 引用 |
+| 迁移判定 | root `CONTEXT.md` 存在且 `模式：三档`，或文档带模版特征；产品 README/DESIGN 不动 |
 | 完成定义 | 文档与安装副本一致；`--help` 与命令表一致；`--check` 无 ⛔；卡 ≤100 行 |
 
 ## 8. 工程约束
@@ -133,10 +153,12 @@ multi-agent-task-handoff/
 - 一次只用一个命令；不提供 `+` / 空格叠加。
 - `SKILL.md` 单文件，硬上限 150 行、目标 120；超出才拆 `references/`。
 - 协议护栏（冲突停、不搬会话、单写者、memory 只读）必须留在 `SKILL.md`，不能只放 `PROJECT_RULES.md` 或 README。
-- 宿主差异只进 `AGENT_CAPABILITIES.md`；`SKILL.md` 不写宿主分支。
+- 宿主差异只进 `$AGENT_CONFIG/AGENT_CAPABILITIES.md`；`SKILL.md` 不写宿主分支。
 - 旧仓迁移是逐项目人工动作，不默认扫描全盘；先 `--check` 出清单，再 `--fix`。
+- 迁移只动同名标准件；客制化交付文档（大方案、架构稿）不搬，避免移动工程产物和大范围改链。
 - `.github/README.md` 覆盖根 README 的首页展示是预期行为；要求项目 README 当首页的仓不适用。
 - 安装只装 HEAD；工作树未提交时只装上一个 commit。
+- 机器级状态只放 `$AGENT_CONFIG`，不放仓库；仓库里不留 `.skill-sync-paths`。
 
 ## 9. 版本与设计演进
 

@@ -34,11 +34,11 @@ usage() {
   --dry-run        只打印将要做什么，不写文件
   --host NAME      qoder | claude | codex | opencode | zcode | workbuddy（识别不出时显式指定）
   --target DIR     直接指定安装目录（与 --host 二选一）
-  --sync-all       按 .skill-sync-paths 逐份对齐到当前 HEAD，只补落后的；幂等，可重复跑
+  --sync-all       按 $AGENT_CONFIG/sync-paths 逐份对齐到当前 HEAD，只补落后的；幂等，可重复跑
   --print-paths    打印 config / workspace / capabilities / 安装目录及其来源，不写文件
   --force          覆盖没有 .skill-version 的非空目录
   --no-hook        不改仓库本地 core.hooksPath
-  --no-register    不把目标写进 .skill-sync-paths
+  --no-register    不把目标写进 $AGENT_CONFIG/sync-paths
   -h, --help       显示本表
 
 退出码: 0 成功 / 1 用法或环境错误 / 2 识别不出宿主
@@ -121,10 +121,18 @@ resolve_workspace() {
 name=$(sed -n 's/^name:[[:space:]]*//p' "$repo/SKILL.md" | head -1 | tr -d '\r')
 [ "$name" = "$skill_id" ] || die "SKILL.md 的 name 应为 $skill_id（实际: ${name:-空}）"
 
-# --sync-all：按 .skill-sync-paths 逐份对齐到当前 HEAD。
+# 安装注册表统一放 $AGENT_CONFIG/sync-paths；旧位置 $repo/.skill-sync-paths 一次性迁移。
+config_dir=$(agent_config_dir)
+paths_file=$config_dir/sync-paths
+if [ ! -f "$paths_file" ] && [ -f "$repo/.skill-sync-paths" ]; then
+  mkdir -p "$config_dir" 2>/dev/null || true
+  cp "$repo/.skill-sync-paths" "$paths_file" 2>/dev/null && rm -f "$repo/.skill-sync-paths" \
+    && echo "迁移: .skill-sync-paths -> $paths_file"
+fi
+
+# --sync-all：按 $AGENT_CONFIG/sync-paths 逐份对齐到当前 HEAD。
 # 只补落后的，已最新直接跳过，所以可以随便重复跑 —— 被打断也没关系，下次再跑一次就补齐。
 if [ "$sync_all" = 1 ]; then
-  paths_file=$repo/.skill-sync-paths
   [ -f "$paths_file" ] || die "找不到 $paths_file（先跑一次 install.sh 生成）"
   # 一次 git 调用同时拿到 commit；失败才退回 unknown（少一次进程 ≈ 0.7 秒）
   head_commit=$(git -C "$repo" rev-parse HEAD 2>/dev/null) || head_commit=unknown
@@ -379,10 +387,10 @@ reg=$(to_reg "$target")
 if [ "$register" = 1 ]; then
   if [ "$is_git" = 0 ]; then
     echo "登记: 跳过（非 git 源）"
-  elif [ -f "$repo/.skill-sync-paths" ] && grep -Fqx "$reg" "$repo/.skill-sync-paths"; then
-    echo "登记: 已在 .skill-sync-paths"
+  elif [ -f "$paths_file" ] && grep -Fqx "$reg" "$paths_file"; then
+    echo "登记: 已在 sync-paths"
   else
-    echo "登记: 会追加到 .skill-sync-paths -> $reg"
+    echo "登记: 会追加到 sync-paths -> $reg"
   fi
 else
   echo "登记: 跳过（--no-register）"
@@ -405,7 +413,6 @@ else
   echo "钩子: 跳过（--no-hook）"
 fi
 
-config_dir=$(agent_config_dir)
 cfg_file=$config_dir/config.toml
 if [ -f "$cfg_file" ]; then
   echo "配置: 已存在 $cfg_file（不覆盖）"
@@ -461,16 +468,16 @@ if [ ! -f "$cfg_file" ]; then
 fi
 
 if [ "$register" = 1 ] && [ "$is_git" = 1 ]; then
-  reg_file=$repo/.skill-sync-paths
-  [ -f "$reg_file" ] || : > "$reg_file"
-  if grep -Fqx "$reg" "$reg_file"; then
-    echo "已在 .skill-sync-paths: $reg"
+  mkdir -p "$config_dir" 2>/dev/null || true
+  [ -f "$paths_file" ] || : > "$paths_file"
+  if grep -Fqx "$reg" "$paths_file"; then
+    echo "已在 sync-paths: $reg"
   else
-    if [ -s "$reg_file" ] && [ "$(tail -c1 "$reg_file" | wc -l)" -eq 0 ]; then
-      printf '\n' >> "$reg_file"
+    if [ -s "$paths_file" ] && [ "$(tail -c1 "$paths_file" | wc -l)" -eq 0 ]; then
+      printf '\n' >> "$paths_file"
     fi
-    printf '%s\n' "$reg" >> "$reg_file" || die "写 .skill-sync-paths 失败"
-    echo "已登记到 .skill-sync-paths: $reg"
+    printf '%s\n' "$reg" >> "$paths_file" || die "写 sync-paths 失败"
+    echo "已登记到 sync-paths: $reg"
   fi
 fi
 

@@ -52,6 +52,8 @@ bash install.sh --dry-run     # 看会装到哪
 bash install.sh               # 只装当前宿主
 ```
 
+Windows 也可以直接双击根目录的 `安装.bat`：它自动找 git/bash 并调用 `install.sh`，识别不出宿主时会提示你选择。
+
 然后在你的项目目录里对新会话说：
 
 ```text
@@ -59,6 +61,14 @@ bash install.sh               # 只装当前宿主
 ```
 
 第一次会创建 `handoff/CONTEXT.md`；收工时说「收工」，会写卡并生成交接指针。
+
+触发方式按宿主选一种：
+
+- 支持斜杠命令：`/multi-agent-task-handoff <参数>`
+- 支持 skill 工具：直接说「接手 / 收工 / 修复」，或从 skill 列表里选
+- 都不支持：把 `SKILL.md` 的路径交给 agent，让它按文件协议执行
+
+参数可省略（默认 `--resume`）；完整列表见 `--help`。
 
 ## 3. 使用说明
 
@@ -90,6 +100,8 @@ bash install.sh               # 只装当前宿主
 | 交接指针 | `handoff/PROMPT.md` | 发送给新会话的短消息源 |
 | 历史归档 | `handoff/压卡备份.md` | 卡超限时把日志搬出 |
 | 能力缓存 | `$AGENT_CONFIG/AGENT_CAPABILITIES.md` | 宿主差异与实测结论 |
+| 机器配置 | `$AGENT_CONFIG/config.toml` | 工作区根等偏好 |
+| 安装注册表 | `$AGENT_CONFIG/sync-paths` | 本机已安装的宿主副本，提交后自动同步 |
 
 项目自己的 `README.md`、`docs/`、源码都不动；任务文档只在 `handoff/`。
 

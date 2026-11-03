@@ -12,6 +12,7 @@
 
 - `AGENT_CONFIG`：`${XDG_CONFIG_HOME:-$HOME/.config}/multi-agent-task-handoff`（Windows `%APPDATA%\multi-agent-task-handoff`）
 - 工作区根：`$AGENT_WORKSPACE`（存放项目目录的父容器，不是写入目标）
+- 安装注册表：`$AGENT_CONFIG/sync-paths`（一行一个安装目录；`install.sh` / `post-commit` 读它）
 - OS / Shell：
 - 登录：
 - 安装副本：

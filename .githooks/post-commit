@@ -1,9 +1,21 @@
 #!/bin/sh
-# 提交后：1) 把当前 HEAD 同步到 .skill-sync-paths 里的安装目录；
+# 提交后：1) 把当前 HEAD 同步到 $AGENT_CONFIG/sync-paths 里的安装目录；
 # 2) 自动 push（不 force），失败重试一次并提示。
 # 只在 commit 时跑，不常驻；push 失败不阻塞原提交。
 
 repo=$(git rev-parse --show-toplevel) || exit 0
+
+# 注册表统一放 $AGENT_CONFIG/sync-paths；旧位置 $repo/.skill-sync-paths 一次性迁移。
+if [ -n "${AGENT_CONFIG:-}" ]; then cfg_dir=$AGENT_CONFIG
+elif [ -n "${APPDATA:-}" ]; then cfg_dir=$(printf '%s' "$APPDATA/multi-agent-task-handoff" | sed 's|\\|/|g')
+elif [ -n "${XDG_CONFIG_HOME:-}" ]; then cfg_dir=$XDG_CONFIG_HOME/multi-agent-task-handoff
+else cfg_dir=$HOME/.config/multi-agent-task-handoff
+fi
+sync_paths=$cfg_dir/sync-paths
+if [ ! -f "$sync_paths" ] && [ -f "$repo/.skill-sync-paths" ]; then
+  mkdir -p "$cfg_dir" 2>/dev/null || true
+  cp "$repo/.skill-sync-paths" "$sync_paths" 2>/dev/null && rm -f "$repo/.skill-sync-paths"
+fi
 
 if [ -f "$repo/install.sh" ] && command -v sh >/dev/null 2>&1; then
   # --sync-all 幂等：只补落后的副本，已最新的直接跳过。
@@ -12,7 +24,7 @@ if [ -f "$repo/install.sh" ] && command -v sh >/dev/null 2>&1; then
   env -u GIT_DIR -u GIT_WORK_TREE -u GIT_INDEX_FILE \
     sh "$repo/install.sh" --sync-all </dev/null \
     || printf '%s\n' "副本同步未全部成功；手动补齐: sh \"$repo/install.sh\" --sync-all" >&2
-elif [ -f "$repo/.skill-sync-paths" ]; then
+elif [ -f "$sync_paths" ]; then
   # 兜底：没有 install.sh 时按清单逐份解包（用 fd 3 读，避免循环体吃掉清单剩余行）
   head_commit=$(git -C "$repo" rev-parse HEAD)
   while IFS= read -r line <&3; do
@@ -24,7 +36,7 @@ elif [ -f "$repo/.skill-sync-paths" ]; then
     date=$(git -C "$repo" log -1 --format=%cI)
     printf 'commit=%s\ndate=%s\nsource=%s\n' "$head_commit" "$date" "$repo" > "$path/.skill-version"
     echo "skill synced -> $path ($head_commit)"
-  done 3< "$repo/.skill-sync-paths"
+  done 3< "$sync_paths"
 fi
 
 # amend / merge / rebase 期间不自动加提交，也不自动 push

@@ -48,6 +48,7 @@
 
 - 项目目录是唯一写入根；工作区根只用来新建项目目录，永远不直接写 `handoff/`。
 - 任务文档只在 `<项目目录>/handoff/`；项目自己的 README/DESIGN/docs 不自动搬。
+- 旧布局迁移只动同名标准件（CONTEXT/README/DESIGN/压卡备份）；客制化名文档（实施方案/架构设计）留根，由文档表 `../` 引用。
 - 一个项目同一时间一个写者；交接后旧会话停写。
 - `PROMPT.md` 默认 gitignore；含会话 ID/本机路径，不提交。
 - 默认不操作 git；`--commit` 只提交 `handoff/`，`--push` 隐含 commit；失败留本地。
@@ -55,20 +56,21 @@
 - 有 GitHub remote 才生成 `.github/README.md`；它会覆盖根 README 的首页展示，属预期行为。
 - 包文件（`SKILL.md`、`install.sh`、`安装.bat`、`assets/`、`LICENSE`、`.githooks/`）必须留根。
 - `install.sh` 只装 HEAD：工作树未提交时，安装副本仍是上一个 commit。
-- `.skill-sync-paths` 是本地文件；提交后补跑 `bash install.sh --sync-all`。
+- 安装注册表在 `$AGENT_CONFIG/sync-paths`（旧仓库内 `.skill-sync-paths` 已迁走并删除）；提交后补跑 `bash install.sh --sync-all`。
+- 能力表只在 `$AGENT_CONFIG/AGENT_CAPABILITIES.md`；工作区根副本已删，不再双份。
 
 ## 交接记录（只记关键动作，≤10 条）
 
+- 2026-11-03 Claude：机器级状态收口——`sync-paths` 迁到 `$AGENT_CONFIG`，仓库内不再留；工作区根能力表副本删除，只留 `$AGENT_CONFIG` 一份；DESIGN 补 5.1.1 与迁移范围。
 - 2026-11-03 Claude：V3 文档重整——README 按落地页模板重写；DESIGN 删除进度/待办、已废弃方案移入版本节；CONTEXT 承接待办。
 - 2026-11-03 Claude：V3 落地——术语统一、文档迁入 `handoff/`、7 个命令、`config.toml`、能力差异表；删除作者快照与同步脚本；`SKILL.md` 118 行。
 - 2026-10-30 WorkBuddy：收尾写实——三条坑（自动 push、副本同步、验证方法）改成实测表述；验证钩子勿用管道。
-- 2026-10-29 OpenCode：补「现在在哪 / 参考 ID」字段；压卡检查 71 行 / 10 条，无需压卡。
-- 2026-10-29 OpenCode：SKILL description 用自然句含触发词；README 补 `@` 显式调用。
-- 2026-10-29 ZCode：`install.sh` 加 ZCode 宿主；`.skill-sync-paths` 加 ZCode 行；本机副本增至三份。
-- 2026-10-29 ZCode：交接投递按能力表本行选手段；参考 ID 定为 `宿主:ID` 格式。
-- 2026-10-29 Qoder：公开发布——MIT、`AGENT_WORKSPACE`、脱敏重写历史。
 - 2026-10-30 WorkBuddy：加 workbuddy 宿主；能力表补 WorkBuddy 行；`.workbuddy-ai/` 进 gitignore。
 - 2026-10-30 WorkBuddy：能力表拆两张；PROJECT_RULES 定「宿主差异只进能力表」。
+- 2026-10-29 ZCode：`install.sh` 加 ZCode 宿主；本机副本增至三份。
+- 2026-10-29 ZCode：交接投递按能力表本行选手段；参考 ID 定为 `宿主:ID` 格式。
+- 2026-10-29 OpenCode：SKILL description 用自然句含触发词；README 补显式调用说明。
+- 2026-10-29 Qoder：公开发布——MIT、`AGENT_WORKSPACE`、脱敏重写历史。
 
 ## 参考 ID
 
