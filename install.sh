@@ -447,17 +447,17 @@ fi
 
 printf 'commit=%s\ndate=%s\nsource=%s\n' "$full_commit" "$commit_date" "$repo_real" > "$target/.skill-version" || die "写 .skill-version 失败"
 
-if mkdir -p "$config_dir" 2>/dev/null; then
-  if [ -f "$cfg_file" ]; then
-    echo "配置: 已存在 $cfg_file（不覆盖）"
-  elif [ -f "$repo/assets/config.toml.tpl" ]; then
-    cp "$repo/assets/config.toml.tpl" "$cfg_file" || echo "警告: 写配置失败 $cfg_file" >&2
-    echo "配置: 已创建 $cfg_file"
+if [ ! -f "$cfg_file" ]; then
+  if mkdir -p "$config_dir" 2>/dev/null; then
+    if [ -f "$repo/assets/config.toml.tpl" ]; then
+      cp "$repo/assets/config.toml.tpl" "$cfg_file" || echo "警告: 写配置失败 $cfg_file" >&2
+      echo "配置: 已创建 $cfg_file"
+    else
+      echo "警告: 缺少 assets/config.toml.tpl" >&2
+    fi
   else
-    echo "警告: 缺少 assets/config.toml.tpl" >&2
+    echo "警告: 无法创建配置目录 $config_dir" >&2
   fi
-else
-  echo "警告: 无法创建配置目录 $config_dir" >&2
 fi
 
 if [ "$register" = 1 ] && [ "$is_git" = 1 ]; then
