@@ -36,7 +36,7 @@
   - 机器级状态收口：`sync-paths` 从仓库根迁到 `$AGENT_CONFIG`，旧位置一次性迁移。
   - `.github/README.md` 由 `handoff/README.md` 生成；`.claude/` 测试 worktree 已清理。
   - 已提交并推送：`6bfcc60`（V3 协议）、`d4d07d7`（安装输出）、`580dfc3`（状态收口）、`b715de5`（钩子自检）、`6fcd086`（memory 表）、`e694263`（v3 评审表）、`e922909`（v2 卸载行）；远端 = 本地。
-  - 安装副本 4 份（Qoder / OpenCode / ZCode / Claude）在 `e922909`；WorkBuddy 的 `~/.workbuddy-ai` 目录已不存在，sync 跳过。
+  - 安装副本 4 份（Qoder / OpenCode / ZCode / Claude）由 post-commit 同步到当前 HEAD；WorkBuddy 的 `~/.workbuddy-ai` 目录已不存在，sync 跳过。
 - 进行中：无代码改动。
 - 在飞文件（勿动）：无。
 
@@ -66,7 +66,7 @@
 
 ## 交接记录（只记关键动作，≤10 条）
 
-- 2026-11-03 Claude：能力表拆「memory 读取」表；DESIGN 版本表补 v2 卸载、v3 评审排在 v3 前；4 份副本同步到 `e922909`。
+- 2026-11-03 Claude：能力表拆「memory 读取」表；DESIGN 版本表补 v2 卸载、v3 评审排在 v3 前；4 份副本随提交同步。
 - 2026-11-03 Claude：钩子防护——`--print-paths` 打印 hooksPath，`--check` 校验、`--fix` 恢复；定位 worktree 会话改共享 hooksPath 的坑。
 - 2026-11-03 Claude：机器级状态收口——`sync-paths` 迁到 `$AGENT_CONFIG`，仓库内不再留；工作区根能力表副本删除，只留 `$AGENT_CONFIG` 一份；DESIGN 补 5.1.1 与迁移范围。
 - 2026-11-03 Claude：V3 文档重整——README 按落地页模板重写；DESIGN 删除进度/待办、已废弃方案移入版本节；CONTEXT 承接待办。
