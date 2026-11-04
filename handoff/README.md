@@ -48,29 +48,29 @@ flowchart LR
 - 能跑 shell 的环境（Windows Git Bash、Linux、macOS 均可）；
 - git 可选：有 git 用 commit 作锚点，没有就用时间戳。
 
-### 2.2 人怎么装
+### 2.2 手动安装
 
 ```bash
 git clone https://github.com/Lizardon386/multi-agent-task-handoff.git
 cd multi-agent-task-handoff
-bash install.sh --dry-run     # 看会装到哪
+bash install.sh --dry-run     # 确认安装目标
 bash install.sh               # 只装当前宿主
 ```
 
 Windows 可直接双击根目录的 `安装.bat`：它自动找 git/bash 并调用 `install.sh`，识别不出宿主时会提示选择。
 
-装到多个宿主时，每份用 `--host` 装一次；提交后 `install.sh --syncall` 会把各副本对齐到当前 HEAD，幂等，可随时手动重跑。
+需要安装到多个宿主时，对每个宿主各执行一次 `--host` 安装；提交后 `install.sh --syncall` 会把各副本对齐到当前 HEAD，幂等，可随时手动重跑。
 
-### 2.3 AI 怎么装
+### 2.3 由 agent 安装
 
-把仓库地址交给 agent 即可：
+把仓库地址交给 agent，由它执行安装：
 
 ```text
 克隆 https://github.com/Lizardon386/multi-agent-task-handoff，
 先跑 install.sh --dry-run 确认安装目标，再跑 install.sh 只装当前宿主；识别不出宿主就用 --host 指定。
 ```
 
-agent 会装到当前宿主的 `skills/multi-agent-task-handoff`，把目标登记到 `$AGENT_CONFIG/sync-paths`；首次安装还会播种 `config.toml` 和能力表模板。
+agent 会把 skill 安装到当前宿主的 `skills/multi-agent-task-handoff`，把目标登记到 `$AGENT_CONFIG/sync-paths`；首次安装还会创建 `config.toml` 和能力表模板。
 
 ## 3. 使用说明
 
@@ -135,8 +135,8 @@ agent 会装到当前宿主的 `skills/multi-agent-task-handoff`，把目标登�
 
 新机器步骤：
 
-1. `git clone` 本仓库并跑 `install.sh`：会播种模板 `config.toml` 和能力表。
-2. 用旧机器的能力表覆盖模板——`install.sh` 只在文件不存在时播种，不会覆盖已有内容。
+1. `git clone` 本仓库并执行 `install.sh`：会创建模板 `config.toml` 和能力表。
+2. 用旧机器的能力表覆盖模板——`install.sh` 只在文件不存在时创建，不会覆盖已有内容。
 3. 复制 `AGENTS.md` / `PROJECT_RULES.md` 到新工作区根，改 `config.toml` 的 workspace。
 4. 重填能力表「本机环境」块；跑 `--printpath`、`--check`、`--probe` 复验。
 
