@@ -1,6 +1,7 @@
 # <项目名>（<别名>）· 使用说明
 
 <!-- 本文件是 handoff/README.md，任务 README 的唯一源；根 README 是项目 README，不是本文件。 -->
+<!-- 只答“是什么 / 怎么用”；协议见 SKILL.md，取舍见 DESIGN.md，当前状态见 CONTEXT.md。 -->
 
 > 有 GitHub remote 时，`.github/README.md` 由本文件生成；不要手改生成物。
 > 指项目根文件用 `../`，例如 `../INTEGRATION_GUIDE.md`。
@@ -25,6 +26,8 @@
 ### 2.1 前置
 
 ### 2.2 最小步骤
+
+<!-- 产品写“安装”，任务写“怎么开始”；能被 agent 执行时，给一段可直接转交的指令。 -->
 
 ## 3. 使用说明
 
