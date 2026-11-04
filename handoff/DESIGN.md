@@ -1,17 +1,8 @@
 # multi-agent-task-handoff（任务交接）· 方案设计
 
 > 面向改这套协议的人：为什么任务文档固定在 `handoff/`、项目与工作区根怎么分、命令如何收敛、宿主差异如何驱动自动化。
-> 使用者说明见 [README.md](README.md)，当前进度见 [CONTEXT.md](CONTEXT.md)，协议正文见 [SKILL.md](../SKILL.md)。
+> 文档表见 [CONTEXT.md](CONTEXT.md)；使用者说明见 [README.md](README.md)，协议正文见 [SKILL.md](../SKILL.md)。
 > 最近更新：2026-11-03
-
-## 文档
-
-| 文档 | 阅读对象 | 内容 |
-|---|---|---|
-| [README.md](README.md) | 使用者 | 这是什么、怎么跑、限制 |
-| [DESIGN.md](DESIGN.md) | 评审 / 开发 | 本文件 |
-| [CONTEXT.md](CONTEXT.md) | 接手 agent | 当前状态、下一步、坑、验证 |
-| `PROMPT.md` | 接手 agent | 交接指针，自动生成，默认 gitignore（不链接） |
 
 ## 1. 目标与约束
 
@@ -49,14 +40,7 @@ flowchart LR
 
 ## 4. 核心流程
 
-| 命令 | 流程 | 产物 |
-|---|---|---|
-| `--resume` | PROMPT → CONTEXT →（三档）README/DESIGN → 核锚点/验证 | 无写入 |
-| `--suspend` | 按需压卡 → 写 CONTEXT → 覆盖 PROMPT →（有 ID）发指针 | CONTEXT/PROMPT |
-| `--doc` | CONTEXT → README/DESIGN → 文档表/日期 →（git）gitignore PROMPT | handoff/ 三档 |
-| `--check` | 安装 / 布局 / config / 能力表 / memory / 快照 / PROMPT | 无写入 |
-| `--fix` | 检查 → 修可自动项 → 冲突停 → 报告 | 修复项 |
-| `--probe` | 检查 → 低成本实测 → 更新能力表；`--live` 实际建会话/发送/读回 | 能力表 |
+命令流程见 [SKILL.md](../SKILL.md)：`--resume` 读卡核锚点，`--suspend` 压卡/写卡/写指针，`--doc` 补三档，`--check`/`--fix` 检查修复，`--probe` 实测能力。
 
 一次只用一个命令；`--workspace` / `--nosave` 是全局选项。
 

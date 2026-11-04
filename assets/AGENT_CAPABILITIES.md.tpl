@@ -11,7 +11,7 @@
 ## 本机环境（换机重填，不计入能力结论）
 
 - `AGENT_CONFIG`：`${XDG_CONFIG_HOME:-$HOME/.config}/multi-agent-task-handoff`（Windows `%APPDATA%\multi-agent-task-handoff`）
-- 工作区根：`$AGENT_WORKSPACE`（存放项目目录的父容器，不是写入目标）
+- 工作区根：见 `$AGENT_CONFIG/config.toml` 的 `[paths].workspace`；未设置时 `$HOME/agent_workspace`（存放项目目录的父容器，不是写入目标）
 - 安装注册表：`$AGENT_CONFIG/sync-paths`（一行一个安装目录；`install.sh` / `post-commit` 读它，安装副本以它为准）
 - OS / Shell：
 - 登录：

@@ -34,5 +34,5 @@
 ## 维护
 
 - 规则变了才改本文件并更新日期；测了新 agent/宿主/版本只改能力表对应行。
-- 读序：项目 `handoff/PROMPT.md` → `handoff/CONTEXT.md` → 三档时 README/DESIGN → 本文件 → 能力表（需要投递/读回时）。
+- 读序：见 `AGENTS.md`（入口指针）。
 - 能力表一行一个 agent+host+版本，带「验证方法 / 复验成本」；迁移时整表带走。

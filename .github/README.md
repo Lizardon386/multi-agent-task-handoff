@@ -1,4 +1,4 @@
-> **自动生成，源文件在 handoff/README.md；不要手改。** 最近同步：2026-11-03
+> **自动生成，源文件在 handoff/README.md；不要手改。** 最近同步：2026-11-04
 
 # multi-agent-task-handoff（任务交接）· 使用说明
 
@@ -13,10 +13,9 @@
 |---|---|---|
 | [README.md](/handoff/README.md) | 使用者 | 这是什么、怎么跑、限制 |
 | [DESIGN.md](/handoff/DESIGN.md) | 评审 / 开发 | 目标、架构、流程、决策 |
-| [CONTEXT.md](/handoff/CONTEXT.md) | 接手 agent | 当前状态、下一步、坑、验证 |
-| `PROMPT.md` | 接手 agent | 交接指针，自动生成，默认 gitignore（不链接，未生成时不存在） |
-| [SKILL.md](/SKILL.md) | agent | 协议正文 |
-| [HELP.txt](/assets/HELP.txt) | 使用者 | 完整 `--help` |
+| [CONTEXT.md](/handoff/CONTEXT.md) | 接手 agent | 完整文档表、当前状态、下一步、坑 |
+
+完整文档表（含 PROMPT、SKILL、HELP、压卡备份）见 [CONTEXT.md](/handoff/CONTEXT.md)。
 
 ## 1. 这是什么
 

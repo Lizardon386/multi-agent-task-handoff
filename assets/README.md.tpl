@@ -12,10 +12,11 @@
 |---|---|---|
 | [README.md](README.md) | 使用者 | 这是什么、怎么跑、限制 |
 | [DESIGN.md](DESIGN.md) | 评审 / 开发 | 目标、架构、流程、决策 |
-| [CONTEXT.md](CONTEXT.md) | 接手 agent | 当前状态、下一步、坑、验证 |
-| [PROMPT.md](PROMPT.md) | 接手 agent | 交接指针，自动生成 |
+| [CONTEXT.md](CONTEXT.md) | 接手 agent | 完整文档表、当前状态、下一步、坑 |
 
-<!-- 有其他交付文档时，在表里加行。 -->
+完整文档表（含 PROMPT 等）见 [CONTEXT.md](CONTEXT.md)。
+
+<!-- 有其他交付文档时，在 CONTEXT 的文档表里加行，不在这里重复。 -->
 
 ## 1. 这是什么
 
