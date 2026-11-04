@@ -119,7 +119,7 @@ multi-agent-task-handoff/
 | 写入根 | 项目目录；工作区根永远不直接写 `handoff/` |
 | 文档路径 | `<项目目录>/handoff/{CONTEXT,README,DESIGN,PROMPT,压卡备份}.md` |
 | 冲突 | 目标已存在且非本协议生成 → 停，不覆盖、不换路径 |
-| 交接卡 | CONTEXT ≤100 行；交接记录 ≤10 条；只记关键动作 |
+| 交接卡 | CONTEXT ≤100 行；交接记录 ≤10 条；坑类别 ≤10；只记关键动作 |
 | PROMPT | 每次覆盖；带生成时间；默认 gitignore；不写真实会话 ID |
 | 命令 | 一次一个；`--workspace`/`--nosave` 全局；子参数只跟所属命令 |
 | git | 默认不操作；`--commit` 只提交 `handoff/`；`--push` 隐含 commit |
@@ -129,6 +129,7 @@ multi-agent-task-handoff/
 | 跨任务规则 | 项目目录 → 父目录 → `$AGENT_CONFIG/PROJECT_RULES.md` |
 | 能力表 | `$AGENT_CONFIG/AGENT_CAPABILITIES.md`；差异表驱动，协议不写宿主分支 |
 | 机器级状态 | `config.toml`、`AGENT_CAPABILITIES.md`、`sync-paths` 统一放 `$AGENT_CONFIG`；工作区根只放规则与入口 |
+| 触发分层 | 上下文注入（`AGENTS.md` 读序）+ 显式命令（接手/收工）+ 机械动作（`post-commit`）；`AGENTS.md` 只做指针，不触发机械动作 |
 | 换机迁移 | 能力表整表带走，只重填「本机环境」块；`AGENTS.md` / `PROJECT_RULES.md` 复制；`sync-paths` 与宿主 memory 不带；`config.toml` 只改 workspace |
 | 迁移范围 | 只迁符合模版的同名任务文档（`CONTEXT` / `README` / `DESIGN` / `压卡备份`）；客制化名文档（`实施方案`、`架构设计` 等）留根，由 `CONTEXT` 的文档表用 `../` 引用 |
 | 迁移判定 | root `CONTEXT.md` 存在且 `模式：三档`，或文档带模版特征；产品 README/DESIGN 不动 |
@@ -149,7 +150,7 @@ multi-agent-task-handoff/
 - worktree 会话可能修改共享的 `core.hooksPath`；`--check` 校验，`--fix` 恢复，不静默接受。
 - 模板只播种、不覆盖：缺失的 `AGENT_CAPABILITIES.md` / `AGENTS.md` / `PROJECT_RULES.md` 可确认后从模板创建；已存在的不改写，只报过期。
 - 文档只留单一事实源：协议在 `SKILL.md`、取舍在 `DESIGN.md`、状态在 `CONTEXT.md`；其他文件用指针，不复制正文。
-- 版本表与废弃表只追加行；`CONTEXT.md` 的坑平时可追加，`--suspend` 时归并成 ≤7 类；`--check` 只报行数/记录数/类别超限，不自动改写。
+- 版本表与废弃表只追加行；`CONTEXT.md` 的坑平时可追加，`--suspend` 时归并成 ≤10 类；`--check` 只报行数/记录数/类别超限，不自动改写。
 
 ## 9. 版本与设计演进
 

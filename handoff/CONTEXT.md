@@ -50,7 +50,7 @@
 
 ## 坑与约束
 
-协议级边界（写入根、任务文档位置、迁移范围、单写者、`PROMPT`、git、memory）见 `SKILL.md` 与 `DESIGN.md` 第 7 节，本卡不重复。平时可追加；`--suspend` 时归并，同类合并、删重复，类别 ≤7。
+协议级边界（写入根、任务文档位置、迁移范围、单写者、`PROMPT`、git、memory）见 `SKILL.md` 与 `DESIGN.md` 第 7 节，本卡不重复。平时可追加；`--suspend` 时归并，同类合并、删重复，类别 ≤10。
 
 - 钩子：worktree 会话可能把共享 `core.hooksPath` 改成 `.git/hooks`，提交时钩子静默不跑；提交前 `--check` 看，`--fix` 恢复。
 - 安装：`install.sh` 只装 HEAD，工作树未提交时副本仍是上一个 commit；`--syncall` 只从源仓库跑（副本没有 HEAD，硬跑会把副本写成 `commit=unknown`）。
@@ -62,7 +62,7 @@
 
 ## 交接记录（只记关键动作，≤10 条）
 
-- 2026-11-04 Claude：v3.1——迁移语义与 `--syncall` 护栏；README 增换机迁移；能力表路径固定；DESIGN 版本表压成主版本行、废弃表补全 v1/v2；CONTEXT 坑按类归并（14→7）。
+- 2026-11-04 Claude：v3.1——迁移语义与 `--syncall` 护栏；README 增换机迁移；能力表路径固定；DESIGN 版本表压成主版本行、废弃表补全 v1/v2；CONTEXT 坑按类归并（14→7，上限 10）；AGENTS.md 定为只做指针、不触发机械动作。
 - 2026-11-03 Claude：能力表拆「memory 读取」表；DESIGN 版本表补 v2 卸载、v3 评审排在 v3 前；4 份副本随提交同步。
 - 2026-11-03 Claude：钩子防护——`--printpath` 打印 hooksPath，`--check` 校验、`--fix` 恢复；定位 worktree 会话改共享 hooksPath 的坑。
 - 2026-11-03 Claude：机器级状态收口——`sync-paths` 迁到 `$AGENT_CONFIG`，仓库内不再留；工作区根能力表副本删除，只留 `$AGENT_CONFIG` 一份；DESIGN 补 5.1.1 与迁移范围。
