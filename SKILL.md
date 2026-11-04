@@ -63,7 +63,7 @@ argument-hint: "[--help | --resume | --suspend [ID] [--commit] [--push] | --doc 
 ## --suspend
 
 1. 确保 `handoff/CONTEXT.md`；只在 >100 行或 >10 条记录时压卡；没超报“无需压卡”。
-2. 先压卡，再写本次「现在/下一步/坑/交接记录」；报告 before/after。
+2. 先压卡，再写本次「现在/下一步/坑/交接记录」；坑按类归并、删重复与协议复述，类别 ≤7；报告 before/after。
 3. 覆盖写 `handoff/PROMPT.md`：项目目录、读卡顺序、文档表、锚点、验证命令、下一步 1–3 条、勿动文件、已决策、旧 ID、规则指针；文件头注明自动生成。
 4. 有 ID：发短指针“请读 `<项目目录>/handoff/PROMPT.md` 接盘”；目标读不到文件时才附全文。
 5. 无 ID：写完就停，报告路径。
@@ -91,7 +91,7 @@ argument-hint: "[--help | --resume | --suspend [ID] [--commit] [--push] | --doc 
 
 ## --check / --fix
 
-- `--check` 只读：安装版本、布局、config/workspace、能力表日期、`sync-paths`、git 钩子（`core.hooksPath`）、memory gitignore、`.github/README.md` 链接与 drift、PROMPT 是否过期、工作区文档（AGENTS/PROJECT_RULES 是否存在、是否指向 `$AGENT_CONFIG` 与 `handoff/`、是否残留旧路径）；不改文件。
+- `--check` 只读：安装版本、布局、config/workspace、能力表日期、`sync-paths`、git 钩子（`core.hooksPath`）、memory gitignore、`.github/README.md` 链接与 drift、PROMPT 是否过期、工作区文档（AGENTS/PROJECT_RULES 是否存在、是否指向 `$AGENT_CONFIG` 与 `handoff/`、是否残留旧路径）、CONTEXT 行数/记录数/坑类别是否超限；不改文件。
 - `--fix`：先跑同一套检查，再修可自动修复项；冲突/不可逆项询问。
 - 可修：安装副本快进（分叉停）、根 CONTEXT/压卡备份迁入 `handoff/`、协议标记的 README/DESIGN 迁入 `handoff/`、`.github/README.md` 重新生成、`core.hooksPath` 不是 `.githooks` 时恢复（仅当 `.githooks/post-commit` 存在）、缺失的 AGENTS/PROJECT_RULES 确认后从模板播种；已存在的不改写，只报过期。
 - 安装副本对齐跑 `<skill 目录>/install.sh --syncall`：只从源仓库运行（安装副本没有 HEAD，会被拒绝），只补落后副本，已最新跳过。
