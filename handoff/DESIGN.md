@@ -84,7 +84,8 @@ multi-agent-task-handoff/
 - `sync-paths` 是“一行一个安装目录”的纯文本，由 `install.sh` 追加；`--syncall` 与 `post-commit` 都读它。
 - `--syncall` 只允许从源仓库运行：安装副本没有 HEAD，强行同步会把所有副本写成 `commit=unknown`，等于降级。
 - 旧位置 `<repo>/.skill-sync-paths` 由 `install.sh` / `post-commit` 一次性迁到新位置后删除。
-- 三者不合并成一个文件：偏好（低频编辑）、能力缓存（Markdown 表）、注册表（高频追加）的读写方式不同，合并会让 bash 解析变脆。
+- 三者不合并成一个文件：偏好（人工低频编辑）、能力缓存（Markdown 表）、注册表（工具追加、可重建）的写入者和失败域不同，合并会让 bash 解析变脆，并把“装到哪”和“同步哪些”绑在一起。
+- `config.toml` 只放用户选择；可推导的运行时状态（宿主、副本版本、`core.hooksPath`、各路径）不写入配置，由 `--printpath` 现算。
 
 ### 5.2 关键接缝
 
