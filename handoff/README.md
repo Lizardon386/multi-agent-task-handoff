@@ -36,8 +36,8 @@
 
 ```mermaid
 flowchart LR
-  A[会话 A] -->|收工 --suspend| F[handoff/CONTEXT.md<br/>handoff/PROMPT.md]
-  F -->|接手 --resume| B[会话 B]
+  A[会话 A] -->|收工 / --suspend| F[handoff/CONTEXT.md<br/>handoff/PROMPT.md]
+  F -->|接手 / --resume| B[会话 B]
 ```
 
 ## 2. 安装
@@ -94,7 +94,7 @@ agent 会装到当前宿主的 `skills/multi-agent-task-handoff`，把目标登�
 | 摸底宿主能力 | `--probe` | 实测当前 agent 并更新能力表；`--live` 会实际建会话 |
 | 路径诊断 | `--printpath` | 表格输出配置目录、工作区根、能力表（含日期）、源仓库、钩子、宿主识别来源、全部副本的路径与 commit |
 
-项目第一次用先跑 `--doc` 建档（没有 `handoff/` 不会自动创建）；之后「接手」（`--resume`）继续，「收工」（`--suspend`）写卡并生成 `PROMPT.md`。
+项目第一次用先跑 `--doc` 建档（没有 `handoff/` 不会自动创建）；之后接手 / `--resume` 继续，收工 / `--suspend` 写卡并生成 `PROMPT.md`。
 
 一次只用一个命令。安装、配置、GitHub 首页、旧布局迁移的细节见 [DESIGN.md](DESIGN.md) 和 [SKILL.md](../SKILL.md)。
 
