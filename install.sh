@@ -273,21 +273,23 @@ if [ "$print_paths" = 1 ]; then
   resolve_workspace
   caps=${AGENT_CAPABILITIES:-$config_dir/AGENT_CAPABILITIES.md}
   cfg_file=$config_dir/config.toml
-  printf 'AGENT_CONFIG: %s\n' "$config_dir"
+  printf '路径诊断\n'
+  printf '────────────────────────────────────────\n'
+  printf '  %-13s %s\n' 'AGENT_CONFIG' "$config_dir"
   if [ -f "$cfg_file" ]; then
-    printf 'config: %s（已存在）\n' "$cfg_file"
+    printf '  %-13s %s  [已存在]\n' 'config' "$cfg_file"
   else
-    printf 'config: %s（不存在，安装时会创建）\n' "$cfg_file"
+    printf '  %-13s %s  [不存在，安装时会创建]\n' 'config' "$cfg_file"
   fi
-  printf 'workspace: %s（来源: %s）\n' "$workspace" "$workspace_src"
-  printf 'capabilities: %s\n' "$caps"
+  printf '  %-13s %s  [来源: %s]\n' 'workspace' "$workspace" "$workspace_src"
+  printf '  %-13s %s\n' 'capabilities' "$caps"
   hooks_path=$(git -C "$repo" config --local --get core.hooksPath 2>/dev/null || true)
   case "$hooks_path" in
     .githooks) hooks_status='已启用' ;;
     '') hooks_status='未设置，钩子不会跑' ;;
     *) hooks_status="未指向 .githooks，提交时钩子不会跑" ;;
   esac
-  printf 'hooksPath: %s（%s）\n' "${hooks_path:-未设置}" "$hooks_status"
+  printf '  %-13s %s  [%s]\n' 'hooksPath' "${hooks_path:-未设置}" "$hooks_status"
   if [ -n "$target_arg" ]; then
     t=$(to_unix "$target_arg")
   elif [ -n "$host_arg" ]; then
@@ -298,7 +300,8 @@ if [ "$print_paths" = 1 ]; then
   else
     t=未识别宿主
   fi
-  printf 'install target: %s\n' "$t"
+  printf '  %-13s %s\n' 'install' "$t"
+  printf '────────────────────────────────────────\n'
   exit 0
 fi
 

@@ -22,12 +22,12 @@
 ## 目标与完成定义
 
 - 目标：V3 协议落地；任务文档固定在 `handoff/`；宿主差异由能力表驱动；交接只发指针。
-- 完成标准（可验证）：`SKILL.md` / `README.md` / `DESIGN.md` 与安装副本一致；7 个命令与 `--help` 一致；`--check` 无 ⛔；`CONTEXT.md` ≤100 行；`install.sh --dry-run` / `--print-paths` / `--sync-all` 正常。
+- 完成标准（可验证）：`SKILL.md` / `README.md` / `DESIGN.md` 与安装副本一致；8 个命令与 `--help` 一致；`--check` 无 ⛔；`CONTEXT.md` ≤100 行；`install.sh --dry-run` / `--print-paths` / `--sync-all` 正常。
 
 ## 现在在哪
 
 - 已完成：
-  - `SKILL.md` 重写为 V3（127 行）：7 个命令、术语、`handoff/`、配置、memory、GitHub、迁移规则、钩子检查。
+  - `SKILL.md` 重写为 V3：8 个命令、术语、`handoff/`、配置、memory、GitHub、迁移规则、钩子检查。
   - 任务文档迁入 `handoff/`：README / DESIGN / CONTEXT / 压卡备份；PROMPT 由 `--suspend` 生成，默认 gitignore。
   - `install.sh`：`--print-paths`（含 hooksPath）、创建 `$AGENT_CONFIG/config.toml`、`.skill-version` 写 `source=`；默认工作区根改 `$HOME/agent_workspace`。
   - 能力表模板改成「Agent 能力与宿主差异表」；本机能力表只留 `$AGENT_CONFIG` 一份。
