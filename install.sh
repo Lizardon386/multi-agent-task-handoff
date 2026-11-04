@@ -273,16 +273,9 @@ if [ "$print_paths" = 1 ]; then
   resolve_workspace
   caps=${AGENT_CAPABILITIES:-$config_dir/AGENT_CAPABILITIES.md}
   cfg_file=$config_dir/config.toml
-  printf '路径诊断\n'
-  printf '────────────────────────────────────────\n'
-  printf '  %-13s %s\n' 'AGENT_CONFIG' "$config_dir"
-  if [ -f "$cfg_file" ]; then
-    printf '  %-13s %s  [已存在]\n' 'config' "$cfg_file"
-  else
-    printf '  %-13s %s  [不存在，安装时会创建]\n' 'config' "$cfg_file"
-  fi
-  printf '  %-13s %s  [来源: %s]\n' 'workspace' "$workspace" "$workspace_src"
-  printf '  %-13s %s\n' 'capabilities' "$caps"
+  registry_file=$config_dir/sync-paths
+  reg_count=0
+  [ -f "$registry_file" ] && reg_count=$(awk 'NF && $1 !~ /^#/ {n++} END{print n+0}' "$registry_file" 2>/dev/null)
   src_repo=
   hook_repo=$repo
   if ! git -C "$hook_repo" rev-parse --git-dir >/dev/null 2>&1; then
@@ -293,7 +286,6 @@ if [ "$print_paths" = 1 ]; then
       src_repo=
     fi
   fi
-  printf '  %-13s %s\n' 'source' "${src_repo:-$repo}"
   if git -C "$hook_repo" rev-parse --git-dir >/dev/null 2>&1; then
     hooks_path=$(git -C "$hook_repo" config --local --get core.hooksPath 2>/dev/null || true)
     case "$hooks_path" in
@@ -305,7 +297,6 @@ if [ "$print_paths" = 1 ]; then
     hooks_path=未知
     hooks_status='非 git 副本，未找到源仓库'
   fi
-  printf '  %-13s %s  [%s]\n' 'hooksPath' "${hooks_path:-未设置}" "$hooks_status"
   if [ -n "$target_arg" ]; then
     t=$(to_unix "$target_arg")
   elif [ -n "$host_arg" ]; then
@@ -316,7 +307,28 @@ if [ "$print_paths" = 1 ]; then
   else
     t=未识别宿主
   fi
-  printf '  %-13s %s\n' 'install' "$t"
+  printf '路径诊断\n'
+  printf '────────────────────────────────────────\n'
+  printf '  配置目录        %s\n' "$config_dir"
+  if [ -f "$cfg_file" ]; then
+    printf '  配置文件        %s  [已存在]\n' "$cfg_file"
+  else
+    printf '  配置文件        %s  [不存在，安装时会创建]\n' "$cfg_file"
+  fi
+  printf '  工作区根        %s  [来源: %s]\n' "$workspace" "$workspace_src"
+  if [ -f "$caps" ]; then
+    printf '  能力表          %s  [已存在]\n' "$caps"
+  else
+    printf '  能力表          %s  [缺失]\n' "$caps"
+  fi
+  if [ -f "$registry_file" ]; then
+    printf '  安装注册表      %s  [%s 条]\n' "$registry_file" "$reg_count"
+  else
+    printf '  安装注册表      %s  [缺失]\n' "$registry_file"
+  fi
+  printf '  源仓库          %s\n' "${src_repo:-$repo}"
+  printf '  Git 钩子        %s  [%s]\n' "${hooks_path:-未设置}" "$hooks_status"
+  printf '  安装副本        %s\n' "$t"
   printf '────────────────────────────────────────\n'
   exit 0
 fi
