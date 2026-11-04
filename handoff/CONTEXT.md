@@ -36,7 +36,7 @@
   - 机器级状态收口：`sync-paths` 从仓库根迁到 `$AGENT_CONFIG`，旧位置一次性迁移。
   - `.github/README.md` 由 `handoff/README.md` 生成；`.claude/` 测试 worktree 已清理。
   - 已提交：`6bfcc60`（V3 协议）、`d4d07d7`（安装输出）、`580dfc3`（状态收口）、`b715de5`（钩子自检）、`6fcd086`（memory 表）、`e694263`（v3 评审表）、`e922909`（v2 卸载行）；推送状态以 `git status -sb` 为准（网络异常时可能 ahead）。
-  - 安装副本 4 份（Qoder / OpenCode / ZCode / Claude）由 post-commit 同步到当前 HEAD；WorkBuddy 的 `~/.workbuddy-ai` 目录已不存在，sync 跳过。
+  - 安装副本 4 份（Qoder / OpenCode / ZCode / Claude）由 post-commit 同步到当前 HEAD；WorkBuddy 5.9.x 配置目录改为 `~/.workbuddy`，待装或待确认。
 - 进行中：无代码改动。
 - 在飞文件（勿动）：无。
 
@@ -45,7 +45,7 @@
 1. 双平台往返测试：临时 git 项目跑 `--resume` → `--suspend` → `--resume`，再跑 `--doc`、`--check`、`--fix`、`--probe`。
 2. 非 git 项目、Windows Git Bash、Ubuntu 路径测试（`$HOME`、XDG、`%APPDATA%`、空格路径）。
 3. 现有项目逐个 `--check` → `--fix` 迁移，不默认扫描全盘。
-4. WorkBuddy memory 读取方式实测（本机 `~/.workbuddy-ai` 已不存在，需先恢复宿主）；其余能力表待测项用 `--probe` 补。
+4. WorkBuddy 5.9.x 复验：配置目录 `~/.workbuddy`、memory 在 `~/.workbuddy/memory/`（用户级单文件）；确认投递/读回是否变化。
 5. 每次提交前跑 `--check`，核对 `core.hooksPath` 和副本状态（worktree 会话后尤其要查）。
 
 ## 坑与约束
@@ -56,7 +56,7 @@
 - 一个项目同一时间一个写者；交接后旧会话停写。
 - `PROMPT.md` 默认 gitignore；含会话 ID/本机路径，不提交。
 - 默认不操作 git；`--commit` 只提交 `handoff/`，`--push` 隐含 commit；失败留本地。
-- memory 只读提升；不复制、不写回；项目内 memory 必须 gitignore。位置与读取方式按能力表「memory 读取」：Claude 在 `~/.claude/projects/<cwd编码>/memory/`（项目外），WorkBuddy 在项目目录 `.workbuddy-ai/memory/`。
+- memory 只读提升；不复制、不写回；项目内 memory 必须 gitignore。位置与读取方式按能力表「memory 读取」：Claude 在 `~/.claude/projects/<cwd编码>/memory/`；WorkBuddy 5.9.x 在 `~/.workbuddy/memory/`（旧 5.8.x 在项目目录 `.workbuddy-ai/memory/`）。
 - 有 GitHub remote 才生成 `.github/README.md`；它会覆盖根 README 的首页展示，属预期行为。
 - 包文件（`SKILL.md`、`install.sh`、`安装.bat`、`assets/`、`LICENSE`、`.githooks/`）必须留根。
 - `install.sh` 只装 HEAD：工作树未提交时，安装副本仍是上一个 commit。
