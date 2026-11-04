@@ -2,7 +2,7 @@
 name: multi-agent-task-handoff
 description: 多 agent 任务接力协议：接手/接盘/交接项目、写交接卡、收工/压卡、工程化/补全 handoff 文档、自检/修复/摸底宿主能力；交接文件固定在项目目录的 handoff/ 下。
 when_to_use: 开始或结束一个任务、接盘别人留下的项目、把工作交接给另一个 agent/会话、或需要检查/修复交接文档与宿主能力时。
-argument-hint: "[--help | --resume | --suspend [ID] [--commit] [--push] | --doc | --check | --fix | --probe [--live] | --print-paths]"
+argument-hint: "[--help | --resume | --suspend [ID] [--commit] [--push] | --doc | --check | --fix | --probe [--live] | --printpath]"
 ---
 
 # 多 agent 任务交接
@@ -28,7 +28,7 @@ argument-hint: "[--help | --resume | --suspend [ID] [--commit] [--push] | --doc 
 | `--check` | 只读检查 |
 | `--fix` | 检查 + 修可自动修复项 |
 | `--probe [--live]` | 检查 + 实测能力；`--live` 实际建会话/发送/读回 |
-| `--print-paths` | 只读路径诊断：config / workspace / 项目目录 / 能力表 / 安装副本 / 钩子 |
+| `--printpath` | 只读路径诊断：config / workspace / 项目目录 / 能力表 / 安装副本 / 钩子 |
 | `--workspace <PATH> [--nosave]` | 指定工作区根；默认写回 `config.toml` |
 | `--help` | 输出完整帮助 |
 
@@ -103,7 +103,7 @@ argument-hint: "[--help | --resume | --suspend [ID] [--commit] [--push] | --doc 
 - `--probe --live`：先检查，再实际建会话/发送/读回；需确认；可能留测试会话，报告并尝试删除。
 - 结果只记可用/不可用，不写会话 ID。
 
-## --print-paths
+## --printpath
 
 只读诊断，不写文件。优先运行 `<skill 目录>/install.sh --print-paths`（宿主注入的 base directory；Windows 用 Git Bash 的 sh）；没有 shell 时按 `$AGENT_CONFIG`、`config.toml`、默认值自行解析。
 

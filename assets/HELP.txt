@@ -1,7 +1,7 @@
 multi-agent-task-handoff — 多 agent 任务交接
 
 用法:
-  multi-agent-task-handoff [--workspace <PATH>] [--nosave] [--help | --resume | --suspend [ID] [--commit] [--push] | --doc | --check | --fix | --probe [--live] | --print-paths]
+  multi-agent-task-handoff [--workspace <PATH>] [--nosave] [--help | --resume | --suspend [ID] [--commit] [--push] | --doc | --check | --fix | --probe [--live] | --printpath]
 
 命令:
   --resume                  接盘 / 接手：读 handoff/PROMPT.md → handoff/CONTEXT.md，
@@ -16,7 +16,7 @@ multi-agent-task-handoff — 多 agent 任务交接
   --fix                     修复：先检查，再修可自动修复项；冲突/不可逆项询问
   --probe [--live]          摸底 / 探测：先检查，再实测当前 agent 并更新能力表
                               --live  实际执行建会话 / 发送 / 读回（需确认）
-  --print-paths             路径诊断：表格输出 config / workspace / 项目目录 /
+  --printpath               路径诊断：表格输出 config / workspace / 项目目录 /
                             能力表 / 安装副本 / Git 钩子
   --workspace <PATH> [--nosave]
                             全局：指定工作区根；默认写回 config.toml；
@@ -28,7 +28,7 @@ multi-agent-task-handoff — 多 agent 任务交接
   --workspace 可与一个命令同用；--nosave 只跟 --workspace
   --commit / --push 只能跟 --suspend
   --live 只能跟 --probe
-  --print-paths 是独立命令
+  --printpath 是独立命令
   --help 单独使用
   无参数等同 --resume
 
@@ -43,7 +43,7 @@ multi-agent-task-handoff — 多 agent 任务交接
   --fix
   --probe --live
   --doc
-  --print-paths
+  --printpath
 
 路径诊断:
-  优先用 --print-paths（表格输出）；脚本 / CI 仍可跑 install.sh --print-paths（原始 key:value）
+  优先用 --printpath（表格输出）；脚本 / CI 仍可跑 install.sh --print-paths（原始 key:value）
