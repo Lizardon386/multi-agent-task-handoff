@@ -34,8 +34,10 @@
 
 跨会话的闭环只有一步：
 
-```text
-会话 A ──「收工」──▶ handoff/{CONTEXT,PROMPT}.md ──「接手」──▶ 会话 B
+```mermaid
+flowchart LR
+  A[会话 A] -->|收工 --suspend| F[handoff/CONTEXT.md<br/>handoff/PROMPT.md]
+  F -->|接手 --resume| B[会话 B]
 ```
 
 ## 2. 安装
