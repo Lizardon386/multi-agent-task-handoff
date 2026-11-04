@@ -1,7 +1,7 @@
 ---
 name: multi-agent-task-handoff
 description: 多 agent 任务接力协议：接手/接盘/交接项目、写交接卡、收工/压卡、工程化/补全 handoff 文档、自检/修复/摸底宿主能力；交接文件固定在项目目录的 handoff/ 下。
-when_to_use: 开始或结束一个任务、接盘别人留下的项目、把工作交接给另一个 agent/会话、或需要检查/修复交接文档与宿主能力时。
+when_to_use: 开始或结束一个任务、接盘别人留下的项目、把工作交接给另一个 agent、或需要检查/修复交接文档与宿主能力时。
 argument-hint: "[--help | --resume | --suspend [ID] [--commit] [--push] | --doc | --check | --fix | --probe [--live] | --printpath]"
 ---
 
@@ -135,10 +135,10 @@ argument-hint: "[--help | --resume | --suspend [ID] [--commit] [--push] | --doc 
 
 ## 边界
 
-- 一个项目一个写者；交接后旧会话停写。
+- 一个项目一个写者；交接后旧 agent 停写。
 - 冲突停，不覆盖、不换路径。
 - 文件迁移默认不做；用户明确要求才复制顶层非隐藏文件。
-- 会话不搬运；用新会话 + PROMPT 指针。
+- 活会话不搬运；换 agent 用新会话 + PROMPT 指针。
 - 不装常驻钩子、不写全局规则、不起后台服务、不调用模型。
 - 工作区 `AGENTS.md` 只做入口指针；不承载协议正文，不触发机械动作。
 - 敏感信息不提交；PROMPT 默认 gitignore。

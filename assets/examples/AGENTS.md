@@ -7,5 +7,5 @@
 - 跨任务规则：`<AGENT_CONFIG>/PROJECT_RULES.md`
 - 能力表：`<AGENT_CONFIG>/AGENT_CAPABILITIES.md`
 - 任务交接卡：`<项目目录>/handoff/CONTEXT.md`
-- 如何开始：接手 / `--resume`；新会话先读 `handoff/PROMPT.md`。
+- 如何开始：接手 / `--resume`；接手 agent 先读 `handoff/PROMPT.md`。
 - 工作区根只存放项目目录，不直接写 `handoff/`。

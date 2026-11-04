@@ -6,7 +6,7 @@
 
 ## 1. 目标与约束
 
-会话是易失的：换会话、换 agent、换机器，接盘的人只能从目录和上一段会话猜。靠人记会漏，靠常驻强制会拖慢每轮，靠文档自身又会写成日志；所以需要一个目录内、任何 agent 都能读的最小协议。
+agent 的上下文是易失的：换 agent、换宿主、换机器，接盘的人只能从目录和上一任留下的只言片语猜。靠人记会漏，靠常驻强制会拖慢每轮，靠文档自身又会写成日志；所以需要一个目录内、任何 agent 都能读的最小协议。
 
 目标：任务文档固定在项目目录的 `handoff/`；交接只发状态和指针；能自动的自动做，做不到的明确列给用户；宿主差异不写进协议正文。
 
@@ -40,15 +40,15 @@ flowchart LR
 
 ## 4. 完整历程
 
-第 3 节给组件拓扑，这里给时间线：建档、工作、收工，到另一个会话接手，再回到工作；维护与迁移是旁路。命令语义见 [SKILL.md](../SKILL.md)，本节只讲顺序、产出和边界。
+第 3 节给组件拓扑，这里给时间线：建档、工作、收工，到另一个 agent 接手，再回到工作；维护与迁移是旁路。命令语义见 [SKILL.md](../SKILL.md)，本节只讲顺序、产出和边界。
 
 ```mermaid
 flowchart LR
-  subgraph A[会话 A]
+  subgraph A[Agent A]
     D[开工<br/>--doc] --> W1[工作]
     W1 --> S[收工<br/>--suspend]
   end
-  subgraph B[会话 B]
+  subgraph B[Agent B]
     R[接手<br/>--resume] --> C[核锚点 / 跑验证]
     C --> W2[继续工作]
   end
@@ -66,7 +66,7 @@ flowchart LR
 | 开工 | `--doc` | 确保 CONTEXT；补 README/DESIGN；写 `模式：三档`；同意后把 PROMPT 加入 `.gitignore` | `handoff/` 三档 | 目标已存在且非本协议生成 → 停 |
 | 工作 | — | 改代码/文档；状态或坑变化时更新 CONTEXT | 可交接的当前状态 | 一个项目同一时间一个写者 |
 | 收工 | `--suspend` | 超限先压卡；写现在/下一步/坑/记录；覆盖 PROMPT；按需读 memory 提升事实 | CONTEXT 更新 + PROMPT 覆盖 | 默认不动 git；`--commit` 只提交 `handoff/`；`--push` 隐含 commit |
-| 交接给会话 | `--suspend <ID>` | 写卡后只发指针；目标读不到文件才附全文 | 目标会话可接手 | 会话不搬运 |
+| 交给指定 agent | `--suspend <ID>` | 写卡后按会话 ID 只发指针；目标读不到文件才附全文 | 目标 agent 可接手 | 活会话不搬运 |
 | 接手 | `--resume` | PROMPT → CONTEXT → 三档 → 规则；核锚点、跑验证；有 ID 可读回 | 恢复上下文 | 冲突以 CONTEXT 为准；旧布局提示 `--check` / `--fix` |
 | 维护 | `--check` / `--fix` / `--probe` / `--printpath` | 只读检查 / 自动修复 / 实测能力 / 路径诊断 | 报告或修复 | 默认不提交；冲突项询问 |
 | 迁移 | `--check` → `--fix` | 先出清单；只迁同名标准件；git 仓用 `git mv` | 旧布局并入 `handoff/` | 客制化名文档留根；不扫描全盘 |
@@ -75,7 +75,7 @@ flowchart LR
 
 - 没有 `handoff/` 不自动建：先 `--doc`。
 - 目标文档已存在且非本协议生成：停，不覆盖、不换路径。
-- 交接后旧会话停写；同一项目同一时间一个写者。
+- 交接后旧 agent 停写；同一项目同一时间一个写者。
 - `PROMPT` 与 `CONTEXT` 冲突以 `CONTEXT` 为准。
 - 默认不操作 git；外部可见动作必须显式 `--commit` / `--push`。
 - 安装、副本同步与配置不在这条线上：见第 5 节。
@@ -165,7 +165,7 @@ multi-agent-task-handoff/
 | git | 默认不操作；`--commit` 只提交 `handoff/`；`--push` 隐含 commit |
 | memory | 只读提升；不复制、不写回；项目内 memory 必须 gitignore |
 | GitHub | 有 remote 即生成 `.github/README.md`；无 remote 不生成；不用 symlink |
-| 一个写者 | 同一项目同一时间一个会话写；交接后旧会话停写 |
+| 一个写者 | 同一项目同一时间一个 agent 写；交接后旧 agent 停写 |
 | 跨任务规则 | 项目目录 → 父目录 → `$AGENT_CONFIG/PROJECT_RULES.md` |
 | 能力表 | `$AGENT_CONFIG/AGENT_CAPABILITIES.md`；差异表驱动，协议不写宿主分支 |
 | 机器级状态 | `config.toml`、`AGENT_CAPABILITIES.md`、`sync-paths` 统一放 `$AGENT_CONFIG`；工作区根只放规则与入口 |
@@ -179,7 +179,7 @@ multi-agent-task-handoff/
 
 - 一次只用一个命令；不提供 `+` / 空格叠加。
 - `SKILL.md` 单文件，硬上限 150 行、目标 120；超出才拆 `references/`。
-- 协议护栏（冲突停、不搬会话、单写者、memory 只读）必须留在 `SKILL.md`，不能只放 `PROJECT_RULES.md` 或 README。
+- 协议护栏（冲突停、不搬活会话、单写者、memory 只读）必须留在 `SKILL.md`，不能只放 `PROJECT_RULES.md` 或 README。
 - 宿主差异只进 `$AGENT_CONFIG/AGENT_CAPABILITIES.md`；`SKILL.md` 不写宿主分支。
 - 旧仓迁移是逐项目人工动作，不默认扫描全盘；先 `--check` 出清单，再 `--fix`。
 - 迁移只动同名标准件；客制化交付文档（大方案、架构稿）不搬，避免移动工程产物和大范围改链。

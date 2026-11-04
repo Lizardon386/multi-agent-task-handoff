@@ -2,7 +2,7 @@
 
 # multi-agent-task-handoff（任务交接）· 使用说明
 
-> 换会话、换 agent、隔天回来，任务还能接着干：把状态写进项目目录的 `handoff/`，下一个 agent 读卡即可接手。
+> 换 agent、换宿主、隔天回来，任务还能接着干：把状态写进项目目录的 `handoff/`，下一个 agent 读卡即可接手。
 > 一个 skill、一个目录、一份交接卡；不装常驻服务，不绑定宿主，不复制聊天历史。
 > 本文件是 `handoff/README.md`，任务/产品 README 的唯一源；GitHub 首页由它生成。
 > 最近更新：2026-11-04
@@ -19,13 +19,13 @@
 
 ## 1. 这是什么
 
-会话是易失的。换一个会话、换一个 agent、隔一天回来，上一个会话想过什么、试过什么、卡在哪，全都没了。通常只能翻聊天记录，或者靠人复述。
+agent 的上下文是易失的。换一个 agent、换一个宿主、隔一天回来，上一个 agent 想过什么、试过什么、卡在哪，全都没了。通常只能翻聊天记录，或者靠人复述。
 
 这个 skill 只做一件事：**把“现在到哪了”写成一份任何 agent 都能读的文件**，放在项目目录的 `handoff/` 里。下一位进来，读它，就能接着干。
 
 适合：
 
-- 一个任务会跨越多次会话，或者要在 agent 之间转手；
+- 一个任务会跨越多个 agent 实例，或者要在不同宿主之间转手；
 - 需要留下“为什么这么定、下一步做什么、哪些别动”；
 - 想让交接这件事可检查、可迁移，而不是靠记忆。
 
@@ -34,12 +34,12 @@
 - 纯问答、一次性脚本；
 - 已经有完善工单/项目管理流程，且不需要 agent 读上下文的场景。
 
-跨会话的闭环只有一步：
+agent 之间的闭环只有一步：
 
 ```mermaid
 flowchart LR
-  A[会话 A] -->|收工 / --suspend| F[handoff/CONTEXT.md<br/>handoff/PROMPT.md]
-  F -->|接手 / --resume| B[会话 B]
+  A[Agent A] -->|收工 / --suspend| F[handoff/CONTEXT.md<br/>handoff/PROMPT.md]
+  F -->|接手 / --resume| B[Agent B]
 ```
 
 ## 2. 安装
@@ -91,7 +91,7 @@ agent 会把 skill 安装到当前宿主的 `skills/multi-agent-task-handoff`，
 | 新任务开工 | `--doc` | 在 `<项目目录>/handoff/` 建 CONTEXT，需要时补 README/DESIGN |
 | 接手别人的任务 | `接手` / `--resume` | 读 PROMPT → CONTEXT，核锚点、跑验证 |
 | 本轮收工 | `收工` / `--suspend` | 按需压卡、写 CONTEXT、覆盖 PROMPT |
-| 交给指定会话 | `--suspend <ID>` | 写卡后只发一段指针，不贴全文 |
+| 交给指定 agent | `--suspend <ID>` | 写卡后按会话 ID 只发一段指针，不贴全文 |
 | 体检/修复 | `--check` / `--fix` | 检查安装、布局、配置、链接；`--fix` 修可自动项，含把落后的安装副本快进到当前提交 |
 | 摸底宿主能力 | `--probe` | 实测当前 agent 并更新能力表；`--live` 会实际建会话 |
 | 路径诊断 | `--printpath` | 表格输出配置目录、工作区根、能力表（含日期）、源仓库、钩子、宿主识别来源、全部副本的路径与 commit |
@@ -114,7 +114,7 @@ agent 会把 skill 安装到当前宿主的 `skills/multi-agent-task-handoff`，
 | 产物 | 位置 | 用途 |
 |---|---|---|
 | 交接卡 | `handoff/CONTEXT.md` | 下一位 agent 的入口 |
-| 交接指针 | `handoff/PROMPT.md` | 发送给新会话的短消息源 |
+| 交接指针 | `handoff/PROMPT.md` | 发送给接手 agent 的短消息源 |
 | 历史归档 | `handoff/压卡备份.md` | 卡超限时把日志搬出 |
 | 能力缓存 | `$AGENT_CONFIG/AGENT_CAPABILITIES.md` | 宿主差异与实测结论 |
 | 机器配置 | `$AGENT_CONFIG/config.toml` | 工作区根等偏好 |
@@ -146,12 +146,12 @@ agent 会把 skill 安装到当前宿主的 `skills/multi-agent-task-handoff`，
 
 ## 6. 限制与注意事项
 
-- 不自动捕获会话；必须显式触发一次。
+- 不后台捕获 agent 上下文；必须显式触发一次。
 - 不在项目目录装钩子，不写全局规则，不起后台服务。
-- 一个项目同一时间一个写者；交接后旧会话停写。
+- 一个项目同一时间一个写者；交接后旧 agent 停写。
 - memory 只读提升，不复制、不写回。
 - `PROMPT.md` 含本机路径，由 `--doc` 加入项目 `.gitignore`；敏感信息不提交。
-- 会话不搬运；跨会话用“新会话 + PROMPT 指针”。
+- 活会话不搬运；换 agent 用“新会话 + PROMPT 指针”。
 - 旧项目迁移逐个 `--check` / `--fix`；不默认扫描全盘。
 - 没有 `handoff/` 也不会自动建：先跑 `--doc`。
 
