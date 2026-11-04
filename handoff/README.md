@@ -38,15 +38,15 @@
 会话 A ──「收工」──▶ handoff/{CONTEXT,PROMPT}.md ──「接手」──▶ 会话 B
 ```
 
-## 2. 快速开始
+## 2. 安装
 
 ### 2.1 前置
 
-- 任一支持的宿主：Claude Code / Qoder / OpenCode(OpenChamber) / ZCode / Codex / WorkBuddy；
+- 支持的宿主：Claude Code / Qoder / OpenCode(OpenChamber) / ZCode / Codex / WorkBuddy；
 - 能跑 shell 的环境（Windows Git Bash、Linux、macOS 均可）；
 - git 可选：有 git 用 commit 作锚点，没有就用时间戳。
 
-### 2.2 最小步骤
+### 2.2 人怎么装
 
 ```bash
 git clone https://github.com/Lizardon386/multi-agent-task-handoff.git
@@ -55,19 +55,24 @@ bash install.sh --dry-run     # 看会装到哪
 bash install.sh               # 只装当前宿主
 ```
 
-Windows 也可以直接双击根目录的 `安装.bat`：它自动找 git/bash 并调用 `install.sh`，识别不出宿主时会提示你选择。
+Windows 可直接双击根目录的 `安装.bat`：它自动找 git/bash 并调用 `install.sh`，识别不出宿主时会提示选择。
 
-装到多个宿主时，提交后由 `install.sh --syncall` 把各安装副本对齐到当前 HEAD；幂等，只补落后的，可随时手动重跑。
+装到多个宿主时，每份用 `--host` 装一次；提交后 `install.sh --syncall` 会把各副本对齐到当前 HEAD，幂等，可随时手动重跑。
 
-然后在你的项目目录里对新会话说：
+### 2.3 AI 怎么装
+
+把仓库地址交给 agent 即可：
 
 ```text
-接手
+克隆 https://github.com/Lizardon386/multi-agent-task-handoff，
+先跑 install.sh --dry-run 确认安装目标，再跑 install.sh 只装当前宿主；识别不出宿主就用 --host 指定。
 ```
 
-第一次会创建 `handoff/CONTEXT.md`；收工时说「收工」，会写卡并生成交接指针。
+agent 会装到当前宿主的 `skills/multi-agent-task-handoff`，把目标登记到 `$AGENT_CONFIG/sync-paths`；首次安装还会播种 `config.toml` 和能力表模板。
 
-触发方式按宿主选一种：
+## 3. 使用说明
+
+### 3.1 触发方式
 
 - 支持斜杠命令：`/multi-agent-task-handoff <参数>`
 - 支持 skill 工具：直接说「接手 / 收工 / 修复」，或从 skill 列表里选
@@ -75,7 +80,7 @@ Windows 也可以直接双击根目录的 `安装.bat`：它自动找 git/bash �
 
 参数可省略（默认 `--resume`）；完整列表见 `--help`。
 
-## 3. 使用说明
+### 3.2 常用场景
 
 | 场景 | 说法 / 命令 | 会发生什么 |
 |---|---|---|
@@ -86,6 +91,8 @@ Windows 也可以直接双击根目录的 `安装.bat`：它自动找 git/bash �
 | 体检/修复 | `--check` / `--fix` | 检查安装、布局、配置、链接；`--fix` 修可自动项，含把落后的安装副本快进到当前提交 |
 | 摸底宿主能力 | `--probe` | 实测当前 agent 并更新能力表；`--live` 会实际建会话 |
 | 路径诊断 | `--printpath` | 表格输出配置目录、工作区根、能力表（含日期）、源仓库、钩子、宿主识别来源、全部副本的路径与 commit |
+
+项目第一次用先跑 `--doc` 建档（没有 `handoff/` 不会自动创建）；之后「接手」（`--resume`）继续，「收工」（`--suspend`）写卡并生成 `PROMPT.md`。
 
 一次只用一个命令。安装、配置、GitHub 首页、旧布局迁移的细节见 [DESIGN.md](DESIGN.md) 和 [SKILL.md](../SKILL.md)。
 
