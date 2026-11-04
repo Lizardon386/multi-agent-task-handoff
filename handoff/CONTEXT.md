@@ -35,7 +35,7 @@
   - 删除 `作者实机调研/` 与 `sync-作者实机调研.sh`；`post-commit` 去掉快照同步，保留副本同步 + 自动 push。
   - 机器级状态收口：`sync-paths` 从仓库根迁到 `$AGENT_CONFIG`，旧位置一次性迁移。
   - `.github/README.md` 由 `handoff/README.md` 生成；`.claude/` 测试 worktree 已清理。
-  - 已提交并推送：`6bfcc60`（V3 协议）、`d4d07d7`（安装输出）、`580dfc3`（状态收口）、`b715de5`（钩子自检）、`6fcd086`（memory 表）、`e694263`（v3 评审表）、`e922909`（v2 卸载行）；远端 = 本地。
+  - 已提交：`6bfcc60`（V3 协议）、`d4d07d7`（安装输出）、`580dfc3`（状态收口）、`b715de5`（钩子自检）、`6fcd086`（memory 表）、`e694263`（v3 评审表）、`e922909`（v2 卸载行）；推送状态以 `git status -sb` 为准（网络异常时可能 ahead）。
   - 安装副本 4 份（Qoder / OpenCode / ZCode / Claude）由 post-commit 同步到当前 HEAD；WorkBuddy 的 `~/.workbuddy-ai` 目录已不存在，sync 跳过。
 - 进行中：无代码改动。
 - 在飞文件（勿动）：无。
