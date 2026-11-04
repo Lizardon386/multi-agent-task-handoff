@@ -105,7 +105,7 @@ argument-hint: "[--help | --resume | --suspend [ID] [--commit] [--push] | --doc 
 
 ## --printpath
 
-只读诊断，不写文件。优先运行 `<skill 目录>/install.sh --print-paths`（宿主注入的 base directory；Windows 用 Git Bash 的 sh）；没有 shell 时按 `$AGENT_CONFIG`、`config.toml`、默认值自行解析。
+只读诊断，不写文件。优先运行 `<skill 目录>/install.sh --printpath`（宿主注入的 base directory；Windows 用 Git Bash 的 sh）；没有 shell 时按 `$AGENT_CONFIG`、`config.toml`、默认值自行解析。
 
 输出用表格，缺项标 ⚠️/❌：
 

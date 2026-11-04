@@ -35,7 +35,7 @@ usage() {
   --host NAME      qoder | claude | codex | opencode | zcode | workbuddy（识别不出时显式指定）
   --target DIR     直接指定安装目录（与 --host 二选一）
   --sync-all       按 $AGENT_CONFIG/sync-paths 逐份对齐到当前 HEAD，只补落后的；幂等，可重复跑
-  --print-paths    打印 config / workspace / capabilities / 安装目录及其来源，不写文件
+  --printpath      打印 config / workspace / capabilities / 安装目录及其来源，不写文件
   --force          覆盖没有 .skill-version 的非空目录
   --no-hook        不改仓库本地 core.hooksPath
   --no-register    不把目标写进 $AGENT_CONFIG/sync-paths
@@ -55,7 +55,7 @@ while [ $# -gt 0 ]; do
     --no-hook) hook=0 ;;
     --no-register) register=0 ;;
     --sync-all) sync_all=1 ;;
-    --print-paths) print_paths=1 ;;
+    --printpath) print_paths=1 ;;
     --host) [ $# -ge 2 ] || usage_die "--host 需要一个值"; host_arg=$2; shift ;;
     --host=*) host_arg=${1#*=} ;;
     --target) [ $# -ge 2 ] || usage_die "--target 需要一个值"; target_arg=$2; shift ;;

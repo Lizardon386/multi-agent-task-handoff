@@ -46,4 +46,4 @@ multi-agent-task-handoff — 多 agent 任务交接
   --printpath
 
 路径诊断:
-  优先用 --printpath（表格输出）；脚本 / CI 仍可跑 install.sh --print-paths（原始 key:value）
+  优先用 --printpath（表格输出）；脚本 / CI 仍可跑 install.sh --printpath（原始 key:value）

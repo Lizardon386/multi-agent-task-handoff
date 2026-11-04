@@ -5,7 +5,7 @@
 > 模式：三档
 > 项目目录：`D:\agent_workspace\multi-agent-task-handoff`
 > 状态锚点：`git log -1 --oneline`；推 GitHub 前 `gh auth status`
-> 验证命令：`git status -sb`；`bash install.sh --dry-run`；`bash install.sh --print-paths`；`bash install.sh --sync-all --dry-run`
+> 验证命令：`git status -sb`；`bash install.sh --dry-run`；`bash install.sh --printpath`；`bash install.sh --sync-all --dry-run`
 
 ## 文档
 
@@ -22,14 +22,14 @@
 ## 目标与完成定义
 
 - 目标：V3 协议落地；任务文档固定在 `handoff/`；宿主差异由能力表驱动；交接只发指针。
-- 完成标准（可验证）：`SKILL.md` / `README.md` / `DESIGN.md` 与安装副本一致；8 个命令与 `--help` 一致；`--check` 无 ⛔；`CONTEXT.md` ≤100 行；`install.sh --dry-run` / `--print-paths` / `--sync-all` 正常。
+- 完成标准（可验证）：`SKILL.md` / `README.md` / `DESIGN.md` 与安装副本一致；8 个命令与 `--help` 一致；`--check` 无 ⛔；`CONTEXT.md` ≤100 行；`install.sh --dry-run` / `--printpath` / `--sync-all` 正常。
 
 ## 现在在哪
 
 - 已完成：
   - `SKILL.md` 重写为 V3：8 个命令、术语、`handoff/`、配置、memory、GitHub、迁移规则、钩子检查。
   - 任务文档迁入 `handoff/`：README / DESIGN / CONTEXT / 压卡备份；PROMPT 由 `--suspend` 生成，默认 gitignore。
-  - `install.sh`：`--print-paths`（含 hooksPath）、创建 `$AGENT_CONFIG/config.toml`、`.skill-version` 写 `source=`；默认工作区根改 `$HOME/agent_workspace`。
+  - `install.sh`：`--printpath`（含 hooksPath）、创建 `$AGENT_CONFIG/config.toml`、`.skill-version` 写 `source=`；默认工作区根改 `$HOME/agent_workspace`。
   - 能力表模板改成「Agent 能力与宿主差异表」；本机能力表只留 `$AGENT_CONFIG` 一份。
   - 能力表拆出「memory 读取」表（位置 / 作用域键 / 读取方式 / 项目内 / suspend 读取）；SKILL `--suspend` 第 7 条同步。
   - 删除 `作者实机调研/` 与 `sync-作者实机调研.sh`；`post-commit` 去掉快照同步，保留副本同步 + 自动 push。
@@ -67,7 +67,7 @@
 ## 交接记录（只记关键动作，≤10 条）
 
 - 2026-11-03 Claude：能力表拆「memory 读取」表；DESIGN 版本表补 v2 卸载、v3 评审排在 v3 前；4 份副本随提交同步。
-- 2026-11-03 Claude：钩子防护——`--print-paths` 打印 hooksPath，`--check` 校验、`--fix` 恢复；定位 worktree 会话改共享 hooksPath 的坑。
+- 2026-11-03 Claude：钩子防护——`--printpath` 打印 hooksPath，`--check` 校验、`--fix` 恢复；定位 worktree 会话改共享 hooksPath 的坑。
 - 2026-11-03 Claude：机器级状态收口——`sync-paths` 迁到 `$AGENT_CONFIG`，仓库内不再留；工作区根能力表副本删除，只留 `$AGENT_CONFIG` 一份；DESIGN 补 5.1.1 与迁移范围。
 - 2026-11-03 Claude：V3 文档重整——README 按落地页模板重写；DESIGN 删除进度/待办、已废弃方案移入版本节；CONTEXT 承接待办。
 - 2026-11-03 Claude：V3 落地——术语统一、文档迁入 `handoff/`、7 个命令、`config.toml`、能力差异表；删除作者快照与同步脚本；`SKILL.md` 118 行。

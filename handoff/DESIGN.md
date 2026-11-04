@@ -51,7 +51,7 @@ flowchart LR
 ```text
 multi-agent-task-handoff/
 ├─ SKILL.md                 # 协议正文（包文件，必须在根）
-├─ install.sh               # 安装：宿主识别、config、--print-paths、--sync-all
+├─ install.sh               # 安装：宿主识别、config、--printpath、--sync-all
 ├─ 安装.bat                  # Windows 双击入口，调用 install.sh
 ├─ LICENSE
 ├─ assets/                  # HELP / 模板 / 示例
