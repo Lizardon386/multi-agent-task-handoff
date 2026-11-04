@@ -38,17 +38,49 @@ flowchart LR
   G[$AGENT_CONFIG] --> K[能力差异表 / config.toml / sync-paths / 可选 PROJECT_RULES]
 ```
 
-## 4. 核心流程
+## 4. 完整历程
 
-| 阶段 | 命令 | 产出 | 下一步 |
-|---|---|---|---|
-| 开工 | `--doc` | `handoff/` 三档 | 工作 |
-| 工作 | — | 直接改代码/文档 | 收工 |
-| 收工 | `--suspend` | CONTEXT 更新 + PROMPT 覆盖 | 新会话 |
-| 接手 | `--resume` | 核锚点、跑验证 | 工作 |
-| 维护 | `--check` / `--fix` / `--probe` / `--printpath` | 报告或修复 | — |
+第 3 节给组件拓扑，这里给时间线：建档、工作、收工，到另一个会话接手，再回到工作；维护与迁移是旁路。命令语义见 [SKILL.md](../SKILL.md)，本节只讲顺序、产出和边界。
 
-命令语义见 [SKILL.md](../SKILL.md)，这里只给顺序。一次只用一个命令；`--workspace` / `--nosave` 是全局选项。
+```mermaid
+flowchart LR
+  subgraph A[会话 A]
+    D[开工<br/>--doc] --> W1[工作]
+    W1 --> S[收工<br/>--suspend]
+  end
+  subgraph B[会话 B]
+    R[接手<br/>--resume] --> C[核锚点 / 跑验证]
+    C --> W2[继续工作]
+  end
+  S --> F[handoff/CONTEXT.md<br/>handoff/PROMPT.md]
+  F --> R
+  W2 -.->|收工 / --suspend| F
+  M[维护<br/>--check / --fix / --probe / --printpath] -.->|随时| F
+  L[旧布局] -.->|--check / --fix| D
+```
+
+### 4.1 阶段与产出
+
+| 阶段 | 触发 | 动作 | 产出 / 结果 | 边界 |
+|---|---|---|---|---|
+| 开工 | `--doc` | 确保 CONTEXT；补 README/DESIGN；写 `模式：三档`；同意后把 PROMPT 加入 `.gitignore` | `handoff/` 三档 | 目标已存在且非本协议生成 → 停 |
+| 工作 | — | 改代码/文档；状态或坑变化时更新 CONTEXT | 可交接的当前状态 | 一个项目同一时间一个写者 |
+| 收工 | `--suspend` | 超限先压卡；写现在/下一步/坑/记录；覆盖 PROMPT；按需读 memory 提升事实 | CONTEXT 更新 + PROMPT 覆盖 | 默认不动 git；`--commit` 只提交 `handoff/`；`--push` 隐含 commit |
+| 交接给会话 | `--suspend <ID>` | 写卡后只发指针；目标读不到文件才附全文 | 目标会话可接手 | 会话不搬运 |
+| 接手 | `--resume` | PROMPT → CONTEXT → 三档 → 规则；核锚点、跑验证；有 ID 可读回 | 恢复上下文 | 冲突以 CONTEXT 为准；旧布局提示 `--check` / `--fix` |
+| 维护 | `--check` / `--fix` / `--probe` / `--printpath` | 只读检查 / 自动修复 / 实测能力 / 路径诊断 | 报告或修复 | 默认不提交；冲突项询问 |
+| 迁移 | `--check` → `--fix` | 先出清单；只迁同名标准件；git 仓用 `git mv` | 旧布局并入 `handoff/` | 客制化名文档留根；不扫描全盘 |
+
+### 4.2 异常与不可逆点
+
+- 没有 `handoff/` 不自动建：先 `--doc`。
+- 目标文档已存在且非本协议生成：停，不覆盖、不换路径。
+- 交接后旧会话停写；同一项目同一时间一个写者。
+- `PROMPT` 与 `CONTEXT` 冲突以 `CONTEXT` 为准。
+- 默认不操作 git；外部可见动作必须显式 `--commit` / `--push`。
+- 安装、副本同步与配置不在这条线上：见第 5 节。
+
+一次只用一个命令；`--workspace` / `--nosave` 是全局选项。
 
 ## 5. 架构与关键接缝
 
