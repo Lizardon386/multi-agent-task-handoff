@@ -283,12 +283,28 @@ if [ "$print_paths" = 1 ]; then
   fi
   printf '  %-13s %s  [来源: %s]\n' 'workspace' "$workspace" "$workspace_src"
   printf '  %-13s %s\n' 'capabilities' "$caps"
-  hooks_path=$(git -C "$repo" config --local --get core.hooksPath 2>/dev/null || true)
-  case "$hooks_path" in
-    .githooks) hooks_status='已启用' ;;
-    '') hooks_status='未设置，钩子不会跑' ;;
-    *) hooks_status="未指向 .githooks，提交时钩子不会跑" ;;
-  esac
+  src_repo=
+  hook_repo=$repo
+  if ! git -C "$hook_repo" rev-parse --git-dir >/dev/null 2>&1; then
+    src_repo=$(sed -n 's/^source=//p' "$repo/.skill-version" 2>/dev/null | head -1)
+    if [ -n "$src_repo" ] && git -C "$src_repo" rev-parse --git-dir >/dev/null 2>&1; then
+      hook_repo=$src_repo
+    else
+      src_repo=
+    fi
+  fi
+  printf '  %-13s %s\n' 'source' "${src_repo:-$repo}"
+  if git -C "$hook_repo" rev-parse --git-dir >/dev/null 2>&1; then
+    hooks_path=$(git -C "$hook_repo" config --local --get core.hooksPath 2>/dev/null || true)
+    case "$hooks_path" in
+      .githooks) hooks_status='已启用' ;;
+      '') hooks_status='未设置，钩子不会跑' ;;
+      *) hooks_status="未指向 .githooks，提交时钩子不会跑" ;;
+    esac
+  else
+    hooks_path=未知
+    hooks_status='非 git 副本，未找到源仓库'
+  fi
   printf '  %-13s %s  [%s]\n' 'hooksPath' "${hooks_path:-未设置}" "$hooks_status"
   if [ -n "$target_arg" ]; then
     t=$(to_unix "$target_arg")
