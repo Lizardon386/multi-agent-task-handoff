@@ -1,11 +1,11 @@
 # multi-agent-task-handoff · 上下文与进展
 
-> V3 已落地并推送（`e922909`）；任务文档在 `handoff/`，4 份副本已同步（WorkBuddy 目录不存在）；待双平台验证与旧项目迁移。
+> V3 已落地；v3.1 收尾（迁移语义 + `--syncall` 护栏）；4 份副本已同步（WorkBuddy 目录不存在）；待双平台验证与旧项目迁移。
 > 最近更新：2026-11-04
 > 模式：三档
 > 项目目录：`D:\agent_workspace\multi-agent-task-handoff`
 > 状态锚点：`git log -1 --oneline`；推 GitHub 前 `gh auth status`
-> 验证命令：`git status -sb`；`bash install.sh --dry-run`；`bash install.sh --printpath`；`bash install.sh --sync-all --dry-run`
+> 验证命令：`git status -sb`；`bash install.sh --dry-run`；`bash install.sh --printpath`；`bash install.sh --syncall --dry-run`
 
 ## 文档
 
@@ -22,7 +22,7 @@
 ## 目标与完成定义
 
 - 目标：V3 协议落地；任务文档固定在 `handoff/`；宿主差异由能力表驱动；交接只发指针。
-- 完成标准（可验证）：`SKILL.md` / `README.md` / `DESIGN.md` 与安装副本一致；8 个命令与 `--help` 一致；`--check` 无 ⛔；`CONTEXT.md` ≤100 行；`install.sh --dry-run` / `--printpath` / `--sync-all` 正常。
+- 完成标准（可验证）：`SKILL.md` / `README.md` / `DESIGN.md` 与安装副本一致；8 个命令与 `--help` 一致；`--check` 无 ⛔；`CONTEXT.md` ≤100 行；`install.sh --dry-run` / `--printpath` / `--syncall` 正常。
 
 ## 现在在哪
 
@@ -61,12 +61,14 @@
 - 包文件（`SKILL.md`、`install.sh`、`安装.bat`、`assets/`、`LICENSE`、`.githooks/`）必须留根。
 - `install.sh` 只装 HEAD：工作树未提交时，安装副本仍是上一个 commit。
 - worktree 会话可能把共享的 `core.hooksPath` 改成 `.git/hooks`，导致提交时钩子静默不跑；提交前 `--check` 看钩子，`--fix` 可恢复。
-- 安装注册表在 `$AGENT_CONFIG/sync-paths`（旧仓库内 `.skill-sync-paths` 已迁走并删除）；提交后补跑 `bash install.sh --sync-all`。
-- 能力表只在 `$AGENT_CONFIG/AGENT_CAPABILITIES.md`；工作区根副本已删，不再双份。新机器由 `install.sh` 从模板播种（不存在时），已存在不覆盖。
+- 安装注册表在 `$AGENT_CONFIG/sync-paths`（旧仓库内 `.skill-sync-paths` 已迁走并删除）；提交后 `post-commit` 跑 `bash install.sh --syncall`。`--syncall` 只从源仓库跑：安装副本没有 HEAD，强行同步会把副本写成 `commit=unknown`，脚本现在直接拒绝。
+- 能力表只在 `$AGENT_CONFIG/AGENT_CAPABILITIES.md`；工作区根副本已删，不再双份。新机器由 `install.sh` 从模板播种（不存在时），已存在不覆盖。路径固定，`config.toml` 不再有 `capabilities` 键。
+- 换机只带知识：能力表整表复制、`AGENTS.md` / `PROJECT_RULES.md` 复制；`sync-paths` 与宿主 memory 不带；`PROMPT.md` 不带走。
 - 工作区 `AGENTS.md` / `PROJECT_RULES.md` 缺失时，`--check` 报 🟡，`--fix` 确认后从模板播种；已存在的只报过期，不改写。
 
 ## 交接记录（只记关键动作，≤10 条）
 
+- 2026-11-04 Claude：v3.1 迁移语义——README 增换机迁移表与步骤；`--sync-all` 改名 `--syncall` 并拒绝从安装副本运行；删未实现的 `capabilities` 配置键与 `AGENT_CAPABILITIES` 环境变量；`--fix` 写明副本快进手段。
 - 2026-11-04 Claude：安装播种能力表；`--check` 增加工作区文档三项；`--fix` 只补缺失、不改写已有。
 - 2026-11-03 Claude：能力表拆「memory 读取」表；DESIGN 版本表补 v2 卸载、v3 评审排在 v3 前；4 份副本随提交同步。
 - 2026-11-03 Claude：钩子防护——`--printpath` 打印 hooksPath，`--check` 校验、`--fix` 恢复；定位 worktree 会话改共享 hooksPath 的坑。

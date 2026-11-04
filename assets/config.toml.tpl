@@ -5,7 +5,6 @@ version = 1
 # 作者本机自定义示例（默认注释，首次运行会询问）：
 # workspace = "D:/agent_workspace"
 
-# 可选；默认同目录 AGENT_CAPABILITIES.md
-# capabilities = "~/..."
+# 能力表固定为同目录 AGENT_CAPABILITIES.md（不支持自定义路径）
 
 # 不设 github 开关：有 GitHub remote 即从 handoff/README.md 生成 .github/README.md

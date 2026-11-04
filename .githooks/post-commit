@@ -18,12 +18,12 @@ if [ ! -f "$sync_paths" ] && [ -f "$repo/.skill-sync-paths" ]; then
 fi
 
 if [ -f "$repo/install.sh" ] && command -v sh >/dev/null 2>&1; then
-  # --sync-all 幂等：只补落后的副本，已最新的直接跳过。
+  # --syncall 幂等：只补落后的副本，已最新的直接跳过。
   # 所以被打断也不留后患 —— 下次提交会再跑一遍，自动补齐。
   # 清掉钩子注入的 GIT_* 变量，避免 install.sh 误判仓库状态。
   env -u GIT_DIR -u GIT_WORK_TREE -u GIT_INDEX_FILE \
-    sh "$repo/install.sh" --sync-all </dev/null \
-    || printf '%s\n' "副本同步未全部成功；手动补齐: sh \"$repo/install.sh\" --sync-all" >&2
+    sh "$repo/install.sh" --syncall </dev/null \
+    || printf '%s\n' "副本同步未全部成功；手动补齐: sh \"$repo/install.sh\" --syncall" >&2
 elif [ -f "$sync_paths" ]; then
   # 兜底：没有 install.sh 时按清单逐份解包（用 fd 3 读，避免循环体吃掉清单剩余行）
   head_commit=$(git -C "$repo" rev-parse HEAD)

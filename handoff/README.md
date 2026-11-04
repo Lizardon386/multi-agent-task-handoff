@@ -3,7 +3,7 @@
 > 换会话、换 agent、隔天回来，任务还能接着干：把状态写进项目目录的 `handoff/`，下一个 agent 读卡即可接手。
 > 一个 skill、一个目录、一份交接卡；不装常驻服务，不绑定宿主，不复制聊天历史。
 > 本文件是 `handoff/README.md`，任务/产品 README 的唯一源；GitHub 首页由它生成。
-> 最近更新：2026-11-03
+> 最近更新：2026-11-04
 
 ## 文档
 
@@ -51,6 +51,8 @@ bash install.sh               # 只装当前宿主
 
 Windows 也可以直接双击根目录的 `安装.bat`：它自动找 git/bash 并调用 `install.sh`，识别不出宿主时会提示你选择。
 
+装到多个宿主时，提交后由 `install.sh --syncall` 把各安装副本对齐到当前 HEAD；幂等，只补落后的，可随时手动重跑。
+
 然后在你的项目目录里对新会话说：
 
 ```text
@@ -75,7 +77,7 @@ Windows 也可以直接双击根目录的 `安装.bat`：它自动找 git/bash �
 | 接手别人的任务 | `接手` / `--resume` | 读 PROMPT → CONTEXT，核锚点、跑验证 |
 | 本轮收工 | `收工` / `--suspend` | 按需压卡、写 CONTEXT、覆盖 PROMPT |
 | 交给指定会话 | `--suspend <ID>` | 写卡后只发一段指针，不贴全文 |
-| 体检/修复 | `--check` / `--fix` | 检查安装、布局、配置、链接；`--fix` 修可自动项 |
+| 体检/修复 | `--check` / `--fix` | 检查安装、布局、配置、链接；`--fix` 修可自动项，含把落后的安装副本快进到当前提交 |
 | 摸底宿主能力 | `--probe` | 实测当前 agent 并更新能力表；`--live` 会实际建会话 |
 | 路径诊断 | `--printpath` | 表格输出配置目录、配置文件、工作区根、项目目录、能力表、安装注册表、源仓库、安装副本、钩子 |
 
@@ -103,7 +105,29 @@ Windows 也可以直接双击根目录的 `安装.bat`：它自动找 git/bash �
 
 项目自己的 `README.md`、`docs/`、源码都不动；任务文档只在 `handoff/`。
 
-## 5. 限制与注意事项
+## 5. 换机迁移
+
+协议本体随仓库走；机器上另有几样东西要分清带不带：
+
+| 内容 | 位置 | 带不带 |
+|---|---|---|
+| 能力表 | `$AGENT_CONFIG/AGENT_CAPABILITIES.md` | ✅ 整表带走，覆盖模板；只重填「本机环境」块 |
+| 工作区规则 | `<工作区根>/AGENTS.md`、`PROJECT_RULES.md` | ✅ 复制过去；「本机环境」小节重填 |
+| 机器偏好 | `$AGENT_CONFIG/config.toml` | 🟡 改掉 `[paths].workspace` 再带 |
+| 安装注册表 | `$AGENT_CONFIG/sync-paths` | ❌ 不带，新机器 `install.sh` 自动重建 |
+| 宿主 memory | 宿主自己的目录 | ❌ 不搬；有价值的事实已在 `handoff/` |
+| 任务状态 | 项目内 `handoff/` | 随项目仓库 clone 即带 |
+
+新机器步骤：
+
+1. `git clone` 本仓库并跑 `install.sh`：会播种模板 `config.toml` 和能力表。
+2. 用旧机器的能力表覆盖模板——`install.sh` 只在文件不存在时播种，不会覆盖已有内容。
+3. 复制 `AGENTS.md` / `PROJECT_RULES.md` 到新工作区根，改 `config.toml` 的 workspace。
+4. 重填能力表「本机环境」块；跑 `--printpath`、`--check`、`--probe` 复验。
+
+`PROMPT.md` 不带走：默认 gitignore，含本机路径和会话 ID。
+
+## 6. 限制与注意事项
 
 - 不自动捕获会话；必须显式触发一次。
 - 不在项目目录装钩子，不写全局规则，不起后台服务。

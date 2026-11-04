@@ -10,7 +10,7 @@ dry=0
 force=0
 hook=1
 register=1
-sync_all=0
+syncall=0
 print_paths=0
 host_arg=
 target_arg=
@@ -34,7 +34,7 @@ usage() {
   --dry-run        只打印将要做什么，不写文件
   --host NAME      qoder | claude | codex | opencode | zcode | workbuddy（识别不出时显式指定）
   --target DIR     直接指定安装目录（与 --host 二选一）
-  --sync-all       按 $AGENT_CONFIG/sync-paths 逐份对齐到当前 HEAD，只补落后的；幂等，可重复跑
+  --syncall        按 $AGENT_CONFIG/sync-paths 逐份对齐到当前 HEAD，只补落后的；幂等，可重复跑
   --printpath      打印 config / workspace / capabilities / 安装目录及其来源，不写文件
   --force          覆盖没有 .skill-version 的非空目录
   --no-hook        不改仓库本地 core.hooksPath
@@ -54,7 +54,7 @@ while [ $# -gt 0 ]; do
     --force) force=1 ;;
     --no-hook) hook=0 ;;
     --no-register) register=0 ;;
-    --sync-all) sync_all=1 ;;
+    --syncall) syncall=1 ;;
     --printpath) print_paths=1 ;;
     --host) [ $# -ge 2 ] || usage_die "--host 需要一个值"; host_arg=$2; shift ;;
     --host=*) host_arg=${1#*=} ;;
@@ -69,8 +69,8 @@ done
 if [ -n "$target_arg" ] && [ -n "$host_arg" ]; then
   usage_die "--host 与 --target 只能用一个"
 fi
-if [ "$sync_all" = 1 ] && { [ -n "$target_arg" ] || [ -n "$host_arg" ]; }; then
-  usage_die "--sync-all 不能与 --host / --target 一起用"
+if [ "$syncall" = 1 ] && { [ -n "$target_arg" ] || [ -n "$host_arg" ]; }; then
+  usage_die "--syncall 不能与 --host / --target 一起用"
 fi
 
 script_dir=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd -P) || die "找不到脚本所在目录"
@@ -130,10 +130,13 @@ if [ ! -f "$paths_file" ] && [ -f "$repo/.skill-sync-paths" ]; then
     && echo "迁移: .skill-sync-paths -> $paths_file"
 fi
 
-# --sync-all：按 $AGENT_CONFIG/sync-paths 逐份对齐到当前 HEAD。
+# --syncall：按 $AGENT_CONFIG/sync-paths 逐份对齐到当前 HEAD。
 # 只补落后的，已最新直接跳过，所以可以随便重复跑 —— 被打断也没关系，下次再跑一次就补齐。
-if [ "$sync_all" = 1 ]; then
+if [ "$syncall" = 1 ]; then
   [ -f "$paths_file" ] || die "找不到 $paths_file（先跑一次 install.sh 生成）"
+  # 必须从源仓库跑：安装副本没有 HEAD，强行同步会把所有副本降级成 unknown。
+  git -C "$repo" rev-parse --git-dir >/dev/null 2>&1 \
+    || die "--syncall 必须从源仓库运行（当前是安装副本，没有 HEAD）"
   # 一次 git 调用同时拿到 commit；失败才退回 unknown（少一次进程 ≈ 0.7 秒）
   head_commit=$(git -C "$repo" rev-parse HEAD 2>/dev/null) || head_commit=unknown
   printf '对齐目标: %s\n' "$head_commit"
@@ -271,7 +274,7 @@ detect_host() {
 if [ "$print_paths" = 1 ]; then
   config_dir=$(agent_config_dir)
   resolve_workspace
-  caps=${AGENT_CAPABILITIES:-$config_dir/AGENT_CAPABILITIES.md}
+  caps=$config_dir/AGENT_CAPABILITIES.md
   cfg_file=$config_dir/config.toml
   registry_file=$config_dir/sync-paths
   reg_count=0

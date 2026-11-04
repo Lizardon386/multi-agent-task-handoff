@@ -2,7 +2,7 @@
 
 > 面向改这套协议的人：为什么任务文档固定在 `handoff/`、项目与工作区根怎么分、命令如何收敛、宿主差异如何驱动自动化。
 > 文档表见 [CONTEXT.md](CONTEXT.md)；使用者说明见 [README.md](README.md)，协议正文见 [SKILL.md](../SKILL.md)。
-> 最近更新：2026-11-03
+> 最近更新：2026-11-04
 
 ## 1. 目标与约束
 
@@ -51,7 +51,7 @@ flowchart LR
 ```text
 multi-agent-task-handoff/
 ├─ SKILL.md                 # 协议正文（包文件，必须在根）
-├─ install.sh               # 安装：宿主识别、config、--printpath、--sync-all
+├─ install.sh               # 安装：宿主识别、config、--printpath、--syncall
 ├─ 安装.bat                  # Windows 双击入口，调用 install.sh
 ├─ LICENSE
 ├─ assets/                  # HELP / 模板 / 示例
@@ -81,7 +81,8 @@ multi-agent-task-handoff/
 | `handoff/*` | 任务状态 | 项目目录 |
 
 - `$AGENT_CONFIG`：Linux/macOS `${XDG_CONFIG_HOME:-$HOME/.config}/multi-agent-task-handoff`；Windows `%APPDATA%\multi-agent-task-handoff`；可用 `AGENT_CONFIG` 覆盖。
-- `sync-paths` 是“一行一个安装目录”的纯文本，由 `install.sh` 追加；`--sync-all` 与 `post-commit` 都读它。
+- `sync-paths` 是“一行一个安装目录”的纯文本，由 `install.sh` 追加；`--syncall` 与 `post-commit` 都读它。
+- `--syncall` 只允许从源仓库运行：安装副本没有 HEAD，强行同步会把所有副本写成 `commit=unknown`，等于降级。
 - 旧位置 `<repo>/.skill-sync-paths` 由 `install.sh` / `post-commit` 一次性迁到新位置后删除。
 - 三者不合并成一个文件：偏好（低频编辑）、能力缓存（Markdown 表）、注册表（高频追加）的读写方式不同，合并会让 bash 解析变脆。
 
@@ -128,6 +129,7 @@ multi-agent-task-handoff/
 | 跨任务规则 | 项目目录 → 父目录 → `$AGENT_CONFIG/PROJECT_RULES.md` |
 | 能力表 | `$AGENT_CONFIG/AGENT_CAPABILITIES.md`；差异表驱动，协议不写宿主分支 |
 | 机器级状态 | `config.toml`、`AGENT_CAPABILITIES.md`、`sync-paths` 统一放 `$AGENT_CONFIG`；工作区根只放规则与入口 |
+| 换机迁移 | 能力表整表带走，只重填「本机环境」块；`AGENTS.md` / `PROJECT_RULES.md` 复制；`sync-paths` 与宿主 memory 不带；`config.toml` 只改 workspace |
 | 迁移范围 | 只迁符合模版的同名任务文档（`CONTEXT` / `README` / `DESIGN` / `压卡备份`）；客制化名文档（`实施方案`、`架构设计` 等）留根，由 `CONTEXT` 的文档表用 `../` 引用 |
 | 迁移判定 | root `CONTEXT.md` 存在且 `模式：三档`，或文档带模版特征；产品 README/DESIGN 不动 |
 | 完成定义 | 文档与安装副本一致；`--help` 与命令表一致；`--check` 无 ⛔；卡 ≤100 行 |
@@ -142,6 +144,7 @@ multi-agent-task-handoff/
 - 迁移只动同名标准件；客制化交付文档（大方案、架构稿）不搬，避免移动工程产物和大范围改链。
 - `.github/README.md` 覆盖根 README 的首页展示是预期行为；要求项目 README 当首页的仓不适用。
 - 安装只装 HEAD；工作树未提交时只装上一个 commit。
+- 换机迁移只带知识，不带本机状态：能力表本身可搬（覆盖模板），`sync-paths` 重建，宿主 memory 不搬，`PROMPT.md` 不带走。
 - 机器级状态只放 `$AGENT_CONFIG`，不放仓库；仓库里不留 `.skill-sync-paths`。
 - worktree 会话可能修改共享的 `core.hooksPath`；`--check` 校验，`--fix` 恢复，不静默接受。
 - 模板只播种、不覆盖：缺失的 `AGENT_CAPABILITIES.md` / `AGENTS.md` / `PROJECT_RULES.md` 可确认后从模板创建；已存在的不改写，只报过期。
@@ -165,6 +168,7 @@ v1→v2 的转折点不是“不要交接”，而是“不要用常驻强制层
 | v2 卸载 | 2026-11-03 | 撤掉根目录三档 | “cwd/任务目录 + 根三档”在多仓/散落仓、Ubuntu 下不成立 | 根三档迁 `handoff/`；命令收敛为 7 个；删作者快照与同步脚本；中文别名保留 |
 | v3 评审 | 2026-11-03 | 方案收敛 | 否决 docs/、symlink、会话搬运、命令叠加 | 明细见 9.2 |
 | v3 | 2026-11-03 | 项目化 + `handoff/` + 差异表驱动 | 从“cwd 即任务根”转向“项目目录”；工作区根只作容器；宿主差异决定自动化程度；会话不搬运 | 术语统一；`handoff/`；8 个命令；`config.toml`；能力差异表；`.github` 快照；memory 只读提升 |
+| v3.1 | 2026-11-04 | 迁移语义 + 安装同步护栏 | 能力表是知识、不是本机状态：整表可带走，只重填本机块；安装副本没有资格决定 HEAD | `--syncall` 改名并拒绝从安装副本运行；删未实现的 `capabilities` 配置键；README 增换机迁移；能力表路径固定 |
 
 ### 9.2 已废弃方案
 
