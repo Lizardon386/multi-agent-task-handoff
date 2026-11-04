@@ -40,9 +40,15 @@ flowchart LR
 
 ## 4. 核心流程
 
-命令流程见 [SKILL.md](../SKILL.md)：`--resume` 读卡核锚点，`--suspend` 压卡/写卡/写指针，`--doc` 补三档，`--check`/`--fix` 检查修复，`--probe` 实测能力。
+| 阶段 | 命令 | 产出 | 下一步 |
+|---|---|---|---|
+| 开工 | `--doc` | `handoff/` 三档 | 工作 |
+| 工作 | — | 直接改代码/文档 | 收工 |
+| 收工 | `--suspend` | CONTEXT 更新 + PROMPT 覆盖 | 新会话 |
+| 接手 | `--resume` | 核锚点、跑验证 | 工作 |
+| 维护 | `--check` / `--fix` / `--probe` / `--printpath` | 报告或修复 | — |
 
-一次只用一个命令；`--workspace` / `--nosave` 是全局选项。
+命令语义见 [SKILL.md](../SKILL.md)，这里只给顺序。一次只用一个命令；`--workspace` / `--nosave` 是全局选项。
 
 ## 5. 架构与关键接缝
 
