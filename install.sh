@@ -35,7 +35,7 @@ usage() {
   --host NAME      qoder | claude | codex | opencode | zcode | workbuddy（识别不出时显式指定）
   --target DIR     直接指定安装目录（与 --host 二选一）
   --syncall        按 $AGENT_CONFIG/sync-paths 逐份对齐到当前 HEAD，只补落后的；幂等，可重复跑
-  --printpath      打印 config / workspace / capabilities / 安装目录及其来源，不写文件
+  --printpath      打印 config / workspace / 能力表 / 源仓库 / 宿主 / 副本清单 / 钩子及其来源，不写文件
   --force          覆盖没有 .skill-version 的非空目录
   --no-hook        不改仓库本地 core.hooksPath
   --no-register    不把目标写进 $AGENT_CONFIG/sync-paths
@@ -279,6 +279,8 @@ if [ "$print_paths" = 1 ]; then
   registry_file=$config_dir/sync-paths
   reg_count=0
   [ -f "$registry_file" ] && reg_count=$(awk 'NF && $1 !~ /^#/ {n++} END{print n+0}' "$registry_file" 2>/dev/null)
+  caps_date=
+  [ -f "$caps" ] && caps_date=$(grep -o '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]' "$caps" 2>/dev/null | head -1)
   src_repo=
   hook_repo=$repo
   if ! git -C "$hook_repo" rev-parse --git-dir >/dev/null 2>&1; then
@@ -289,7 +291,9 @@ if [ "$print_paths" = 1 ]; then
       src_repo=
     fi
   fi
+  head_full=
   if git -C "$hook_repo" rev-parse --git-dir >/dev/null 2>&1; then
+    head_full=$(git -C "$hook_repo" rev-parse HEAD 2>/dev/null || true)
     hooks_path=$(git -C "$hook_repo" config --local --get core.hooksPath 2>/dev/null || true)
     case "$hooks_path" in
       .githooks) hooks_status='已启用' ;;
@@ -302,13 +306,17 @@ if [ "$print_paths" = 1 ]; then
   fi
   if [ -n "$target_arg" ]; then
     t=$(to_unix "$target_arg")
+    host_label='manual (--target)'
   elif [ -n "$host_arg" ]; then
     cfg=$(default_cfg "$host_arg" 2>/dev/null) || cfg=
     [ -n "$cfg" ] && t=$(to_unix "$cfg")/skills/$skill_id || t=未知宿主
+    host_label="$host_arg (--host)"
   elif detect_host; then
     t=$(to_unix "$cfg")/skills/$skill_id
+    host_label="$host ($cfg_src)"
   else
     t=未识别宿主
+    host_label='未识别（检查宿主环境变量）'
   fi
   printf '路径诊断\n'
   printf '────────────────────────────────────────\n'
@@ -320,7 +328,7 @@ if [ "$print_paths" = 1 ]; then
   fi
   printf '  工作区根        %s  [来源: %s]\n' "$workspace" "$workspace_src"
   if [ -f "$caps" ]; then
-    printf '  能力表          %s  [已存在]\n' "$caps"
+    printf '  能力表          %s  [已存在%s]\n' "$caps" "${caps_date:+，更新 $caps_date}"
   else
     printf '  能力表          %s  [缺失]\n' "$caps"
   fi
@@ -331,7 +339,32 @@ if [ "$print_paths" = 1 ]; then
   fi
   printf '  源仓库          %s\n' "${src_repo:-$repo}"
   printf '  Git 钩子        %s  [%s]\n' "${hooks_path:-未设置}" "$hooks_status"
+  printf '  宿主            %s\n' "$host_label"
   printf '  安装副本        %s\n' "$t"
+  if [ -f "$registry_file" ]; then
+    while IFS= read -r line <&3; do
+      case "$line" in ''|'#'*) continue ;; esac
+      dest=$line
+      while :; do case "$dest" in *' ') dest=${dest% } ;; *) break ;; esac; done
+      [ -n "$dest" ] || continue
+      cur=
+      if [ -f "$dest/.skill-version" ]; then
+        while IFS= read -r kv; do
+          case "$kv" in commit=*) cur=${kv#commit=}; break ;; esac
+        done < "$dest/.skill-version"
+      fi
+      if [ ! -d "$dest" ]; then st=缺失
+      elif [ -z "$cur" ]; then st=无版本
+      elif [ -z "$head_full" ]; then st=未知
+      elif [ "$cur" = "$head_full" ]; then st=当前
+      else st=落后
+      fi
+      cur7=$(printf '%.7s' "$cur")
+      printf '  副本            %s  %s  [%s]\n' "$dest" "${cur7:--}" "$st"
+    done 3< "$registry_file"
+  else
+    printf '  副本            无注册表\n'
+  fi
   printf '────────────────────────────────────────\n'
   exit 0
 fi

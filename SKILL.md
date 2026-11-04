@@ -28,7 +28,7 @@ argument-hint: "[--help | --resume | --suspend [ID] [--commit] [--push] | --doc 
 | `--check` | 只读检查 |
 | `--fix` | 检查 + 修可自动修复项 |
 | `--probe [--live]` | 检查 + 实测能力；`--live` 实际建会话/发送/读回 |
-| `--printpath` | 只读路径诊断：config / workspace / 项目目录 / 能力表 / 安装副本 / 钩子 |
+| `--printpath` | 只读路径诊断：config / workspace / 能力表 / 源仓库 / 宿主 / 副本清单 / 钩子 |
 | `--workspace <PATH> [--nosave]` | 指定工作区根；默认写回 `config.toml` |
 | `--help` | 输出完整帮助 |
 
@@ -116,11 +116,12 @@ argument-hint: "[--help | --resume | --suspend [ID] [--commit] [--push] | --doc 
 | 配置文件 |  | ✅ 已存在 / ⚠️ 不存在 |
 | 工作区根 |  | 来源: config.toml / env / 默认 |
 | 项目目录 |  | — |
-| 能力表 |  | ✅ 存在 / ⚠️ 不存在 |
+| 能力表 |  | ✅ 存在（更新日期）/ ⚠️ 不存在 |
 | 安装注册表 |  | N 条 / 缺失 |
 | 源仓库 |  | — |
 | Git 钩子 | .githooks | ✅ 已启用 / ⚠️ 未指向 |
-| 安装副本 |  | ✅ 当前 / ⚠️ 落后 |
+| 宿主 |  | 识别来源: env / --host / --target |
+| 副本清单 | 逐行 路径 + commit | ✅ 当前 / ⚠️ 落后 / ❌ 缺失 |
 
 ## --help
 

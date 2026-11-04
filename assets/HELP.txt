@@ -17,7 +17,8 @@ multi-agent-task-handoff — 多 agent 任务交接
   --probe [--live]          摸底 / 探测：先检查，再实测当前 agent 并更新能力表
                               --live  实际执行建会话 / 发送 / 读回（需确认）
   --printpath               路径诊断：表格输出配置目录 / 配置文件 / 工作区根 / 项目目录 /
-                            能力表 / 安装注册表 / 源仓库 / Git 钩子 / 安装副本
+                            能力表（含更新日期）/ 安装注册表 / 源仓库 / Git 钩子 / 宿主 /
+                            全部副本的路径与 commit
   --workspace <PATH> [--nosave]
                             全局：指定工作区根；默认写回 config.toml；
                             --nosave 只本次生效，不写回
