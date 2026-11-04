@@ -67,7 +67,7 @@ argument-hint: "[--help | --resume | --suspend [ID] [--commit] [--push] | --doc 
 4. 有 ID：发短指针“请读 `<项目目录>/handoff/PROMPT.md` 接盘”；目标读不到文件时才附全文。
 5. 无 ID：写完就停，报告路径。
 6. 默认不操作 git；`--commit` 只提交 `handoff/` 下的文件；`--push` 隐含 commit；失败留本地并报告。
-7. memory：只读提升；不复制、不写回；项目内 memory 必须 gitignore。
+7. memory：按能力表「memory 读取」定位宿主 memory；读 `MEMORY.md` 指针 + 相关条目；只把“会影响下一家”的事实提升到 CONTEXT/DESIGN；不复制原文、不写回、不搬运；冲突以 CONTEXT/DESIGN/git 为准。
 8. 不强制结束会话；可当 checkpoint 用。
 
 ## --doc

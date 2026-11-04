@@ -1,6 +1,6 @@
 # multi-agent-task-handoff · 上下文与进展
 
-> V3 协议落地中：任务文档已迁入 `handoff/`，命令与模板已改，待做双平台验证与旧项目迁移。
+> V3 已落地并推送（`b715de5`）；任务文档在 `handoff/`，5 份副本已同步；待双平台验证与旧项目迁移。
 > 最近更新：2026-11-03
 > 模式：三档
 > 项目目录：`D:\agent_workspace\multi-agent-task-handoff`
@@ -27,12 +27,15 @@
 ## 现在在哪
 
 - 已完成：
-  - `SKILL.md` 重写为 V3（118 行）：7 个命令、术语、`handoff/`、配置、memory、GitHub 边界。
+  - `SKILL.md` 重写为 V3（127 行）：7 个命令、术语、`handoff/`、配置、memory、GitHub、迁移规则、钩子检查。
   - 任务文档迁入 `handoff/`：README / DESIGN / CONTEXT / 压卡备份；PROMPT 由 `--suspend` 生成，默认 gitignore。
-  - `install.sh`：`--print-paths`、创建 `$AGENT_CONFIG/config.toml`、`.skill-version` 写 `source=`；默认工作区根改 `$HOME/agent_workspace`。
-  - 能力表模板改成「Agent 能力与宿主差异表」，新增「项目 / 宿主术语」「项目目录操作」两张表。
-  - 删除 `作者实机调研/` 与 `sync-作者实机调研.sh`；`post-commit` 去掉快照同步。
-  - 生成 `.github/README.md`（由 `handoff/README.md` 生成）。
+  - `install.sh`：`--print-paths`（含 hooksPath）、创建 `$AGENT_CONFIG/config.toml`、`.skill-version` 写 `source=`；默认工作区根改 `$HOME/agent_workspace`。
+  - 能力表模板改成「Agent 能力与宿主差异表」；本机能力表只留 `$AGENT_CONFIG` 一份。
+  - 删除 `作者实机调研/` 与 `sync-作者实机调研.sh`；`post-commit` 去掉快照同步，保留副本同步 + 自动 push。
+  - 机器级状态收口：`sync-paths` 从仓库根迁到 `$AGENT_CONFIG`，旧位置一次性迁移。
+  - `.github/README.md` 由 `handoff/README.md` 生成；`.claude/` 测试 worktree 已清理。
+  - 已提交并推送：`6bfcc60`（V3 协议）、`d4d07d7`（安装输出）、`580dfc3`（状态收口）、`b715de5`（钩子自检）；远端 = 本地。
+  - 5 份安装副本（Qoder / OpenCode / ZCode / WorkBuddy / Claude）均在 `b715de5`。
 - 进行中：无代码改动。
 - 在飞文件（勿动）：无。
 
@@ -42,7 +45,7 @@
 2. 非 git 项目、Windows Git Bash、Ubuntu 路径测试（`$HOME`、XDG、`%APPDATA%`、空格路径）。
 3. 现有项目逐个 `--check` → `--fix` 迁移，不默认扫描全盘。
 4. WorkBuddy memory 读取方式实测；其余能力表待测项用 `--probe` 补。
-5. 安装副本切到 V3：提交后跑 `bash install.sh --sync-all`，`diff -r` 比对 4 份副本。
+5. 每次提交前跑 `--check`，核对 `core.hooksPath` 和副本状态（worktree 会话后尤其要查）。
 
 ## 坑与约束
 
@@ -52,7 +55,7 @@
 - 一个项目同一时间一个写者；交接后旧会话停写。
 - `PROMPT.md` 默认 gitignore；含会话 ID/本机路径，不提交。
 - 默认不操作 git；`--commit` 只提交 `handoff/`，`--push` 隐含 commit；失败留本地。
-- memory 只读提升；不复制、不写回；项目内 memory 必须 gitignore。
+- memory 只读提升；不复制、不写回；项目内 memory 必须 gitignore。位置与读取方式按能力表「memory 读取」：Claude 在 `~/.claude/projects/<cwd编码>/memory/`（项目外），WorkBuddy 在项目目录 `.workbuddy-ai/memory/`。
 - 有 GitHub remote 才生成 `.github/README.md`；它会覆盖根 README 的首页展示，属预期行为。
 - 包文件（`SKILL.md`、`install.sh`、`安装.bat`、`assets/`、`LICENSE`、`.githooks/`）必须留根。
 - `install.sh` 只装 HEAD：工作树未提交时，安装副本仍是上一个 commit。
@@ -62,6 +65,7 @@
 
 ## 交接记录（只记关键动作，≤10 条）
 
+- 2026-11-03 Claude：钩子防护——`--print-paths` 打印 hooksPath，`--check` 校验、`--fix` 恢复；定位 worktree 会话改共享 hooksPath 的坑；5 份副本同步到 `b715de5`。
 - 2026-11-03 Claude：机器级状态收口——`sync-paths` 迁到 `$AGENT_CONFIG`，仓库内不再留；工作区根能力表副本删除，只留 `$AGENT_CONFIG` 一份；DESIGN 补 5.1.1 与迁移范围。
 - 2026-11-03 Claude：V3 文档重整——README 按落地页模板重写；DESIGN 删除进度/待办、已废弃方案移入版本节；CONTEXT 承接待办。
 - 2026-11-03 Claude：V3 落地——术语统一、文档迁入 `handoff/`、7 个命令、`config.toml`、能力差异表；删除作者快照与同步脚本；`SKILL.md` 118 行。
@@ -71,7 +75,6 @@
 - 2026-10-29 ZCode：`install.sh` 加 ZCode 宿主；本机副本增至三份。
 - 2026-10-29 ZCode：交接投递按能力表本行选手段；参考 ID 定为 `宿主:ID` 格式。
 - 2026-10-29 OpenCode：SKILL description 用自然句含触发词；README 补显式调用说明。
-- 2026-10-29 Qoder：公开发布——MIT、`AGENT_WORKSPACE`、脱敏重写历史。
 
 ## 参考 ID
 
