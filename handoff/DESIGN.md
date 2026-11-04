@@ -144,6 +144,7 @@ multi-agent-task-handoff/
 - 安装只装 HEAD；工作树未提交时只装上一个 commit。
 - 机器级状态只放 `$AGENT_CONFIG`，不放仓库；仓库里不留 `.skill-sync-paths`。
 - worktree 会话可能修改共享的 `core.hooksPath`；`--check` 校验，`--fix` 恢复，不静默接受。
+- 模板只播种、不覆盖：缺失的 `AGENT_CAPABILITIES.md` / `AGENTS.md` / `PROJECT_RULES.md` 可确认后从模板创建；已存在的不改写，只报过期。
 
 ## 9. 版本与设计演进
 

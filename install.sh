@@ -446,6 +446,12 @@ if [ -f "$cfg_file" ]; then
 else
   echo "配置: 会创建 $cfg_file"
 fi
+caps_file=$config_dir/AGENT_CAPABILITIES.md
+if [ -f "$caps_file" ]; then
+  echo "能力表: 已存在 $caps_file（不覆盖）"
+else
+  echo "能力表: 会创建 $caps_file（模板，待 --probe 填充）"
+fi
 
 if [ "$dry" = 1 ]; then
   echo "（dry-run，未写文件）"
@@ -488,6 +494,19 @@ if [ ! -f "$cfg_file" ]; then
       echo "配置: 已创建 $cfg_file"
     else
       echo "警告: 缺少 assets/config.toml.tpl" >&2
+    fi
+  else
+    echo "警告: 无法创建配置目录 $config_dir" >&2
+  fi
+fi
+
+if [ ! -f "$caps_file" ]; then
+  if mkdir -p "$config_dir" 2>/dev/null; then
+    if [ -f "$repo/assets/AGENT_CAPABILITIES.md.tpl" ]; then
+      cp "$repo/assets/AGENT_CAPABILITIES.md.tpl" "$caps_file" || echo "警告: 写能力表失败 $caps_file" >&2
+      echo "能力表: 已创建 $caps_file（模板，待 --probe 填充）"
+    else
+      echo "警告: 缺少 assets/AGENT_CAPABILITIES.md.tpl" >&2
     fi
   else
     echo "警告: 无法创建配置目录 $config_dir" >&2

@@ -62,10 +62,12 @@
 - `install.sh` 只装 HEAD：工作树未提交时，安装副本仍是上一个 commit。
 - worktree 会话可能把共享的 `core.hooksPath` 改成 `.git/hooks`，导致提交时钩子静默不跑；提交前 `--check` 看钩子，`--fix` 可恢复。
 - 安装注册表在 `$AGENT_CONFIG/sync-paths`（旧仓库内 `.skill-sync-paths` 已迁走并删除）；提交后补跑 `bash install.sh --sync-all`。
-- 能力表只在 `$AGENT_CONFIG/AGENT_CAPABILITIES.md`；工作区根副本已删，不再双份。
+- 能力表只在 `$AGENT_CONFIG/AGENT_CAPABILITIES.md`；工作区根副本已删，不再双份。新机器由 `install.sh` 从模板播种（不存在时），已存在不覆盖。
+- 工作区 `AGENTS.md` / `PROJECT_RULES.md` 缺失时，`--check` 报 🟡，`--fix` 确认后从模板播种；已存在的只报过期，不改写。
 
 ## 交接记录（只记关键动作，≤10 条）
 
+- 2026-11-04 Claude：安装播种能力表；`--check` 增加工作区文档三项；`--fix` 只补缺失、不改写已有。
 - 2026-11-03 Claude：能力表拆「memory 读取」表；DESIGN 版本表补 v2 卸载、v3 评审排在 v3 前；4 份副本随提交同步。
 - 2026-11-03 Claude：钩子防护——`--printpath` 打印 hooksPath，`--check` 校验、`--fix` 恢复；定位 worktree 会话改共享 hooksPath 的坑。
 - 2026-11-03 Claude：机器级状态收口——`sync-paths` 迁到 `$AGENT_CONFIG`，仓库内不再留；工作区根能力表副本删除，只留 `$AGENT_CONFIG` 一份；DESIGN 补 5.1.1 与迁移范围。
@@ -74,8 +76,6 @@
 - 2026-10-30 WorkBuddy：收尾写实——三条坑（自动 push、副本同步、验证方法）改成实测表述；验证钩子勿用管道。
 - 2026-10-30 WorkBuddy：加 workbuddy 宿主；能力表补 WorkBuddy 行；`.workbuddy-ai/` 进 gitignore。
 - 2026-10-30 WorkBuddy：能力表拆两张；PROJECT_RULES 定「宿主差异只进能力表」。
-- 2026-10-29 ZCode：`install.sh` 加 ZCode 宿主；本机副本增至三份。
-- 2026-10-29 ZCode：交接投递按能力表本行选手段；参考 ID 定为 `宿主:ID` 格式。
 
 ## 参考 ID
 
