@@ -56,7 +56,7 @@
 - 一个项目同一时间一个写者；交接后旧会话停写。
 - `PROMPT.md` 默认 gitignore；含会话 ID/本机路径，不提交。
 - 默认不操作 git；`--commit` 只提交 `handoff/`，`--push` 隐含 commit；失败留本地。
-- memory 只读提升；不复制、不写回；项目内 memory 必须 gitignore。位置与读取方式按能力表「memory 读取」：Claude 在 `~/.claude/projects/<cwd编码>/memory/`；WorkBuddy 5.9.x 在 `~/.workbuddy/memory/`（旧 5.8.x 在项目目录 `.workbuddy-ai/memory/`）。
+- memory 只读提升；不复制、不写回；项目内 memory 必须 gitignore。位置与读取方式按能力表「memory 读取」：Claude 在 `~/.claude/projects/<cwd编码>/memory/`；WorkBuddy 在 `~/.workbuddy/memory/`。
 - 有 GitHub remote 才生成 `.github/README.md`；它会覆盖根 README 的首页展示，属预期行为。
 - 包文件（`SKILL.md`、`install.sh`、`安装.bat`、`assets/`、`LICENSE`、`.githooks/`）必须留根。
 - `install.sh` 只装 HEAD：工作树未提交时，安装副本仍是上一个 commit。

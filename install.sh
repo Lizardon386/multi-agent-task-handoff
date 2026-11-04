@@ -219,7 +219,7 @@ default_cfg() {
       if [ -n "${WORKBUDDY_CONFIG_DIR:-}" ]; then printf '%s\n' "$WORKBUDDY_CONFIG_DIR"
       elif [ -n "${CODEBUDDY_CONFIG_DIR:-}" ]; then printf '%s\n' "$CODEBUDDY_CONFIG_DIR"
       elif [ -d "$HOME/.workbuddy" ]; then printf '%s\n' "$HOME/.workbuddy"
-      else printf '%s\n' "$HOME/.workbuddy-ai"; fi ;;
+      else return 1; fi ;;
     *) return 1 ;;
   esac
 }
