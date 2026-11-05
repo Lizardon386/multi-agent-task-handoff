@@ -212,15 +212,13 @@ multi-agent-task-handoff/
 
 ### 9.1 日常改动流程
 
-1. 改文件；涉及协议/脚本时同步改 `SKILL.md`、README、DESIGN、模板。
+1. 改文件；涉及协议/脚本/文档时同步改 `SKILL.md`、README、DESIGN、模板，以及各文档头块与章节编号。
 2. 自检：`sh -n scripts/lib.sh scripts/handoff.sh install.sh`；`bash install.sh --dryrun`。
 3. 诊断：`bash scripts/handoff.sh --printpath`；`bash scripts/handoff.sh --syncall --dryrun`。
-4. 提交：只 `git add` 相关文件；不提交 `handoff/PROMPT.md`、`$AGENT_CONFIG/*`、会话 ID、凭据。
-5. 推送：`bash scripts/handoff.sh --push`（默认 3 次 / 3 秒，只重试网络错误）。
-6. 同步：`bash scripts/handoff.sh --syncall`；5 份副本应到同一 commit。
-7. 核对：`git status -sb` 无 ahead；`scripts/handoff.sh --printpath` 副本全部「当前」。
+4. 保存：`bash scripts/handoff.sh --save`（默认已跟踪文件，新文件 `--all`，消息 `-m`）。
+5. 核对：`git status -sb` 无 ahead；`scripts/handoff.sh --printpath` 副本全部「当前」。
 
-直接维护可一条命令完成 4–6 步：`scripts/handoff.sh --save`。默认提交已跟踪文件，新文件加 `--all`；提交后自动同步副本，再推送重试。
+`--save` 内部依次：`git add` → `git commit` → `--syncall` → `--push`（网络错误重试）。普通 `git commit` 不会自动同步副本。
 
 自动化边界：**流程编排全部由人触发；自动化只发生在命令内部。**
 
@@ -229,35 +227,36 @@ multi-agent-task-handoff/
 | 改文件 | 人 | 人 / agent | 手动 |
 | 自检 | 人 | 脚本 | 手动触发，自动检查 |
 | 诊断 | 人 | 脚本 | 手动触发，自动读取 |
-| 提交 | 人 | git | 手动选择文件与消息 |
-| 推送 | 人 | `scripts/handoff.sh --push` | 手动触发，自动重试网络错误 |
-| 同步 | 人 | `scripts/handoff.sh --syncall` | 手动触发，自动对齐 |
+| 保存 | 人 | `scripts/handoff.sh --save` | 手动触发；命令内提交、同步、推送重试 |
 | 核对 | 人 | 脚本 | 手动触发，自动检查 |
 
 ```mermaid
 flowchart LR
   A[改文件<br/>手动] --> B[自检<br/>手动触发 / 自动检查]
   B --> C[诊断<br/>手动触发 / 自动读取]
-  C --> D[提交<br/>手动]
-  D --> E[推送<br/>手动触发 / 自动重试]
-  E --> F[同步副本<br/>手动触发 / 自动对齐]
+  C --> S[保存<br/>--save / 手动触发]
+  subgraph SAVE[命令内部]
+    D[提交] --> E[同步副本] --> F[推送重试]
+  end
+  S --> D
   F --> G[核对<br/>手动触发 / 自动检查]
   classDef manual fill:#fff3cd,stroke:#b8860b,color:#000
   classDef hybrid fill:#d4edda,stroke:#28a745,color:#000
-  class A,D manual
-  class B,C,E,F,G hybrid
+  class A manual
+  class B,C,S,D,E,F,G hybrid
 ```
 
-黄=人工判断；绿=人工触发、命令自动执行。没有被动自动化：所有同步与推送都由显式命令触发。
+黄=人工判断；绿=人工触发、命令自动执行；`--save` 框内是命令内部动作，没有外部触发。
 
 ### 9.2 两条提交路径
 
 | 场景 | 命令 | 提交范围 | 同步 |
 |---|---|---|---|
 | 直接维护仓库 | `scripts/handoff.sh --save` | 已跟踪文件（`--all` 含新文件） | 命令内自动 |
-| 任务收工 | `--suspend --commit` / `--push` | 只提交 `handoff/` | 收工末尾自动 `--syncall` |
+| 任务收工 | `--suspend`（挡位读 `[defaults].suspend`；显式 `--local` / `--commit` / `--push`） | 只提交 `handoff/` | 收工末尾自动 `--syncall` |
 
 - `scripts/handoff.sh --push` 只重试网络错误；认证失败、非快进、保护分支立即失败。
+- `--suspend` 默认挡位由 `[defaults].suspend` 决定；`--probe` 默认由 `[defaults].probe` 决定。本机分别为 `push` / `live`。
 - 推送失败时，卡与指针写「待推送」；不 force push，分叉先停下报告。
 
 ### 9.3 发布边界
