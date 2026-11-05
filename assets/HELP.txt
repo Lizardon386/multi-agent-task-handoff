@@ -20,9 +20,10 @@ multi-agent-task-handoff — 多 agent 任务交接
                               --static 只做静态检查与低成本实测
                               --live  实际执行建会话 / 发送 / 读回（需确认）
                             默认挡位读 config.toml 的 [defaults].probe
-  --printpath               路径诊断：表格输出配置目录 / 配置文件 / 工作区根 / 项目目录 /
-                            能力表（含更新日期）/ 安装注册表 / 源仓库 / 宿主 /
-                            全部副本的路径与 commit
+  --printpath [--host NAME | --target DIR]
+                            路径诊断：表格输出配置目录 / 配置文件 / 工作区根 / 能力表
+                            （含更新日期）/ 安装注册表 / 源仓库 / 宿主 / 当前安装副本 /
+                            全部副本的路径与 commit；--host / --target 显式指定
   --workspace <PATH> [--nosave]
                             全局：指定工作区根；默认写回 config.toml；
                             --nosave 只本次生效，不写回
@@ -33,7 +34,7 @@ multi-agent-task-handoff — 多 agent 任务交接
   --workspace 可与一个命令同用；--nosave 只跟 --workspace
   --local / --commit / --push 只能跟 --suspend
   --live 只能跟 --probe
-  --printpath 是独立命令
+  --printpath 是独立命令；--host / --target 只能跟 --printpath
   --help 单独使用
   无参数等同 --resume
 

@@ -66,7 +66,7 @@ bash install.sh --dryrun     # 确认安装目标
 bash install.sh               # 只装当前宿主
 ```
 
-需要安装到多个宿主时，对每个宿主各执行一次 `--host` 安装；收工时 `--suspend` 会跑 `scripts/handoff.sh --syncall` 对齐各副本，幂等，可随时手动重跑。
+需要安装到多个宿主时，对每个宿主各执行一次 `--host` 安装；从源仓库收工时 `--suspend` 会跑 `scripts/handoff.sh --syncall` 对齐各副本（安装副本没有 HEAD，跳过），幂等，可随时手动重跑。
 
 ### 2.3 由 agent 安装
 
@@ -104,11 +104,11 @@ agent 会把 skill 安装到当前宿主的 `skills/multi-agent-task-handoff`，
 |---|---|---|
 | 新任务开工 | `--doc` | 在 `<项目目录>/handoff/` 建 CONTEXT，需要时补 README/DESIGN |
 | 接手别人的任务 | `接手` / `--resume` | 读 PROMPT → CONTEXT，核锚点、跑验证 |
-| 本轮收工 | `收工` / `--suspend` | 按需压卡、写 CONTEXT、覆盖 PROMPT、对齐安装副本；`--push` 网络错误重试 3 次 |
+| 本轮收工 | `收工` / `--suspend` | 按需压卡、写 CONTEXT、覆盖 PROMPT、对齐安装副本（仅源仓库）；`--push` 网络错误重试 3 次 |
 | 交给指定 agent | `--suspend <ID>` | 写卡后按会话 ID 只发一段指针，不贴全文 |
-| 体检/修复 | `--check` / `--fix` | 检查安装、布局、配置、链接；`--fix` 修可自动项，含把落后的安装副本快进到当前提交 |
+| 体检/修复 | `--check` / `--fix` | 检查安装、布局、配置、链接；`--fix` 修可自动项，含把落后的安装副本重装到当前提交 |
 | 摸底宿主能力 | `--probe` | 实测当前 agent 并更新能力表；`--live` 会实际建会话 |
-| 路径诊断 | `--printpath` | 表格输出配置目录、工作区根、能力表（含日期）、源仓库、宿主识别来源、全部副本的路径与 commit |
+| 路径诊断 | `--printpath` | 表格输出配置目录、工作区根、能力表（含日期）、源仓库、宿主识别来源、当前安装副本与全部副本的路径和 commit；`--host` / `--target` 可显式指定 |
 
 项目第一次用先跑 `--doc` 建档（没有 `handoff/` 不会自动创建）；之后接手 / `--resume` 继续，收工 / `--suspend` 写卡并生成 `PROMPT.md`。
 
@@ -177,7 +177,7 @@ agent 会把 skill 安装到当前宿主的 `skills/multi-agent-task-handoff`，
 > 只写用户会遇到、协议不替你解决的事；机制见 DESIGN。
 
 - 不后台捕获 agent 上下文；必须显式触发一次。
-- 不装钩子，不写全局规则，不起后台服务；机械动作由显式命令执行。
+- 不装钩子，不写宿主全局规则，不起后台服务；机械动作由显式命令执行。
 - 一个项目同一时间一个写者；交接后旧 agent 停写。
 - memory 只读提升，不复制、不写回。
 - `PROMPT.md` 含本机路径，由 `--doc` 加入项目 `.gitignore`；敏感信息不提交。

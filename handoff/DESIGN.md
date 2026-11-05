@@ -11,7 +11,7 @@ agent 的上下文是易失的：换 agent、换宿主、换机器，接盘的�
 
 目标：任务文档固定在项目目录的 `handoff/`；交接只发状态和指针；能自动的自动做，做不到的明确列给用户；宿主差异不写进协议正文。
 
-约束：不装常驻服务、不装钩子、不写全局规则、不调用模型；git 可选；任何 agent 读文件即可介入。
+约束：不装常驻服务、不装钩子、不写宿主全局规则、不内嵌模型调用；git 可选；任何 agent 读文件即可介入。
 
 非目标：自动记忆、会话回放、AI 摘要、向量检索、强制合规、命令叠加。
 
@@ -97,7 +97,7 @@ multi-agent-task-handoff/
 ├─ install.sh               # 只安装：宿主识别、target、注册表
 ├─ 安装.bat                  # Windows 安装入口
 ├─ scripts/
-│  ├─ handoff.sh            # 运行时：--printpath / --syncall / --push
+│  ├─ handoff.sh            # 运行时：--printpath / --syncall / --push / --save / --gear
 │  ├─ lib.sh                # 共享：配置 / 宿主 / 路径函数
 │  └─ 运行时.bat             # Windows 运行时入口
 ├─ LICENSE
@@ -128,7 +128,7 @@ multi-agent-task-handoff/
 
 - `$AGENT_CONFIG`：Linux/macOS `${XDG_CONFIG_HOME:-$HOME/.config}/multi-agent-task-handoff`；Windows `%APPDATA%\multi-agent-task-handoff`；可用 `AGENT_CONFIG` 覆盖。
 - `sync-paths` 是“一行一个安装目录”的纯文本，由 `install.sh` 追加；`scripts/handoff.sh --syncall` 是唯一读取路径。
-- `--syncall` 只允许从源仓库运行：安装副本没有 HEAD，强行同步会把所有副本写成 `commit=unknown`，等于降级。
+- `--syncall` 只允许从源仓库运行：安装副本没有 HEAD，强行同步会把所有副本写成 `commit=unknown`，等于降级。对齐是整体重装，副本内本地改动会被覆盖。
 - 旧位置 `<repo>/.skill-sync-paths` 由 `install.sh` 一次性迁到新位置后删除。
 - 三者不合并成一个文件：偏好（人工低频编辑）、能力缓存（Markdown 表）、注册表（工具追加、可重建）的写入者和失败域不同，合并会让 bash 解析变脆，并把“装到哪”和“同步哪些”绑在一起。
 - `config.toml` 只放用户选择；可推导的运行时状态（宿主、副本版本、各路径）不写入配置，由 `--printpath` 现算。
@@ -261,7 +261,7 @@ flowchart LR
 | 场景 | 命令 | 提交范围 | 同步 |
 |---|---|---|---|
 | 直接维护仓库 | `scripts/handoff.sh --save` | 已跟踪文件（`--all` 含新文件） | 命令内自动 |
-| 任务收工 | `--suspend`（挡位读 `[defaults].suspend`；显式 `--local` / `--commit` / `--push`） | 只提交 `handoff/` | 收工末尾自动 `--syncall` |
+| 任务收工 | `--suspend`（挡位读 `[defaults].suspend`；显式 `--local` / `--commit` / `--push`） | 只提交 `handoff/` | 收工末尾自动 `--syncall`（仅源仓库；安装副本跳过） |
 
 - `scripts/handoff.sh --push` 只重试网络错误；认证失败、非快进、保护分支立即失败。
 - `--suspend` 默认挡位由 `[defaults].suspend` 决定；`--probe` 默认由 `[defaults].probe` 决定。本机分别为 `push` / `live`。
