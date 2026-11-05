@@ -182,7 +182,7 @@ agent 会把 skill 安装到当前宿主的 `skills/multi-agent-task-handoff`，
 - 不装钩子，不写宿主全局规则，不起后台服务；机械动作由显式命令执行。
 - 一个项目同一时间一个写者；交接后旧 agent 停写。
 - memory 只读提升，不复制、不写回。
-- `PROMPT.md` 含本机路径，由 `--doc` 加入项目 `.gitignore`；敏感信息不提交。
+- `PROMPT.md` 含本机路径；由 `--doc` 加入项目 `.gitignore`，`--check` 报未忽略/已跟踪，`--fix` 确认后补规则或取消跟踪；敏感信息不提交。
 - 活会话不搬运；换 agent 用“新会话 + PROMPT 指针”。
 - 旧项目迁移逐个 `--check` / `--fix`；不默认扫描全盘。
 - 没有 `handoff/` 也不会自动建：先跑 `--doc`。

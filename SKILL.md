@@ -67,7 +67,7 @@ argument-hint: "[--workspace <PATH>] [--nosave] [--help | --resume | --suspend [
    - ①「已完成」逐版本流水 → 搬入 `COMPACT_BACKUP.md`，只留当前状态；②「交接记录」>10 条 → 最旧搬入。
    - ③「坑与约束」合并同类、删协议复述，≤10 类；④「下一步」「在飞文件」删已完成/失效项；⑤「MEMORY 提炼」只留影响下一家的规则。
 3. 再写本次「现在/下一步/坑/交接记录」；报告 before/after 行数与搬出的条目。
-4. 覆盖写 `handoff/PROMPT.md`：项目目录、读卡顺序、文档表、锚点、验证命令、下一步 1–3 条、勿动文件、已决策、参考 ID、规则指针；文件头注明自动生成。
+4. 覆盖写 `handoff/PROMPT.md`；写前查 gitignore：git 仓且 `handoff/PROMPT.md` 未忽略时，确认后追加（拒绝或无交互则只报告，不阻塞写卡）；已跟踪只报告，交 `--fix` 处理。内容：项目目录、读卡顺序、文档表、锚点、验证命令、下一步 1–3 条、勿动文件、已决策、参考 ID、规则指针；文件头注明自动生成。
 5. 有 ID：发短指针“请读 `<项目目录>/handoff/PROMPT.md` 接盘”；目标读不到文件时才附全文。
 6. 无 ID：写完就停，报告路径。
 7. 默认挡位读 `scripts/handoff.sh --gear suspend`（local / commit / push），显式参数覆盖；local 不操作 git，`--commit` 只提交 `handoff/` 下的文件，`--push` 隐含 commit 并调 `scripts/handoff.sh --push`（网络错误 3 次 / 3 秒；Windows 再按 HTTP/1.1 + OpenSSL 回退 3 次），失败留本地并报告。收工末尾，若当前项目是本 skill 的源仓库（仓库根同时有 `.git` 与 `SKILL.md`）跑 `scripts/handoff.sh --syncall` 对齐副本；普通项目不是 skill 源仓库，安装副本没有 `.git`，都跳过并说明（有提交/推送时放在其后；幂等，只补落后）。不装钩子；写卡与指针按实际推送结果记「已推送 / 待推送」，未确认不写已推送。
@@ -94,9 +94,9 @@ argument-hint: "[--workspace <PATH>] [--nosave] [--help | --resume | --suspend [
 
 ## --check / --fix
 
-- `--check` 只读：安装副本 commit（`.skill-version`）与源仓库 HEAD、布局、config/workspace、能力表日期、`sync-paths`、PROMPT 与项目内 memory 是否 gitignore、`.github/README.md` 链接与 drift、PROMPT 是否过期、工作区文档（AGENTS/PROJECT_RULES 是否存在、是否指向 `$AGENT_CONFIG` 与 `handoff/`、是否残留旧路径）、CONTEXT 行数/记录数/坑类别是否超限；源仓库（根有 `SKILL.md` + `scripts/`）额外核对 SKILL 正文与 scripts/HELP/模板的命令、参数、路径、输出是否一致（只报告）；`--save` 是脚本层维护命令，不进 SKILL/HELP 命令表，缺失不报；不改文件。
+- `--check` 只读：安装副本 commit（`.skill-version`）与源仓库 HEAD、布局、config/workspace、能力表日期、`sync-paths`、`handoff/PROMPT.md` 是否未忽略或已跟踪、项目内 memory 是否 gitignore、`.github/README.md` 链接与 drift、PROMPT 是否过期、工作区文档（AGENTS/PROJECT_RULES 是否存在、是否指向 `$AGENT_CONFIG` 与 `handoff/`、是否残留旧路径）、CONTEXT 行数/记录数/坑类别是否超限；源仓库（根有 `SKILL.md` + `scripts/`）额外核对 SKILL 正文与 scripts/HELP/模板的命令、参数、路径、输出是否一致（只报告）；`--save` 是脚本层维护命令，不进 SKILL/HELP 命令表，缺失不报；不改文件。
 - `--fix`：先跑同一套检查，再修可自动修复项；冲突/不可逆项询问；SKILL 正文差异只报告，不自动改（语义取舍需人工）。
-- 可修：安装副本对齐（从源仓库跑 `--syncall`，见下）、根 CONTEXT/COMPACT_BACKUP 迁入 `handoff/`、协议标记的 README/DESIGN 迁入 `handoff/`、`.github/README.md` 重新生成、缺失的 `AGENTS.md` / `PROJECT_RULES.md` 确认后从 `assets/examples/AGENTS.md` / `assets/PROJECT_RULES.md.tpl` 播种；已存在的不改写，只报过期。
+- 可修：安装副本对齐（从源仓库跑 `--syncall`，见下）、根 CONTEXT/COMPACT_BACKUP 迁入 `handoff/`、协议标记的 README/DESIGN 迁入 `handoff/`、`.github/README.md` 重新生成、`.gitignore` 补 `handoff/PROMPT.md`（已跟踪则确认后 `git rm --cached`）、缺失的 `AGENTS.md` / `PROJECT_RULES.md` 确认后从 `assets/examples/AGENTS.md` / `assets/PROJECT_RULES.md.tpl` 播种；已存在的不改写，只报过期。
 - 安装副本对齐只从源仓库跑 `scripts/handoff.sh --syncall`：安装副本没有 HEAD，会被拒绝；按 commit 只补落后，已最新跳过；整体重装，副本内改动会被覆盖。
 - 默认不提交；由 `--suspend --commit` 一起提交。
 - 无 `handoff/` 且无旧文档 → 提示 `--doc`，不自动建。
