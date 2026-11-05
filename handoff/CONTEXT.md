@@ -31,7 +31,7 @@
 
 - 已完成：
   - V3 协议与 `handoff/` 布局；8 个命令；`config.toml`；能力差异表；memory 只读。
-  - 当前协议 v3.10：`--save` 与挡位、无钩子、`scripts/` 入口、`COMPACT_BACKUP.md` 归档名、README 落地页、`--suspend` 压卡清单、`--resume` 接手清单。
+  - 当前协议 v3.10：`--save` 与挡位、无钩子、`scripts/` 入口、`COMPACT_BACKUP.md` 归档名、README 落地页、`--suspend` 压卡清单、`--resume` 接手清单、源仓库正文审计。
   - 5 份安装副本（Qoder / OpenCode / ZCode / WorkBuddy / Claude）同步到当前 HEAD。
   - Claude / WorkBuddy `--probe --live` 均通过：投递、同步读回，无残留。
   - 推送状态以 `git status -sb` 为准。
