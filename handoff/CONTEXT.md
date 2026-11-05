@@ -67,6 +67,7 @@
 ## 7. 交接记录（只记关键动作，≤10 条）
 > 超出先压卡到 `COMPACT_BACKUP.md`；不写日常细节。
 
+- 2026-11-05 Qoder：切换 GitHub 推送为 SSH 443，远端与本地对齐；无代码改动。
 - 2026-11-05 Qoder：`--check` / `--fix` / `--probe --live` 通过；能力表 Qoder 行补 `--dryrun` 与实测方法；CONTEXT 清掉本机副本/探测状态；压卡一条旧记录。
 - 2026-11-05 WorkBuddy / Claude：v3.2–v3.10 迭代（入口拆分、`--save` 与挡位、删钩子、归档改名、README 落地页化、压卡/接手清单）；全自动方案不采纳；SKILL 正文审计（`--syncall` 条件、`--printpath` 输出、模板路径、边界措辞）；`--check` 增源仓库正文一致性审计（只报告，不自动改）；按 WorkBuddy 审计修正 `--printpath` 用法串，并写明 `--save` 属脚本层、不在 SKILL/HELP 命令表；`--push` 内置 Windows HTTP/1.1 + OpenSSL 回退。详细流水见 [COMPACT_BACKUP.md](COMPACT_BACKUP.md)。
 - 2026-11-05 WorkBuddy：压卡沉降一条旧记录；`--suspend --push` 收工并推送前序提交。
@@ -76,7 +77,6 @@
 - 2026-11-03 Claude：钩子防护——`--printpath` 打印 hooksPath，`--check` 校验、`--fix` 恢复；定位 worktree 会话改共享 hooksPath 的坑。
 - 2026-11-03 Claude：机器级状态收口——`sync-paths` 迁到 `$AGENT_CONFIG`，仓库内不再留；工作区根能力表副本删除，只留 `$AGENT_CONFIG` 一份；DESIGN 补 5.1.1 与迁移范围。
 - 2026-11-03 Claude：V3 文档重整——README 按落地页模板重写；DESIGN 删除进度/待办、已废弃方案移入版本节；CONTEXT 承接待办。
-- 2026-11-03 Claude：V3 落地——术语统一、文档迁入 `handoff/`、7 个命令、`config.toml`、能力差异表；删除作者快照与同步脚本；`SKILL.md` 118 行。
 
 ## 8. 参考 ID
 > 只放可回读的 ID / 路径；不复制历史。
