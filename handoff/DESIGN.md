@@ -69,7 +69,7 @@ flowchart LR
 |---|---|---|---|---|
 | 开工 | `--doc` | 确保 CONTEXT；补 README/DESIGN；写 `模式：三档`；同意后把 PROMPT 加入 `.gitignore` | `handoff/` 三档 | 目标已存在且非本协议生成 → 停 |
 | 工作 | — | 改代码/文档；状态或坑变化时更新 CONTEXT | 可交接的当前状态 | 一个项目同一时间一个写者 |
-| 收工 | `--suspend` | 超限先压卡；写现在/下一步/MEMORY 提炼/坑/记录；覆盖 PROMPT；按需读 memory 提炼规则；默认挡位读 `config.toml`；末尾总是对齐副本（提交/推送时在其后） | CONTEXT 更新 + PROMPT 覆盖 + 副本对齐 | 默认不动 git；`--commit` 只提交 `handoff/`；`--push` 隐含 commit 并调 `scripts/handoff.sh --push`（网络错误 3 次 / 3 秒；Windows 再加 HTTP/1.1 + OpenSSL 回退 3 次）；未确认推送成功写「待推送」 |
+| 收工 | `--suspend` | 超限先压卡；写现在/下一步/MEMORY 提炼/坑/记录；覆盖 PROMPT；按需读 memory 提炼规则；默认挡位读 `config.toml`；源仓库时末尾对齐副本（安装副本跳过；提交/推送时在其后） | CONTEXT 更新 + PROMPT 覆盖 + 副本对齐 | 默认不动 git；`--commit` 只提交 `handoff/`；`--push` 隐含 commit 并调 `scripts/handoff.sh --push`（网络错误 3 次 / 3 秒；Windows 再加 HTTP/1.1 + OpenSSL 回退 3 次）；未确认推送成功写「待推送」 |
 | 交给指定 agent | `--suspend <ID>` | 写卡后按会话 ID 只发指针；目标读不到文件才附全文 | 目标 agent 可接手 | 活会话不搬运 |
 | 接手 | `--resume` | PROMPT → CONTEXT → 三档 → 规则；核对 cwd 与项目目录；核锚点、跑验证；有 ID 可读回 | 恢复上下文 | 冲突以 CONTEXT 为准；cwd 不一致先回主项目或注明 worktree；旧布局提示 `--check` / `--fix` |
 | 维护 | `--check` / `--fix` / `--probe` / `--printpath` | 只读检查 / 自动修复 / 实测能力 / 路径诊断 | 报告或修复 | 默认不提交；冲突项询问 |
@@ -84,7 +84,7 @@ flowchart LR
 - 默认不操作 git；外部可见动作必须显式 `--commit` / `--push`。
 - 安装、副本同步与配置不在这条线上：见第 5 节。
 
-一次只用一个命令；`--workspace` / `--nosave` 是全局选项。
+一次只用一个命令；`--workspace` 可与一个命令同用，`--nosave` 只跟 `--workspace`。
 
 ## 5. 架构与关键接缝
 > 只写模块边界与接口；不重复流程。
@@ -173,7 +173,7 @@ multi-agent-task-handoff/
 | 冲突 | 目标已存在且非本协议生成 → 停，不覆盖、不换路径 |
 | 交接卡 | CONTEXT ≤100 行；交接记录 ≤10 条；坑类别 ≤10；MEMORY 提炼只放影响下一家的规则；只记关键动作 |
 | PROMPT | 每次覆盖；带生成时间；默认 gitignore；不写真实会话 ID |
-| 命令 | 一次一个；`--workspace`/`--nosave` 全局；子参数只跟所属命令 |
+| 命令 | 一次一个；`--workspace` 可搭配一个命令，`--nosave` 只跟 `--workspace`；子参数只跟所属命令 |
 | git | 默认不操作；`--commit` 只提交 `handoff/`；`--push` 隐含 commit 并调 `scripts/handoff.sh --push`（网络错误 3 次 / 3 秒；Windows 再加 HTTP/1.1 + OpenSSL 回退 3 次）；不装钩子；未确认推送成功写「待推送」 |
 | memory | 只读提升；不复制、不写回；项目内 memory 必须 gitignore |
 | GitHub | 有 remote 即生成 `.github/README.md`；无 remote 不生成；不用 symlink |
@@ -184,7 +184,7 @@ multi-agent-task-handoff/
 | 触发分层 | 上下文注入（`AGENTS.md` 读序）+ 显式命令（接手/收工，含副本同步与 push）；无后台触发；`AGENTS.md` 只做指针 |
 | 换机迁移 | 能力表整表带走，只重填「本机环境」块；`AGENTS.md` / `PROJECT_RULES.md` 复制；`sync-paths` 与宿主 memory 不带；`config.toml` 只改 workspace |
 | 迁移范围 | 只迁符合模版的同名任务文档（`CONTEXT` / `README` / `DESIGN` / `COMPACT_BACKUP`）；客制化名文档（`实施方案`、`架构设计` 等）留根，由 `CONTEXT` 的文档表用 `../` 引用 |
-| 迁移判定 | root `CONTEXT.md` 存在且 `模式：三档`，或文档带模版特征；产品 README/DESIGN 不动 |
+| 迁移判定 | root `CONTEXT.md` 存在且带 `模式：单档/三档`，或文档带模版特征；产品 README/DESIGN 不动 |
 | 完成定义 | 文档与安装副本一致；`--help` 与命令表一致；`--check` 无 ⛔；卡 ≤100 行 |
 
 ## 8. 工程约束
@@ -194,7 +194,7 @@ multi-agent-task-handoff/
 - 参数名不带中间连字符：`--dryrun`、`--syncall`、`--noregister`；多词直接连写。
 - `SKILL.md` 单文件，硬上限 150 行、目标 120；超出才拆 `references/`。
 - 协议护栏（冲突停、不搬活会话、单写者、memory 只读）必须留在 `SKILL.md`，不能只放 `PROJECT_RULES.md` 或 README。
-- 宿主差异只进 `$AGENT_CONFIG/AGENT_CAPABILITIES.md`；`SKILL.md` 不写宿主分支。
+- 宿主差异只进 `$AGENT_CONFIG/AGENT_CAPABILITIES.md`；`SKILL.md` 只举例，不写宿主专属规则。
 - 旧仓迁移是逐项目人工动作，不默认扫描全盘；先 `--check` 出清单，再 `--fix`。
 - 迁移只动同名标准件；客制化交付文档（大方案、架构稿）不搬，避免移动工程产物和大范围改链。
 - `.github/README.md` 覆盖根 README 的首页展示是预期行为；要求项目 README 当首页的仓不适用。

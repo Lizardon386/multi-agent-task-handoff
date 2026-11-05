@@ -148,7 +148,7 @@ agent 会把 skill 安装到当前宿主的 `skills/multi-agent-task-handoff`，
 | 历史归档 | `handoff/COMPACT_BACKUP.md` | 卡超限时把日志搬出 |
 | 能力缓存 | `$AGENT_CONFIG/AGENT_CAPABILITIES.md` | 宿主差异与实测结论 |
 | 机器配置 | `$AGENT_CONFIG/config.toml` | 工作区根等偏好 |
-| 安装注册表 | `$AGENT_CONFIG/sync-paths` | 本机已安装的宿主副本，`--suspend` 收工时同步 |
+| 安装注册表 | `$AGENT_CONFIG/sync-paths` | 本机已安装的宿主副本；从源仓库收工时同步，安装副本跳过 |
 
 项目自己的 `README.md`、`docs/`、源码都不动；任务文档只在 `handoff/`。
 
