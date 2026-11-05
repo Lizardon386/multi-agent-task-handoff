@@ -1,23 +1,27 @@
 #!/bin/sh
-# 把当前 HEAD 安装到“当前宿主”的 skill 目录；只装一个目标。
-# 宿主靠环境变量识别：Qoder / Claude Code / Codex / OpenCode / ZCode。识别不出就退出，不猜目录。
+# 只负责安装：把当前 HEAD 装到“当前宿主”的 skill 目录。
+# 运行时诊断/同步见 handoff.sh。宿主靠环境变量识别，识别不出就退出，不猜目录。
 
 set -u
 
-skill_id=multi-agent-task-handoff
+script_dir=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd -P) || { echo "错误: 找不到脚本所在目录" >&2; exit 1; }
+repo=$script_dir
+[ -f "$repo/SKILL.md" ] || { echo "错误: 脚本必须放在仓库根目录（找不到 SKILL.md）" >&2; exit 1; }
+[ -f "$repo/lib.sh" ] || { echo "错误: 缺少 lib.sh" >&2; exit 1; }
+. "$repo/lib.sh"
 
 dry=0
 force=0
 hook=1
 register=1
-syncall=0
-print_paths=0
 host_arg=
 target_arg=
 
 usage() {
   cat <<'EOF'
 用法: bash install.sh [选项]
+
+只安装，不做诊断或副本同步；诊断/同步用 handoff.sh。
 
 按环境变量识别当前宿主，只给它安装：
   Qoder        QODER_CONFIG_DIR / QODERCN_CONFIG_DIR
@@ -34,8 +38,6 @@ usage() {
   --dry-run        只打印将要做什么，不写文件
   --host NAME      qoder | claude | codex | opencode | zcode | workbuddy（识别不出时显式指定）
   --target DIR     直接指定安装目录（与 --host 二选一）
-  --syncall        按 $AGENT_CONFIG/sync-paths 逐份对齐到当前 HEAD，只补落后的；幂等，可重复跑
-  --printpath      打印 config / workspace / 能力表 / 源仓库 / 宿主 / 副本清单 / 钩子及其来源，不写文件
   --force          覆盖没有 .skill-version 的非空目录
   --no-hook        不改仓库本地 core.hooksPath
   --no-register    不把目标写进 $AGENT_CONFIG/sync-paths
@@ -54,8 +56,6 @@ while [ $# -gt 0 ]; do
     --force) force=1 ;;
     --no-hook) hook=0 ;;
     --no-register) register=0 ;;
-    --syncall) syncall=1 ;;
-    --printpath) print_paths=1 ;;
     --host) [ $# -ge 2 ] || usage_die "--host 需要一个值"; host_arg=$2; shift ;;
     --host=*) host_arg=${1#*=} ;;
     --target) [ $# -ge 2 ] || usage_die "--target 需要一个值"; target_arg=$2; shift ;;
@@ -69,305 +69,13 @@ done
 if [ -n "$target_arg" ] && [ -n "$host_arg" ]; then
   usage_die "--host 与 --target 只能用一个"
 fi
-if [ "$syncall" = 1 ] && { [ -n "$target_arg" ] || [ -n "$host_arg" ]; }; then
-  usage_die "--syncall 不能与 --host / --target 一起用"
-fi
 
-script_dir=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd -P) || die "找不到脚本所在目录"
-repo=$script_dir
-[ -f "$repo/SKILL.md" ] || die "脚本必须放在仓库根目录（找不到 SKILL.md）"
 repo_real=$(CDPATH= cd -- "$repo" && pwd -P)
-
-# 机器级配置目录：$AGENT_CONFIG > %APPDATA% > $XDG_CONFIG_HOME > ~/.config
-agent_config_dir() {
-  if [ -n "${AGENT_CONFIG:-}" ]; then printf '%s\n' "$AGENT_CONFIG"
-  elif [ -n "${APPDATA:-}" ]; then printf '%s\n' "$APPDATA/multi-agent-task-handoff" | sed 's|\\|/|g'
-  elif [ -n "${XDG_CONFIG_HOME:-}" ]; then printf '%s\n' "$XDG_CONFIG_HOME/multi-agent-task-handoff"
-  else printf '%s\n' "$HOME/.config/multi-agent-task-handoff"
-  fi
-}
-
-expand_path() {
-  p=$1
-  case "$p" in
-    '~') p=$HOME ;;
-    '~/'*) p=$HOME/${p#\~/} ;;
-  esac
-  case "$p" in
-    *'%USERPROFILE%'*) p=$(printf '%s' "$p" | sed "s|%USERPROFILE%|$HOME|g") ;;
-  esac
-  printf '%s\n' "$p"
-}
-
-config_get() {
-  key=$1
-  file=$2
-  [ -f "$file" ] || return 1
-  sed -n "s/^[[:space:]]*$key[[:space:]]*=[[:space:]]*\"\\(.*\\)\"[[:space:]]*$/\1/p" "$file" | head -1
-}
-
-resolve_workspace() {
-  if [ -n "${AGENT_WORKSPACE:-}" ]; then
-    workspace=$(expand_path "$AGENT_WORKSPACE"); workspace_src=AGENT_WORKSPACE; return
-  fi
-  cfg_file=$(agent_config_dir)/config.toml
-  v=$(config_get workspace "$cfg_file" 2>/dev/null || true)
-  if [ -n "$v" ]; then
-    workspace=$(expand_path "$v"); workspace_src=config.toml; return
-  fi
-  workspace=$HOME/agent_workspace; workspace_src=default
-}
 
 name=$(sed -n 's/^name:[[:space:]]*//p' "$repo/SKILL.md" | head -1 | tr -d '\r')
 [ "$name" = "$skill_id" ] || die "SKILL.md 的 name 应为 $skill_id（实际: ${name:-空}）"
 
-# 安装注册表统一放 $AGENT_CONFIG/sync-paths；旧位置 $repo/.skill-sync-paths 一次性迁移。
-config_dir=$(agent_config_dir)
-paths_file=$config_dir/sync-paths
-if [ ! -f "$paths_file" ] && [ -f "$repo/.skill-sync-paths" ]; then
-  mkdir -p "$config_dir" 2>/dev/null || true
-  cp "$repo/.skill-sync-paths" "$paths_file" 2>/dev/null && rm -f "$repo/.skill-sync-paths" \
-    && echo "迁移: .skill-sync-paths -> $paths_file"
-fi
-
-# --syncall：按 $AGENT_CONFIG/sync-paths 逐份对齐到当前 HEAD。
-# 只补落后的，已最新直接跳过，所以可以随便重复跑 —— 被打断也没关系，下次再跑一次就补齐。
-if [ "$syncall" = 1 ]; then
-  [ -f "$paths_file" ] || die "找不到 $paths_file（先跑一次 install.sh 生成）"
-  # 必须从源仓库跑：安装副本没有 HEAD，强行同步会把所有副本降级成 unknown。
-  git -C "$repo" rev-parse --git-dir >/dev/null 2>&1 \
-    || die "--syncall 必须从源仓库运行（当前是安装副本，没有 HEAD）"
-  # 一次 git 调用同时拿到 commit；失败才退回 unknown（少一次进程 ≈ 0.7 秒）
-  head_commit=$(git -C "$repo" rev-parse HEAD 2>/dev/null) || head_commit=unknown
-  printf '对齐目标: %s\n' "$head_commit"
-  total=0
-  bad=0
-  while IFS= read -r line <&3; do
-    case "$line" in ''|'#'*) continue ;; esac
-    # 去尾部空白、取父目录、读 commit，全用 shell 内建：
-    # Git Bash 在 Windows 上每启动一个 sed/dirname 约 0.9 秒，四份累积能把钩子拖到 8 秒以上。
-    dest=$line
-    while :; do case "$dest" in *' ') dest=${dest% } ;; *) break ;; esac; done
-    parent=${dest%/*}
-    [ -n "$parent" ] && [ -d "$parent" ] || { printf '跳过（父目录不存在）: %s\n' "$dest"; continue; }
-    total=$((total + 1))
-    cur=
-    if [ -f "$dest/.skill-version" ]; then
-      while IFS= read -r kv; do
-        case "$kv" in commit=*) cur=${kv#commit=}; break ;; esac
-      done < "$dest/.skill-version"
-    fi
-    if [ "$cur" = "$head_commit" ]; then
-      printf '已最新: %s\n' "$dest"
-      continue
-    fi
-    if [ "$dry" = 1 ]; then
-      printf '需更新: %s（%s -> %s）\n' "$dest" "${cur:-未知}" "$head_commit"
-      continue
-    fi
-    # 子进程单独跑，stdin 接 /dev/null：循环体读的是 fd 3，不会被吃掉
-    if sh "$repo/install.sh" --target "$dest" --no-hook --no-register </dev/null >/dev/null 2>&1; then
-      printf '已同步: %s\n' "$dest"
-    else
-      printf '同步失败: %s（手动: sh %s/install.sh --target "%s"）\n' "$dest" "$repo" "$dest" >&2
-      bad=$((bad + 1))
-    fi
-  done 3< "$paths_file"
-  [ "$total" -eq 0 ] && printf '清单里没有可处理的目录\n'
-  [ "$bad" -gt 0 ] && die "$bad 份同步失败"
-  exit 0
-fi
-
-to_unix() {
-  case "$1" in
-    [A-Za-z]:[\\/]*)
-      if command -v cygpath >/dev/null 2>&1; then
-        cygpath -u "$1"
-      else
-        d=$(printf '%s' "$1" | cut -c1 | tr 'A-Z' 'a-z')
-        r=$(printf '%s' "$1" | cut -c3- | sed 's|\\|/|g')
-        printf '/%s%s\n' "$d" "$r"
-      fi ;;
-    *) printf '%s\n' "$1" ;;
-  esac
-}
-
-to_reg() {
-  if command -v cygpath >/dev/null 2>&1; then
-    cygpath -m "$1" 2>/dev/null || printf '%s\n' "$1"
-  else
-    printf '%s\n' "$1"
-  fi
-}
-
-default_cfg() {
-  case "$1" in
-    qoder)
-      if [ -n "${QODER_CONFIG_DIR:-}" ]; then printf '%s\n' "$QODER_CONFIG_DIR"
-      elif [ -n "${QODERCN_CONFIG_DIR:-}" ]; then printf '%s\n' "$QODERCN_CONFIG_DIR"
-      elif [ -d "$HOME/.qoder-cn" ]; then printf '%s\n' "$HOME/.qoder-cn"
-      elif [ -d "$HOME/.qoder" ]; then printf '%s\n' "$HOME/.qoder"
-      else printf '%s\n' "$HOME/.qoder-cn"; fi ;;
-    claude)
-      if [ -n "${CLAUDE_CONFIG_DIR:-}" ]; then printf '%s\n' "$CLAUDE_CONFIG_DIR"; else printf '%s\n' "$HOME/.claude"; fi ;;
-    codex)
-      if [ -n "${CODEX_HOME:-}" ]; then printf '%s\n' "$CODEX_HOME"; else printf '%s\n' "$HOME/.codex"; fi ;;
-    opencode)
-      if [ -n "${OPENCODE_CONFIG_DIR:-}" ]; then printf '%s\n' "$OPENCODE_CONFIG_DIR"
-      elif [ -n "${XDG_CONFIG_HOME:-}" ]; then printf '%s\n' "$XDG_CONFIG_HOME/opencode"
-      else printf '%s\n' "$HOME/.config/opencode"; fi ;;
-    zcode)
-      if [ -n "${ZCODE_CONFIG_DIR:-}" ]; then printf '%s\n' "$ZCODE_CONFIG_DIR"; else printf '%s\n' "$HOME/.zcode"; fi ;;
-    workbuddy)
-      if [ -n "${WORKBUDDY_CONFIG_DIR:-}" ]; then printf '%s\n' "$WORKBUDDY_CONFIG_DIR"
-      elif [ -n "${CODEBUDDY_CONFIG_DIR:-}" ]; then printf '%s\n' "$CODEBUDDY_CONFIG_DIR"
-      elif [ -d "$HOME/.workbuddy" ]; then printf '%s\n' "$HOME/.workbuddy"
-      else return 1; fi ;;
-    *) return 1 ;;
-  esac
-}
-
-detect_host() {
-  # WorkBuddy 放在最前：它同时会带 CODEBUDDY_CONFIG_DIR / CLAUDE_* 等通用变量，
-  # 靠 CODEBUDDY_HOST 前缀和 WORKBUDDY_* 先认，避免被后面的通用变量误判成别的宿主。
-  if [ -n "${CODEBUDDY_HOST:-}" ]; then
-    case "$CODEBUDDY_HOST" in
-      workbuddy*) host=workbuddy; cfg=$(default_cfg workbuddy); cfg_src=CODEBUDDY_HOST; return 0 ;;
-    esac
-  fi
-  if [ -n "${WORKBUDDY_CONFIG_DIR:-}" ]; then
-    host=workbuddy; cfg=$WORKBUDDY_CONFIG_DIR; cfg_src=WORKBUDDY_CONFIG_DIR; return 0
-  fi
-  if [ -n "${CODEBUDDY_CONFIG_DIR:-}" ]; then
-    host=workbuddy; cfg=$CODEBUDDY_CONFIG_DIR; cfg_src=CODEBUDDY_CONFIG_DIR; return 0
-  fi
-  if [ -n "${QODER_CONFIG_DIR:-}" ]; then
-    host=qoder; cfg=$QODER_CONFIG_DIR; cfg_src=QODER_CONFIG_DIR; return 0
-  fi
-  if [ -n "${QODERCN_CONFIG_DIR:-}" ]; then
-    host=qoder; cfg=$QODERCN_CONFIG_DIR; cfg_src=QODERCN_CONFIG_DIR; return 0
-  fi
-  if [ -n "${CLAUDE_CONFIG_DIR:-}" ]; then
-    host=claude; cfg=$CLAUDE_CONFIG_DIR; cfg_src=CLAUDE_CONFIG_DIR; return 0
-  fi
-  if [ -n "${CLAUDECODE:-}" ]; then
-    host=claude; cfg=$HOME/.claude; cfg_src=CLAUDECODE; return 0
-  fi
-  if [ -n "${CODEX_HOME:-}" ]; then
-    host=codex; cfg=$CODEX_HOME; cfg_src=CODEX_HOME; return 0
-  fi
-  if [ -n "${OPENCODE_CONFIG_DIR:-}" ]; then
-    host=opencode; cfg=$OPENCODE_CONFIG_DIR; cfg_src=OPENCODE_CONFIG_DIR; return 0
-  fi
-  if [ -n "${OPENCODE:-}" ]; then
-    host=opencode; cfg=$(default_cfg opencode); cfg_src=OPENCODE; return 0
-  fi
-  if [ -n "${ZCODE_CONFIG_DIR:-}" ]; then
-    host=zcode; cfg=$ZCODE_CONFIG_DIR; cfg_src=ZCODE_CONFIG_DIR; return 0
-  fi
-  if [ -n "${ZCODE_APP_VERSION:-}" ]; then
-    host=zcode; cfg=$(default_cfg zcode); cfg_src=ZCODE_APP_VERSION; return 0
-  fi
-  return 1
-}
-
-if [ "$print_paths" = 1 ]; then
-  config_dir=$(agent_config_dir)
-  resolve_workspace
-  caps=$config_dir/AGENT_CAPABILITIES.md
-  cfg_file=$config_dir/config.toml
-  registry_file=$config_dir/sync-paths
-  reg_count=0
-  [ -f "$registry_file" ] && reg_count=$(awk 'NF && $1 !~ /^#/ {n++} END{print n+0}' "$registry_file" 2>/dev/null)
-  caps_date=
-  [ -f "$caps" ] && caps_date=$(grep -o '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]' "$caps" 2>/dev/null | head -1)
-  src_repo=
-  hook_repo=$repo
-  if ! git -C "$hook_repo" rev-parse --git-dir >/dev/null 2>&1; then
-    src_repo=$(sed -n 's/^source=//p' "$repo/.skill-version" 2>/dev/null | head -1)
-    if [ -n "$src_repo" ] && git -C "$src_repo" rev-parse --git-dir >/dev/null 2>&1; then
-      hook_repo=$src_repo
-    else
-      src_repo=
-    fi
-  fi
-  head_full=
-  if git -C "$hook_repo" rev-parse --git-dir >/dev/null 2>&1; then
-    head_full=$(git -C "$hook_repo" rev-parse HEAD 2>/dev/null || true)
-    hooks_path=$(git -C "$hook_repo" config --local --get core.hooksPath 2>/dev/null || true)
-    case "$hooks_path" in
-      .githooks) hooks_status='可选钩子已启用' ;;
-      '') hooks_status='未设置（可选钩子不跑；同步由 --suspend 负责）' ;;
-      *) hooks_status='未指向 .githooks（可选钩子不跑；同步由 --suspend 负责）' ;;
-    esac
-  else
-    hooks_path=未知
-    hooks_status='非 git 副本，未找到源仓库'
-  fi
-  if [ -n "$target_arg" ]; then
-    t=$(to_unix "$target_arg")
-    host_label='manual (--target)'
-  elif [ -n "$host_arg" ]; then
-    cfg=$(default_cfg "$host_arg" 2>/dev/null) || cfg=
-    [ -n "$cfg" ] && t=$(to_unix "$cfg")/skills/$skill_id || t=未知宿主
-    host_label="$host_arg (--host)"
-  elif detect_host; then
-    t=$(to_unix "$cfg")/skills/$skill_id
-    host_label="$host ($cfg_src)"
-  else
-    t=未识别宿主
-    host_label='未识别（检查宿主环境变量）'
-  fi
-  printf '路径诊断\n'
-  printf '────────────────────────────────────────\n'
-  printf '  配置目录        %s\n' "$config_dir"
-  if [ -f "$cfg_file" ]; then
-    printf '  配置文件        %s  [已存在]\n' "$cfg_file"
-  else
-    printf '  配置文件        %s  [不存在，安装时会创建]\n' "$cfg_file"
-  fi
-  printf '  工作区根        %s  [来源: %s]\n' "$workspace" "$workspace_src"
-  if [ -f "$caps" ]; then
-    printf '  能力表          %s  [已存在%s]\n' "$caps" "${caps_date:+，更新 $caps_date}"
-  else
-    printf '  能力表          %s  [缺失]\n' "$caps"
-  fi
-  if [ -f "$registry_file" ]; then
-    printf '  安装注册表      %s  [%s 条]\n' "$registry_file" "$reg_count"
-  else
-    printf '  安装注册表      %s  [缺失]\n' "$registry_file"
-  fi
-  printf '  源仓库          %s\n' "${src_repo:-$repo}"
-  printf '  Git 钩子        %s  [%s]\n' "${hooks_path:-未设置}" "$hooks_status"
-  printf '  宿主            %s\n' "$host_label"
-  printf '  安装副本        %s\n' "$t"
-  if [ -f "$registry_file" ]; then
-    while IFS= read -r line <&3; do
-      case "$line" in ''|'#'*) continue ;; esac
-      dest=$line
-      while :; do case "$dest" in *' ') dest=${dest% } ;; *) break ;; esac; done
-      [ -n "$dest" ] || continue
-      cur=
-      if [ -f "$dest/.skill-version" ]; then
-        while IFS= read -r kv; do
-          case "$kv" in commit=*) cur=${kv#commit=}; break ;; esac
-        done < "$dest/.skill-version"
-      fi
-      if [ ! -d "$dest" ]; then st=缺失
-      elif [ -z "$cur" ]; then st=无版本
-      elif [ -z "$head_full" ]; then st=未知
-      elif [ "$cur" = "$head_full" ]; then st=当前
-      else st=落后
-      fi
-      cur7=$(printf '%.7s' "$cur")
-      printf '  副本            %s  %s  [%s]\n' "$dest" "${cur7:--}" "$st"
-    done 3< "$registry_file"
-  else
-    printf '  副本            无注册表\n'
-  fi
-  printf '────────────────────────────────────────\n'
-  exit 0
-fi
+resolve_paths_file
 
 target_abs() {
   d=$(dirname -- "$1")

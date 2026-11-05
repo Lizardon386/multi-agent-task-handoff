@@ -89,8 +89,11 @@ flowchart LR
 ```text
 multi-agent-task-handoff/
 ├─ SKILL.md                 # 协议正文（包文件，必须在根）
-├─ install.sh               # 安装：宿主识别、config、--printpath、--syncall
-├─ 安装.bat                  # Windows 双击入口，调用 install.sh
+├─ lib.sh                   # 共享：配置 / 宿主 / 路径函数
+├─ install.sh               # 只安装：宿主识别、target、注册表
+├─ handoff.sh               # 运行时：--printpath / --syncall
+├─ 安装.bat                  # Windows 安装入口
+├─ handoff.bat              # Windows 运行时入口
 ├─ LICENSE
 ├─ assets/                  # HELP / 模板 / 示例
 ├─ .github/README.md        # 由 handoff/README.md 生成
@@ -104,7 +107,7 @@ multi-agent-task-handoff/
    └─ 压卡备份.md            # 历史
 ```
 
-包文件（`SKILL.md`、`install.sh`、`安装.bat`、`assets/`、`LICENSE`、`.githooks/`）必须在根；任务文档进 `handoff/`。
+包文件（`SKILL.md`、`lib.sh`、`install.sh`、`handoff.sh`、`安装.bat`、`handoff.bat`、`assets/`、`LICENSE`、`.githooks/`）必须在根；任务文档进 `handoff/`。
 
 #### 5.1.1 机器级状态统一放 `$AGENT_CONFIG`
 
@@ -119,7 +122,7 @@ multi-agent-task-handoff/
 | `handoff/*` | 任务状态 | 项目目录 |
 
 - `$AGENT_CONFIG`：Linux/macOS `${XDG_CONFIG_HOME:-$HOME/.config}/multi-agent-task-handoff`；Windows `%APPDATA%\multi-agent-task-handoff`；可用 `AGENT_CONFIG` 覆盖。
-- `sync-paths` 是“一行一个安装目录”的纯文本，由 `install.sh` 追加；`--syncall` 是主路径，可选 `post-commit` 也读它。
+- `sync-paths` 是“一行一个安装目录”的纯文本，由 `install.sh` 追加；`handoff.sh --syncall` 是主路径，可选 `post-commit` 也读它。
 - `--syncall` 只允许从源仓库运行：安装副本没有 HEAD，强行同步会把所有副本写成 `commit=unknown`，等于降级。
 - 旧位置 `<repo>/.skill-sync-paths` 由 `install.sh` / `post-commit` 一次性迁到新位置后删除。
 - 三者不合并成一个文件：偏好（人工低频编辑）、能力缓存（Markdown 表）、注册表（工具追加、可重建）的写入者和失败域不同，合并会让 bash 解析变脆，并把“装到哪”和“同步哪些”绑在一起。
@@ -214,6 +217,7 @@ multi-agent-task-handoff/
 | v3 | 2026-11-03 | 从「cwd 即任务根」转向「项目目录」；工作区根只作容器；宿主差异决定自动化 | `handoff/`；8 个命令；`config.toml`；能力差异表；memory 只读提升 |
 | v3.1 | 2026-11-04 | 能力表是知识、不是本机状态；安装副本没有资格决定 HEAD | `--syncall` 护栏；迁移语义；能力表路径固定 |
 | v3.2 | 2026-11-05 | 机械动作不再押在可被外部改写的 `core.hooksPath` 上 | 同步与 push 收归 `--suspend` 显式执行；`post-commit` 降级为可选加速、不再自动 push |
+| v3.3 | 2026-11-05 | 入口按动作拆分：安装与运行时分离 | `install.sh` 只安装；`handoff.sh` / `handoff.bat` 负责诊断与同步；`lib.sh` 共享函数 |
 
 ### 9.2 已废弃方案
 

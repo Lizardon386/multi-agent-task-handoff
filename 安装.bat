@@ -2,6 +2,7 @@
 chcp 65001 >nul
 setlocal
 cd /d "%~dp0"
+rem 只负责安装。运行时诊断/同步用 handoff.bat。
 
 set "GIT="
 for /f "delims=" %%i in ('where git 2^>nul') do if not defined GIT set "GIT=%%i"

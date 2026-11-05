@@ -59,7 +59,9 @@ bash install.sh               # 只装当前宿主
 
 Windows 可直接双击根目录的 `安装.bat`：它自动找 git/bash 并调用 `install.sh`，识别不出宿主时会提示选择。
 
-需要安装到多个宿主时，对每个宿主各执行一次 `--host` 安装；收工时 `--suspend` 会跑 `install.sh --syncall` 对齐各副本，提交钩子只是可选加速，两者都幂等、可随时手动重跑。
+需要安装到多个宿主时，对每个宿主各执行一次 `--host` 安装；收工时 `--suspend` 会跑 `handoff.sh --syncall` 对齐各副本，提交钩子只是可选加速，两者都幂等、可随时手动重跑。
+
+Windows 上诊断和同步用 `handoff.bat --printpath` / `handoff.bat --syncall`；安装仍用 `安装.bat`。
 
 ### 2.3 由 agent 安装
 
