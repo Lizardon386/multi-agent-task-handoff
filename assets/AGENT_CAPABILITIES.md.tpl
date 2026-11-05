@@ -12,7 +12,7 @@
 
 - `AGENT_CONFIG`：`${XDG_CONFIG_HOME:-$HOME/.config}/multi-agent-task-handoff`（Windows `%APPDATA%\multi-agent-task-handoff`）
 - 工作区根：见 `$AGENT_CONFIG/config.toml` 的 `[paths].workspace`；未设置时 `$HOME/agent_workspace`（存放项目目录的父容器，不是写入目标）
-- 安装注册表：`$AGENT_CONFIG/sync-paths`（一行一个安装目录；`install.sh` / `post-commit` 读它，安装副本以它为准）
+- 安装注册表：`$AGENT_CONFIG/sync-paths`（一行一个安装目录；`install.sh` / `handoff.sh --syncall` 读它，安装副本以它为准）
 - 迁移：整表复制到新机器同一路径（覆盖模板）；`sync-paths` 不带；`config.toml` 只改 workspace
 - OS / Shell：
 - 登录：

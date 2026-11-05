@@ -61,7 +61,7 @@ bash install.sh               # 只装当前宿主
 
 Windows 可直接双击根目录的 `安装.bat`：它自动找 git/bash 并调用 `install.sh`，识别不出宿主时会提示选择。
 
-需要安装到多个宿主时，对每个宿主各执行一次 `--host` 安装；收工时 `--suspend` 会跑 `scripts/handoff.sh --syncall` 对齐各副本，提交钩子只是可选加速，两者都幂等、可随时手动重跑。
+需要安装到多个宿主时，对每个宿主各执行一次 `--host` 安装；收工时 `--suspend` 会跑 `scripts/handoff.sh --syncall` 对齐各副本，幂等，可随时手动重跑。
 
 Windows 上诊断和同步用 `scripts\运行时.bat --printpath` / `scripts\运行时.bat --syncall`；安装仍用 `安装.bat`。
 
@@ -96,7 +96,7 @@ agent 会把 skill 安装到当前宿主的 `skills/multi-agent-task-handoff`，
 | 交给指定 agent | `--suspend <ID>` | 写卡后按会话 ID 只发一段指针，不贴全文 |
 | 体检/修复 | `--check` / `--fix` | 检查安装、布局、配置、链接；`--fix` 修可自动项，含把落后的安装副本快进到当前提交 |
 | 摸底宿主能力 | `--probe` | 实测当前 agent 并更新能力表；`--live` 会实际建会话 |
-| 路径诊断 | `--printpath` | 表格输出配置目录、工作区根、能力表（含日期）、源仓库、钩子、宿主识别来源、全部副本的路径与 commit |
+| 路径诊断 | `--printpath` | 表格输出配置目录、工作区根、能力表（含日期）、源仓库、宿主识别来源、全部副本的路径与 commit |
 
 项目第一次用先跑 `--doc` 建档（没有 `handoff/` 不会自动创建）；之后接手 / `--resume` 继续，收工 / `--suspend` 写卡并生成 `PROMPT.md`。
 
@@ -149,7 +149,7 @@ agent 会把 skill 安装到当前宿主的 `skills/multi-agent-task-handoff`，
 ## 6. 限制与注意事项
 
 - 不后台捕获 agent 上下文；必须显式触发一次。
-- 不依赖提交钩子，不写全局规则，不起后台服务；机械动作由显式命令执行。
+- 不装钩子，不写全局规则，不起后台服务；机械动作由显式命令执行。
 - 一个项目同一时间一个写者；交接后旧 agent 停写。
 - memory 只读提升，不复制、不写回。
 - `PROMPT.md` 含本机路径，由 `--doc` 加入项目 `.gitignore`；敏感信息不提交。

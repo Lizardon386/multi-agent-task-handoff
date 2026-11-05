@@ -63,21 +63,20 @@
 ## 坑与约束
 > 只写会踩的坑与约束；协议级边界见 `SKILL.md` / `DESIGN.md`，本卡不重复；平时可追加，`--suspend` 时归并，≤10 类。
 
-- 钩子：`post-commit` 只是可选加速；worktree 会话可能改共享 `core.hooksPath` 让它静默不跑；副本同步与 push 由 `--suspend` 显式执行，直接维护提交后也要手动 `scripts/handoff.sh --syncall`。
 - 安装：`install.sh` 只装 HEAD，工作树未提交时副本仍是上一个 commit；`--syncall` 只从源仓库跑（副本没有 HEAD，硬跑会把副本写成 `commit=unknown`）。
-- 注册表：`$AGENT_CONFIG/sync-paths` 是本机安装注册表，`--suspend` 与可选 `post-commit` 按它对齐副本；换机不带，新机器重建。
+- 注册表：`$AGENT_CONFIG/sync-paths` 是本机安装注册表，`--syncall` 按它对齐副本；换机不带，新机器重建。
 - 能力表：固定 `$AGENT_CONFIG/AGENT_CAPABILITIES.md`；只在不存在时从模板播种，已存在不覆盖；换机整表复制、只重填「本机环境」块。
 - GitHub：有 remote 才生成 `.github/README.md`，会覆盖根 README 首页（预期）。
-- 入口 / 发布：`install.sh` 只安装，诊断/同步用 `scripts/handoff.sh`（Windows `scripts/运行时.bat`），不要再给 install.sh 加运行时子命令；包文件（`SKILL.md`、`scripts/`、`install.sh`、`安装.bat`、`assets/`、`LICENSE`、`.githooks/`）必须留根。
+- 入口 / 发布：`install.sh` 只安装，诊断/同步用 `scripts/handoff.sh`（Windows `scripts/运行时.bat`），不要再给 install.sh 加运行时子命令；包文件（`SKILL.md`、`scripts/`、`install.sh`、`安装.bat`、`assets/`、`LICENSE`）必须留根。
 - 工作区文档：`AGENTS.md` / `PROJECT_RULES.md` 缺失时 `--check` 报 🟡，`--fix` 确认后从模板播种；已存在的只报过期。
 - 文档：模板不会被 `--check` 校验；改协议或文档结构后手动扫 `assets/*.tpl`，避免模板与正文互相矛盾。
-- git：钩子不自动 push；只有 `--push` 会显式推送，`--commit` 只提交 `handoff/`；`--push` 由 `scripts/handoff.sh --push` 重试 3 次 / 3 秒，只重试网络错误；未确认推送成功不写「已推送」。
-- 不回到全自动：文件改动无法触发 git（边界禁止常驻服务），钩子失效时全自动=全不自动且无兜底；与「git 可选」「敏感信息不提交」冲突。`--commit` / `--push` 保留；嫌步骤多只能封成一条显式命令。
+- git：不装钩子；只有 `--push` 会显式推送，`--commit` 只提交 `handoff/`；`--push` 由 `scripts/handoff.sh --push` 重试 3 次 / 3 秒，只重试网络错误；未确认推送成功不写「已推送」。
+- 不回到全自动：文件改动无法触发 git（边界禁止常驻服务），没有可靠触发器时全自动=全不自动；与「git 可选」「敏感信息不提交」冲突。`--commit` / `--push` 保留；嫌步骤多只能封成一条显式命令。
 
 ## 交接记录（只记关键动作，≤10 条）
 > 超出先压卡到 `ARCHIVE.md`；不写日常细节。
 
-- 2026-11-05 WorkBuddy：v3.2 落地（推送状态以 git 为准）；全自动方案评估后不采纳（理由见坑）；本次 `--suspend --push` 走显式 push + `--syncall` 收工；Claude 修正推送状态表述、收工末尾总是 `--syncall`、`--resume` 核对 cwd 与项目目录；v3.3 拆分 install/handoff 入口；v3.3.1 加 `scripts/handoff.sh --push` 网络错误重试；DESIGN 加开发者维护章，模板同步（提交/推送/同步）；v3.3.2 参数去中间连字符（`--dryrun` / `--nohook` / `--noregister`）；v3.3.3 运行时归入 `scripts/`，归档改 `ARCHIVE.md`；DESIGN 版本表只留主版本，小版本细节归本卡与 ARCHIVE；主版本表的「结果」改为「理由与结果」，写出转向原因；维护流程标出手动/自动并补流程图；CONTEXT 增 `MEMORY 提炼` 章，承接跨 agent 的规则/偏好；新增 `--save` 与 `[defaults]` 挡位（本机 push / live）；CONTEXT 各章加用法头，模板同步。
+- 2026-11-05 WorkBuddy：v3.2 落地（推送状态以 git 为准）；全自动方案评估后不采纳（理由见坑）；本次 `--suspend --push` 走显式 push + `--syncall` 收工；Claude 修正推送状态表述、收工末尾总是 `--syncall`、`--resume` 核对 cwd 与项目目录；v3.3 拆分 install/handoff 入口；v3.3.1 加 `scripts/handoff.sh --push` 网络错误重试；DESIGN 加开发者维护章，模板同步（提交/推送/同步）；v3.3.2 参数去中间连字符（`--dryrun` / `--nohook` / `--noregister`）；v3.3.3 运行时归入 `scripts/`，归档改 `ARCHIVE.md`；DESIGN 版本表只留主版本，小版本细节归本卡与 ARCHIVE；主版本表的「结果」改为「理由与结果」，写出转向原因；维护流程标出手动/自动并补流程图；CONTEXT 增 `MEMORY 提炼` 章，承接跨 agent 的规则/偏好；新增 `--save` 与 `[defaults]` 挡位（本机 push / live）；CONTEXT 各章加用法头，模板同步；删除 `.githooks`，同步/推送全部显式执行。
 - 2026-11-05 WorkBuddy：`--probe --live` 实测通过；压卡沉降一条旧记录；`--suspend --push` 收工并推送前面未推的提交。
 - 2026-11-04 Claude：v3.1——迁移语义与 `--syncall` 护栏；能力表路径固定；README 增换机迁移；DESIGN 版本/废弃表收敛。
 - 2026-11-04 Claude：文档重整——README 安装/使用分章、DESIGN 完整历程与图表、交接主体统一为 agent、`--printpath` 全量视图、5 份模板对齐；收窄自动提交记忆，`--suspend` 未给 `--push` 时抑制钩子推送；Claude `--probe --live` 通过，能力表补 `CreateSession` 的 worktree 落点。

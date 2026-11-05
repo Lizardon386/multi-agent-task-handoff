@@ -26,7 +26,7 @@ usage() {
 用法: bash handoff.sh [选项]
 
   --printpath [--host NAME | --target DIR]
-                   路径诊断：配置 / 工作区 / 能力表 / 源仓库 / 宿主 / 副本清单 / 钩子
+                   路径诊断：配置 / 工作区 / 能力表 / 源仓库 / 宿主 / 副本清单
   --syncall [--dryrun]
                    按 $AGENT_CONFIG/sync-paths 逐份对齐到当前 HEAD，只补落后的
                    （必须从源仓库运行；--dryrun 只打印）
@@ -176,7 +176,7 @@ if [ "$mode" = syncall ]; then
   while IFS= read -r line <&3; do
     case "$line" in ''|'#'*) continue ;; esac
     # 去尾部空白、取父目录、读 commit，全用 shell 内建：
-    # Git Bash 在 Windows 上每启动一个 sed/dirname 约 0.9 秒，四份累积能把钩子拖到 8 秒以上。
+    # Git Bash 在 Windows 上每启动一个 sed/dirname 约 0.9 秒，四份累积能把同步拖到 8 秒以上。
     dest=$line
     while :; do case "$dest" in *' ') dest=${dest% } ;; *) break ;; esac; done
     parent=${dest%/*}
@@ -197,7 +197,7 @@ if [ "$mode" = syncall ]; then
       continue
     fi
     # 子进程单独跑，stdin 接 /dev/null：循环体读的是 fd 3，不会被吃掉
-    if sh "$repo/install.sh" --target "$dest" --nohook --noregister </dev/null >/dev/null 2>&1; then
+    if sh "$repo/install.sh" --target "$dest" --noregister </dev/null >/dev/null 2>&1; then
       printf '已同步: %s\n' "$dest"
     else
       printf '同步失败: %s（手动: sh %s/install.sh --target "%s"）\n' "$dest" "$repo" "$dest" >&2
@@ -219,27 +219,18 @@ reg_count=0
 caps_date=
 [ -f "$caps" ] && caps_date=$(grep -o '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]' "$caps" 2>/dev/null | head -1)
 src_repo=
-hook_repo=$repo
-if ! git -C "$hook_repo" rev-parse --git-dir >/dev/null 2>&1; then
+head_repo=$repo
+if ! git -C "$head_repo" rev-parse --git-dir >/dev/null 2>&1; then
   src_repo=$(sed -n 's/^source=//p' "$repo/.skill-version" 2>/dev/null | head -1)
   if [ -n "$src_repo" ] && git -C "$src_repo" rev-parse --git-dir >/dev/null 2>&1; then
-    hook_repo=$src_repo
+    head_repo=$src_repo
   else
     src_repo=
   fi
 fi
 head_full=
-if git -C "$hook_repo" rev-parse --git-dir >/dev/null 2>&1; then
-  head_full=$(git -C "$hook_repo" rev-parse HEAD 2>/dev/null || true)
-  hooks_path=$(git -C "$hook_repo" config --local --get core.hooksPath 2>/dev/null || true)
-  case "$hooks_path" in
-    .githooks) hooks_status='可选钩子已启用' ;;
-    '') hooks_status='未设置（可选钩子不跑；同步由 --suspend 负责）' ;;
-    *) hooks_status='未指向 .githooks（可选钩子不跑；同步由 --suspend 负责）' ;;
-  esac
-else
-  hooks_path=未知
-  hooks_status='非 git 副本，未找到源仓库'
+if git -C "$head_repo" rev-parse --git-dir >/dev/null 2>&1; then
+  head_full=$(git -C "$head_repo" rev-parse HEAD 2>/dev/null || true)
 fi
 if [ -n "$target_arg" ]; then
   t=$(to_unix "$target_arg")
@@ -275,7 +266,6 @@ else
   printf '  安装注册表      %s  [缺失]\n' "$registry_file"
 fi
 printf '  源仓库          %s\n' "${src_repo:-$repo}"
-printf '  Git 钩子        %s  [%s]\n' "${hooks_path:-未设置}" "$hooks_status"
 printf '  宿主            %s\n' "$host_label"
 printf '  安装副本        %s\n' "$t"
 if [ -f "$registry_file" ]; then

@@ -21,7 +21,7 @@ multi-agent-task-handoff — 多 agent 任务交接
                               --live  实际执行建会话 / 发送 / 读回（需确认）
                             默认挡位读 config.toml 的 [defaults].probe
   --printpath               路径诊断：表格输出配置目录 / 配置文件 / 工作区根 / 项目目录 /
-                            能力表（含更新日期）/ 安装注册表 / 源仓库 / Git 钩子 / 宿主 /
+                            能力表（含更新日期）/ 安装注册表 / 源仓库 / 宿主 /
                             全部副本的路径与 commit
   --workspace <PATH> [--nosave]
                             全局：指定工作区根；默认写回 config.toml；

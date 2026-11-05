@@ -12,7 +12,6 @@ repo=$script_dir
 
 dry=0
 force=0
-hook=1
 register=1
 host_arg=
 target_arg=
@@ -39,7 +38,6 @@ usage() {
   --host NAME      qoder | claude | codex | opencode | zcode | workbuddy（识别不出时显式指定）
   --target DIR     直接指定安装目录（与 --host 二选一）
   --force          覆盖没有 .skill-version 的非空目录
-  --nohook        不改仓库本地 core.hooksPath
   --noregister    不把目标写进 $AGENT_CONFIG/sync-paths
   -h, --help       显示本表
 
@@ -54,7 +52,6 @@ while [ $# -gt 0 ]; do
   case "$1" in
     --dryrun) dry=1 ;;
     --force) force=1 ;;
-    --nohook) hook=0 ;;
     --noregister) register=0 ;;
     --host) [ $# -ge 2 ] || usage_die "--host 需要一个值"; host_arg=$2; shift ;;
     --host=*) host_arg=${1#*=} ;;
@@ -179,23 +176,6 @@ else
   echo "登记: 跳过（--noregister）"
 fi
 
-if [ "$hook" = 1 ]; then
-  if [ "$is_git" = 0 ]; then
-    echo "钩子: 跳过（非 git 源）"
-  else
-    cur=$(git -C "$repo" config --local --get core.hooksPath 2>/dev/null || true)
-    if [ -z "$cur" ]; then
-      echo "钩子: 会设 core.hooksPath=.githooks"
-    elif [ "$cur" = ".githooks" ]; then
-      echo "钩子: 已启用"
-    else
-      echo "钩子: 未覆盖（当前 core.hooksPath=$cur）"
-    fi
-  fi
-else
-  echo "钩子: 跳过（--nohook）"
-fi
-
 cfg_file=$config_dir/config.toml
 if [ -f "$cfg_file" ]; then
   echo "配置: 已存在 $cfg_file（不覆盖）"
@@ -280,18 +260,6 @@ if [ "$register" = 1 ] && [ "$is_git" = 1 ]; then
     fi
     printf '%s\n' "$reg" >> "$paths_file" || die "写 sync-paths 失败"
     echo "已登记到 sync-paths: $reg"
-  fi
-fi
-
-if [ "$hook" = 1 ] && [ "$is_git" = 1 ]; then
-  cur=$(git -C "$repo" config --local --get core.hooksPath 2>/dev/null || true)
-  if [ -z "$cur" ]; then
-    git -C "$repo" config --local core.hooksPath .githooks || die "启用钩子失败"
-    echo "已启用 core.hooksPath=.githooks"
-  elif [ "$cur" = ".githooks" ]; then
-    echo "钩子已启用（core.hooksPath=.githooks）"
-  else
-    echo "提示: core.hooksPath 已是 $cur，未覆盖；可选钩子不生效，--suspend 会显式同步" >&2
   fi
 fi
 

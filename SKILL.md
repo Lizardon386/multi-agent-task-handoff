@@ -28,7 +28,7 @@ argument-hint: "[--help | --resume | --suspend [ID] [--local | --commit | --push
 | `--check` | 只读检查 |
 | `--fix` | 检查 + 修可自动修复项 |
 | `--probe [--static \| --live]` | 检查 + 实测能力；`--live` 实际建会话/发送/读回 |
-| `--printpath` | 只读路径诊断：config / workspace / 能力表 / 源仓库 / 宿主 / 副本清单 / 钩子 |
+| `--printpath` | 只读路径诊断：config / workspace / 能力表 / 源仓库 / 宿主 / 副本清单 |
 | `--workspace <PATH> [--nosave]` | 指定工作区根；默认写回 `config.toml` |
 | `--help` | 输出完整帮助 |
 
@@ -67,7 +67,7 @@ argument-hint: "[--help | --resume | --suspend [ID] [--local | --commit | --push
 3. 覆盖写 `handoff/PROMPT.md`：项目目录、读卡顺序、文档表、锚点、验证命令、下一步 1–3 条、勿动文件、已决策、旧 ID、规则指针；文件头注明自动生成。
 4. 有 ID：发短指针“请读 `<项目目录>/handoff/PROMPT.md` 接盘”；目标读不到文件时才附全文。
 5. 无 ID：写完就停，报告路径。
-6. 默认挡位读 `scripts/handoff.sh --gear suspend`（local / commit / push），显式参数覆盖；local 不操作 git，`--commit` 只提交 `handoff/` 下的文件，`--push` 隐含 commit 并调 `scripts/handoff.sh --push`（3 次 / 3 秒，只重试网络错误），失败留本地并报告。收工末尾总是跑 `scripts/handoff.sh --syncall` 对齐副本（有提交/推送时放在其后；幂等，只补落后）。`post-commit` 不自动 push；写卡与指针按实际推送结果记「已推送 / 待推送」，未确认不写已推送。
+6. 默认挡位读 `scripts/handoff.sh --gear suspend`（local / commit / push），显式参数覆盖；local 不操作 git，`--commit` 只提交 `handoff/` 下的文件，`--push` 隐含 commit 并调 `scripts/handoff.sh --push`（3 次 / 3 秒，只重试网络错误），失败留本地并报告。收工末尾总是跑 `scripts/handoff.sh --syncall` 对齐副本（有提交/推送时放在其后；幂等，只补落后）。不装钩子；写卡与指针按实际推送结果记「已推送 / 待推送」，未确认不写已推送。
 7. memory：按能力表「memory 读取」定位宿主 memory；读 `MEMORY.md` 指针 + 相关条目；只把“会影响下一家”的规则/偏好写入 `CONTEXT.md` 的 `## MEMORY 提炼`（无则写「无」）；不复制原文、不写回、不搬运；冲突以 CONTEXT/DESIGN/git 为准。
 8. 不强制结束会话；可当 checkpoint 用。
 
@@ -91,7 +91,7 @@ argument-hint: "[--help | --resume | --suspend [ID] [--local | --commit | --push
 
 ## --check / --fix
 
-- `--check` 只读：安装版本、布局、config/workspace、能力表日期、`sync-paths`、git 钩子状态（仅提示，不作为必需）、memory gitignore、`.github/README.md` 链接与 drift、PROMPT 是否过期、工作区文档（AGENTS/PROJECT_RULES 是否存在、是否指向 `$AGENT_CONFIG` 与 `handoff/`、是否残留旧路径）、CONTEXT 行数/记录数/坑类别是否超限；不改文件。
+- `--check` 只读：安装版本、布局、config/workspace、能力表日期、`sync-paths`、memory gitignore、`.github/README.md` 链接与 drift、PROMPT 是否过期、工作区文档（AGENTS/PROJECT_RULES 是否存在、是否指向 `$AGENT_CONFIG` 与 `handoff/`、是否残留旧路径）、CONTEXT 行数/记录数/坑类别是否超限；不改文件。
 - `--fix`：先跑同一套检查，再修可自动修复项；冲突/不可逆项询问。
 - 可修：安装副本快进（分叉停）、根 CONTEXT/ARCHIVE 迁入 `handoff/`、协议标记的 README/DESIGN 迁入 `handoff/`、`.github/README.md` 重新生成、缺失的 AGENTS/PROJECT_RULES 确认后从模板播种；已存在的不改写，只报过期。
 - 安装副本对齐跑 `<skill 目录>/scripts/handoff.sh --syncall`：只从源仓库运行（安装副本没有 HEAD，会被拒绝），只补落后副本，已最新跳过。
@@ -119,7 +119,6 @@ argument-hint: "[--help | --resume | --suspend [ID] [--local | --commit | --push
 | 能力表 |  | ✅ 存在（更新日期）/ ⚠️ 不存在 |
 | 安装注册表 |  | N 条 / 缺失 |
 | 源仓库 |  | — |
-| Git 钩子 | 当前值 | 仅提示；同步由 `--suspend` 负责 |
 | 宿主 |  | 识别来源: env / --host / --target |
 | 副本清单 | 逐行 路径 + commit | ✅ 当前 / ⚠️ 落后 / ❌ 缺失 |
 
@@ -139,7 +138,7 @@ argument-hint: "[--help | --resume | --suspend [ID] [--local | --commit | --push
 - 冲突停，不覆盖、不换路径。
 - 文件迁移默认不做；用户明确要求才复制顶层非隐藏文件。
 - 活会话不搬运；换 agent 用新会话 + PROMPT 指针。
-- 不依赖提交钩子、不写全局规则、不起后台服务、不调用模型。
+- 不装钩子、不写全局规则、不起后台服务、不调用模型。
 - 工作区 `AGENTS.md` 只做入口指针；不承载协议正文，不触发机械动作。
 - 敏感信息不提交；PROMPT 默认 gitignore。
 - 宿主差异进能力表；SKILL 不写宿主分支。
