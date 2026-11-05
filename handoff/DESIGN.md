@@ -202,13 +202,45 @@ multi-agent-task-handoff/
 - 批量循环只用 POSIX sh 内建（`while read`、`printf '%.7s'`）：Git Bash 每个外部进程约 0.9 秒，副本多时会把提交钩子拖慢。
 - 版本表与废弃表只追加行；`CONTEXT.md` 的坑平时可追加，`--suspend` 时归并成 ≤10 类；`--check` 只报行数/记录数/类别超限，不自动改写。
 
-## 9. 版本与设计演进
+## 9. 开发者维护
+
+面向直接改这个仓库的人，不面向任务使用者。日常只有三件事：提交、推送、同步副本。
+
+### 9.1 日常改动流程
+
+1. 改文件；涉及协议/脚本时同步改 `SKILL.md`、README、DESIGN、模板。
+2. 自检：`sh -n lib.sh install.sh handoff.sh`；`bash install.sh --dry-run`。
+3. 诊断：`bash handoff.sh --printpath`；`bash handoff.sh --syncall --dry-run`。
+4. 提交：只 `git add` 相关文件；不提交 `handoff/PROMPT.md`、`$AGENT_CONFIG/*`、会话 ID、凭据。
+5. 推送：`bash handoff.sh --push`（默认 3 次 / 3 秒，只重试网络错误）。
+6. 同步：`bash handoff.sh --syncall`；5 份副本应到同一 commit。
+7. 核对：`git status -sb` 无 ahead；`handoff.sh --printpath` 副本全部「当前」。
+
+### 9.2 两条提交路径
+
+| 场景 | 命令 | 提交范围 | 同步 |
+|---|---|---|---|
+| 直接维护仓库 | `git commit` + `handoff.sh --push` | 你改的文件 | 手动 `handoff.sh --syncall` |
+| 任务收工 | `--suspend --commit` / `--push` | 只提交 `handoff/` | 收工末尾自动 `--syncall` |
+
+- `post-commit` 只是可选加速，不参与正确性；不自动 push。
+- `handoff.sh --push` 只重试网络错误；认证失败、非快进、保护分支立即失败。
+- 推送失败时，卡与指针写「待推送」；不 force push，分叉先停下报告。
+
+### 9.3 发布边界
+
+- 包文件必须在根：`SKILL.md`、`lib.sh`、`install.sh`、`handoff.sh`、`安装.bat`、`handoff.bat`、`assets/`、`LICENSE`、`.githooks/`。
+- 改 `lib.sh` / `handoff.sh` 后必须 `--syncall`，否则安装副本仍是旧入口。
+- `.bat` 必须 CRLF；仓库用 `*.bat text eol=crlf`，`git archive` 会按属性输出。
+- 普通提交不会自动同步副本；不要假设钩子跑了。
+
+## 10. 版本与设计演进
 
 旧版代码已从工作树删除；这里只留设计演进。2026-10-29 公开发布前用 git-filter-repo 脱敏重写历史，旧哈希失效。
 
 维护：版本表一个主版本一行，只追加、不回填；不写跨版本总结句（总结会过时），主线由各行「理念更替」自然连成。废弃方案表按阶段累计，被否决的方案保留理由和替代，避免重新讨论。
 
-### 9.1 版本表
+### 10.1 版本表
 
 | 版本 | 时间 | 理念更替 | 结果 |
 |---|---|---|---|
@@ -221,7 +253,7 @@ multi-agent-task-handoff/
 | v3.3 | 2026-11-05 | 入口按动作拆分：安装与运行时分离 | `install.sh` 只安装；`handoff.sh` / `handoff.bat` 负责诊断与同步；`lib.sh` 共享函数 |
 | v3.3.1 | 2026-11-05 | 推送失败可恢复：显式重试只针对网络错误 | `handoff.sh --push` 默认 3 次 / 3 秒；认证与冲突不重试 |
 
-### 9.2 已废弃方案
+### 10.2 已废弃方案
 
 按阶段累计；被否决的方案保留理由，替代注明落点。
 
