@@ -70,7 +70,7 @@ argument-hint: "[--workspace <PATH>] [--nosave] [--help | --resume | --suspend [
 4. 覆盖写 `handoff/PROMPT.md`：项目目录、读卡顺序、文档表、锚点、验证命令、下一步 1–3 条、勿动文件、已决策、参考 ID、规则指针；文件头注明自动生成。
 5. 有 ID：发短指针“请读 `<项目目录>/handoff/PROMPT.md` 接盘”；目标读不到文件时才附全文。
 6. 无 ID：写完就停，报告路径。
-7. 默认挡位读 `scripts/handoff.sh --gear suspend`（local / commit / push），显式参数覆盖；local 不操作 git，`--commit` 只提交 `handoff/` 下的文件，`--push` 隐含 commit 并调 `scripts/handoff.sh --push`（3 次 / 3 秒，只重试网络错误），失败留本地并报告。收工末尾，若当前项目是本 skill 的源仓库（仓库根同时有 `.git` 与 `SKILL.md`）跑 `scripts/handoff.sh --syncall` 对齐副本；普通项目不是 skill 源仓库，安装副本没有 `.git`，都跳过并说明（有提交/推送时放在其后；幂等，只补落后）。不装钩子；写卡与指针按实际推送结果记「已推送 / 待推送」，未确认不写已推送。
+7. 默认挡位读 `scripts/handoff.sh --gear suspend`（local / commit / push），显式参数覆盖；local 不操作 git，`--commit` 只提交 `handoff/` 下的文件，`--push` 隐含 commit 并调 `scripts/handoff.sh --push`（网络错误 3 次 / 3 秒；Windows 再按 HTTP/1.1 + OpenSSL 回退 3 次），失败留本地并报告。收工末尾，若当前项目是本 skill 的源仓库（仓库根同时有 `.git` 与 `SKILL.md`）跑 `scripts/handoff.sh --syncall` 对齐副本；普通项目不是 skill 源仓库，安装副本没有 `.git`，都跳过并说明（有提交/推送时放在其后；幂等，只补落后）。不装钩子；写卡与指针按实际推送结果记「已推送 / 待推送」，未确认不写已推送。
 8. memory：按能力表「memory 读取」定位宿主 memory；读 `MEMORY.md` 指针 + 相关条目；只把“会影响下一家”的规则/偏好写入 `CONTEXT.md` 的「MEMORY 提炼」章（无则写「无」）；不复制原文、不写回、不搬运；冲突以 CONTEXT/DESIGN/git 为准。
 9. 不强制结束会话；可当 checkpoint 用。
 

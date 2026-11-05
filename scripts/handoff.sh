@@ -31,7 +31,8 @@ usage() {
                    按 $AGENT_CONFIG/sync-paths 逐份对齐到当前 HEAD，只补落后的
                    （必须从源仓库运行；--dryrun 只打印）
   --push [--retries N] [--delay S]
-                   显式推送当前分支；只重试网络类错误（默认 3 次，间隔 3 秒）
+                   显式推送当前分支；网络错误重试 3 次 / 3 秒；
+                   Windows 再加 HTTP/1.1 + OpenSSL 回退 3 次
   --save [--all] [-m MSG] [--retries N] [--delay S]
                    提交已跟踪修改（--all 含新文件），同步副本，再推送（重试）
   --gear suspend|probe
@@ -141,23 +142,44 @@ if [ "$mode" = push ]; then
   git -C "$repo" rev-parse --git-dir >/dev/null 2>&1 || die "--push 必须在源仓库运行"
   git -C "$repo" rev-parse --abbrev-ref --symbolic-full-name '@{u}' >/dev/null 2>&1 \
     || die "当前分支没有上游；先 git push -u origin <branch>"
-  i=1
-  while [ "$i" -le "$retries" ]; do
-    out=$(git -C "$repo" push 2>&1); rc=$?
-    if [ "$rc" -eq 0 ]; then
-      printf '%s\n' "$out"
-      printf '已推送: %s\n' "$(git -C "$repo" rev-parse --short HEAD)"
-      exit 0
+  case "$(uname -s 2>/dev/null)" in
+    MINGW*|MSYS*|CYGWIN*) tls_fallback=1 ;;
+    *) tls_fallback=0 ;;
+  esac
+  for phase in normal fallback; do
+    if [ "$phase" = fallback ]; then
+      [ "$tls_fallback" = 1 ] || continue
+      printf '常规推送失败，改用 HTTP/1.1 + OpenSSL 重试（%s 次 / %s 秒）\n' "$retries" "$delay" >&2
     fi
-    case "$out" in
-      *"Authentication failed"*|*"Permission denied"*|*"non-fast-forward"*|*"rejected"*|*"protected branch"*|*"could not read Username"*|*"terminal prompts disabled"*)
-        printf '%s\n' "$out" >&2
-        die "推送失败（非网络错误，不重试）" ;;
-    esac
-    printf '推送失败（第 %s/%s 次）：\n%s\n' "$i" "$retries" "$out" >&2
-    [ "$i" -lt "$retries" ] && sleep "$delay"
-    i=$((i + 1))
+    i=1
+    while [ "$i" -le "$retries" ]; do
+      if [ "$phase" = fallback ]; then
+        out=$(git -C "$repo" -c http.version=HTTP/1.1 -c http.sslBackend=openssl push 2>&1); rc=$?
+      else
+        out=$(git -C "$repo" push 2>&1); rc=$?
+      fi
+      if [ "$rc" -eq 0 ]; then
+        printf '%s\n' "$out"
+        printf '已推送: %s\n' "$(git -C "$repo" rev-parse --short HEAD)"
+        exit 0
+      fi
+      case "$out" in
+        *"Authentication failed"*|*"Permission denied"*|*"non-fast-forward"*|*"rejected"*|*"protected branch"*|*"could not read Username"*|*"terminal prompts disabled"*)
+          printf '%s\n' "$out" >&2
+          die "推送失败（非网络错误，不重试）" ;;
+      esac
+      if [ "$phase" = fallback ]; then
+        printf 'TLS 回退失败（第 %s/%s 次）：\n%s\n' "$i" "$retries" "$out" >&2
+      else
+        printf '推送失败（第 %s/%s 次）：\n%s\n' "$i" "$retries" "$out" >&2
+      fi
+      [ "$i" -lt "$retries" ] && sleep "$delay"
+      i=$((i + 1))
+    done
   done
+  if [ "$tls_fallback" = 1 ]; then
+    die "推送连续失败（常规 + TLS 回退各 $retries 次）；提交留在本地"
+  fi
   die "推送连续失败 $retries 次；提交留在本地"
 fi
 

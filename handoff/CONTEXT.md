@@ -31,7 +31,7 @@
 
 - 已完成：
   - V3 协议与 `handoff/` 布局；8 个命令；`config.toml`；能力差异表；memory 只读。
-  - 当前协议 v3.10：`--save` 与挡位、无钩子、`scripts/` 入口、`COMPACT_BACKUP.md` 归档名、README 落地页、`--suspend` 压卡清单、`--resume` 接手清单、源仓库正文审计。
+  - 当前协议 v3.10：`--save` 与挡位、无钩子、`scripts/` 入口、`COMPACT_BACKUP.md` 归档名、README 落地页、`--suspend` 压卡清单、`--resume` 接手清单、源仓库正文审计、推送 TLS 回退。
   - 2026-11-05：`--check` / `--fix` / `--probe --live` 通过；能力表 Qoder 行更新；CONTEXT 清掉本机副本/探测状态。
   - 推送状态以 `git status -sb` 为准。
 - 进行中：无代码改动；本次收工提交 handoff 文档。
@@ -60,7 +60,7 @@
 - 入口 / 发布：`install.sh` 只安装，诊断/同步用 `scripts/handoff.sh`（Windows `scripts/运行时.bat`），不要再给 install.sh 加运行时子命令；包文件（`SKILL.md`、`scripts/`、`install.sh`、`安装.bat`、`assets/`、`LICENSE`）必须留根。
 - 工作区文档：`AGENTS.md` / `PROJECT_RULES.md` 缺失时 `--check` 报 🟡，`--fix` 确认后从模板播种；已存在的只报过期。
 - 文档：模板不会被 `--check` 校验；改协议或文档结构后手动扫 `assets/*.tpl`，避免模板与正文互相矛盾。
-- git：不装钩子；只有 `--push` 会显式推送，`--commit` 只提交 `handoff/`；`--push` 由 `scripts/handoff.sh --push` 重试 3 次 / 3 秒，只重试网络错误；未确认推送成功不写「已推送」。
+- git：不装钩子；只有 `--push` 会显式推送，`--commit` 只提交 `handoff/`；`--push` 由 `scripts/handoff.sh --push` 重试 3 次 / 3 秒，只重试网络错误；Windows 再加 HTTP/1.1 + OpenSSL 回退 3 次；未确认推送成功不写「已推送」。
 - 不回到全自动：文件改动无法触发 git（边界禁止常驻服务），没有可靠触发器时全自动=全不自动；与「git 可选」「敏感信息不提交」冲突。`--commit` / `--push` 保留；嫌步骤多只能封成一条显式命令。
 - 能力表：验证方法里的参数名必须与脚本实际一致（`--dryrun`、`--syncall`，无中间连字符）；`--check` 只报不修。
 
@@ -68,7 +68,7 @@
 > 超出先压卡到 `COMPACT_BACKUP.md`；不写日常细节。
 
 - 2026-11-05 Qoder：`--check` / `--fix` / `--probe --live` 通过；能力表 Qoder 行补 `--dryrun` 与实测方法；CONTEXT 清掉本机副本/探测状态；压卡一条旧记录。
-- 2026-11-05 WorkBuddy / Claude：v3.2–v3.10 迭代（入口拆分、`--save` 与挡位、删钩子、归档改名、README 落地页化、压卡/接手清单）；全自动方案不采纳；SKILL 正文审计（`--syncall` 条件、`--printpath` 输出、模板路径、边界措辞）；`--check` 增源仓库正文一致性审计（只报告，不自动改）；按 WorkBuddy 审计修正 `--printpath` 用法串，并写明 `--save` 属脚本层、不在 SKILL/HELP 命令表。详细流水见 [COMPACT_BACKUP.md](COMPACT_BACKUP.md)。
+- 2026-11-05 WorkBuddy / Claude：v3.2–v3.10 迭代（入口拆分、`--save` 与挡位、删钩子、归档改名、README 落地页化、压卡/接手清单）；全自动方案不采纳；SKILL 正文审计（`--syncall` 条件、`--printpath` 输出、模板路径、边界措辞）；`--check` 增源仓库正文一致性审计（只报告，不自动改）；按 WorkBuddy 审计修正 `--printpath` 用法串，并写明 `--save` 属脚本层、不在 SKILL/HELP 命令表；`--push` 内置 Windows HTTP/1.1 + OpenSSL 回退。详细流水见 [COMPACT_BACKUP.md](COMPACT_BACKUP.md)。
 - 2026-11-05 WorkBuddy：压卡沉降一条旧记录；`--suspend --push` 收工并推送前序提交。
 - 2026-11-04 Claude：v3.1——迁移语义与 `--syncall` 护栏；能力表路径固定；README 增换机迁移；DESIGN 版本/废弃表收敛。
 - 2026-11-04 Claude：文档重整——README 安装/使用分章、DESIGN 完整历程与图表、交接主体统一为 agent、`--printpath` 全量视图、5 份模板对齐；收窄自动提交记忆，`--suspend` 未给 `--push` 时抑制钩子推送；能力表补 `CreateSession` 的 worktree 落点。

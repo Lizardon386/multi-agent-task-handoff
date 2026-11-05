@@ -104,7 +104,7 @@ agent 会把 skill 安装到当前宿主的 `skills/multi-agent-task-handoff`，
 |---|---|---|
 | 新任务开工 | `--doc` | 在 `<项目目录>/handoff/` 建 CONTEXT，需要时补 README/DESIGN |
 | 接手别人的任务 | `接手` / `--resume` | 读 PROMPT → CONTEXT，核锚点、跑验证 |
-| 本轮收工 | `收工` / `--suspend` | 按需压卡、写 CONTEXT、覆盖 PROMPT、对齐安装副本（仅源仓库）；`--push` 网络错误重试 3 次 |
+| 本轮收工 | `收工` / `--suspend` | 按需压卡、写 CONTEXT、覆盖 PROMPT、对齐安装副本（仅源仓库）；`--push` 网络错误重试 3 次，Windows 再走 TLS 回退 |
 | 交给指定 agent | `--suspend <ID>` | 写卡后按会话 ID 只发一段指针，不贴全文 |
 | 体检/修复 | `--check` / `--fix` | 检查安装、布局、配置、链接；`--fix` 修可自动项，含把落后的安装副本重装到当前提交 |
 | 摸底宿主能力 | `--probe` | 实测当前 agent 并更新能力表；`--live` 会实际建会话 |
@@ -215,7 +215,7 @@ agent 会把 skill 安装到当前宿主的 `skills/multi-agent-task-handoff`，
 <details>
 <summary>推送失败了怎么办？</summary>
 
-`--push` 只对网络错误重试 3 次 / 间隔 3 秒；认证失败、非快进立即失败，提交留在本地，卡与指针记“已提交，待推送”。
+`--push` 只对网络错误重试 3 次 / 间隔 3 秒，Windows 再加 HTTP/1.1 + OpenSSL 回退 3 次；认证失败、非快进立即失败，提交留在本地，卡与指针记“已提交，待推送”。
 </details>
 
 <details>
