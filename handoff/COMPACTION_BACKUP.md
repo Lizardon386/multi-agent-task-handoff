@@ -1,12 +1,11 @@
 # multi-agent-task-handoff · 压卡备份
 
-> 状态历史、已完成归档与逐条变更；2026-10-28 从 CONTEXT.md 原样搬出。
-> 阅读对象：追溯；当前状态以 [CONTEXT.md](CONTEXT.md) 为准。
+> 状态历史、已完成归档与逐条变更，2026-10-28 从 CONTEXT.md 原样搬出；当前状态以 [CONTEXT.md](CONTEXT.md) 为准。
 > 最近更新：2026-11-05
-> 项目目录：`D:\agent_workspace\multi-agent-task-handoff`
 > V3 起文档迁入 `handoff/`；本文件是历史归档，不复制当前状态。
 
 ## 状态历史
+> 只按时间追加；当前状态以 CONTEXT 为准。
 
 - 2026-11-03：V3 落地——术语统一（项目 / 项目目录 / 工作区根）、文档迁入 `handoff/`、7 个命令、`config.toml`、能力差异表；删除作者快照与同步脚本。
 - 2026-10-23：v2 已落地。`SKILL.md` 改为默认单档 + `工程化` / `交接` / `接续` + 只读自检；三份模板重写；当前工作树只保留 v2 的 SKILL、三份根文档和三份模板。

@@ -2,13 +2,11 @@
 
 > 换 agent、换宿主、隔天回来，任务还能接着干：把状态写进项目目录的 `handoff/`，下一个 agent 读卡即可接手。
 > 一个 skill、一个目录、一份交接卡；不装常驻服务，不绑定宿主，不复制聊天历史。
-> 阅读对象：使用者；本文件是 `handoff/README.md`，任务/产品 README 的唯一源。
+> 本文件是 `handoff/README.md`，任务/产品 README 的唯一源；GitHub 首页由它生成。
 > 最近更新：2026-11-05
-> 项目目录：`D:\agent_workspace\multi-agent-task-handoff`
-> GitHub 首页由本文件生成，不要手改生成物。
-> 指项目根文件用 `../`，例如 `../SKILL.md`。
 
 ## 文档
+> 只列任务文档与阅读对象；项目根文档用 `../`；不复制正文。
 
 | 文档 | 阅读对象 | 内容 |
 |---|---|---|
@@ -19,6 +17,7 @@
 完整文档表（含 PROMPT、SKILL、HELP、压卡备份）见 [CONTEXT.md](CONTEXT.md)。
 
 ## 1. 这是什么
+> 只写痛点、适用与不适用；不写命令细节。
 
 agent 的上下文是易失的。换一个 agent、换一个宿主、隔一天回来，上一个 agent 想过什么、试过什么、卡在哪，全都没了。通常只能翻聊天记录，或者靠人复述。
 
@@ -44,6 +43,7 @@ flowchart LR
 ```
 
 ## 2. 安装
+> 只写安装；人装与由 agent 装分开；多宿主用 `--host`，副本用 `--syncall`。
 
 ### 2.1 前置
 
@@ -78,6 +78,7 @@ Windows 上诊断和同步用 `scripts\运行时.bat --printpath` / `scripts\运
 agent 会把 skill 安装到当前宿主的 `skills/multi-agent-task-handoff`，把目标登记到 `$AGENT_CONFIG/sync-paths`；首次安装还会创建 `config.toml` 和能力表模板。
 
 ## 3. 使用说明
+> 只写触发方式与常用场景；命令语义见 SKILL / HELP。
 
 ### 3.1 触发方式
 
@@ -104,6 +105,7 @@ agent 会把 skill 安装到当前宿主的 `skills/multi-agent-task-handoff`，
 一次只用一个命令。`--suspend` / `--probe` 的默认挡位读 `$AGENT_CONFIG/config.toml` 的 `[defaults]`；显式参数覆盖。安装、配置、GitHub 首页、旧布局迁移的细节见 [DESIGN.md](DESIGN.md) 和 [SKILL.md](../SKILL.md)。
 
 ## 4. 产物与目录
+> 只列产物位置与用途；项目自有文档不动。
 
 ```text
 <项目目录>/handoff/
@@ -126,6 +128,7 @@ agent 会把 skill 安装到当前宿主的 `skills/multi-agent-task-handoff`，
 项目自己的 `README.md`、`docs/`、源码都不动；任务文档只在 `handoff/`。
 
 ## 5. 换机迁移
+> 只写带什么 / 不带什么；细节见 PROJECT_RULES。
 
 协议本体随仓库走；机器上另有几样东西要分清带不带：
 
@@ -148,6 +151,7 @@ agent 会把 skill 安装到当前宿主的 `skills/multi-agent-task-handoff`，
 `PROMPT.md` 不带走：默认 gitignore，含本机路径和会话 ID。
 
 ## 6. 限制与注意事项
+> 只写用户会遇到、协议不替你解决的事；机制见 DESIGN。
 
 - 不后台捕获 agent 上下文；必须显式触发一次。
 - 不装钩子，不写全局规则，不起后台服务；机械动作由显式命令执行。
