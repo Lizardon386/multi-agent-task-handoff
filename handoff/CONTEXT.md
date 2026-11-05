@@ -1,6 +1,6 @@
 # multi-agent-task-handoff · 上下文与进展
 
-> V3.1 已落地并推送；文档与模板已对齐；5 份副本同步；WorkBuddy 投递/读回已复验；待双平台往返测试与旧项目迁移。
+> V3.2 已落地：机械动作收归 `--suspend` 显式执行，不再依赖提交钩子；待双平台往返测试与旧项目迁移。
 > 最近更新：2026-11-05
 > 模式：三档
 > 项目目录：`D:\agent_workspace\multi-agent-task-handoff`
@@ -21,7 +21,7 @@
 
 ## 目标与完成定义
 
-- 目标：V3.1 协议落地；任务文档固定在 `handoff/`；宿主差异由能力表驱动；交接只发指针。
+- 目标：V3.2 协议落地；任务文档固定在 `handoff/`；宿主差异由能力表驱动；交接只发指针；机械动作由显式命令执行。
 - 完成标准（可验证）：`SKILL.md` / `README.md` / `DESIGN.md` 与安装副本一致；8 个命令与 `--help` 一致；`--check` 无 ⛔；`CONTEXT.md` ≤100 行；`install.sh --dry-run` / `--printpath` / `--syncall` 正常。
 
 ## 现在在哪
@@ -29,6 +29,7 @@
 - 已完成：
   - V3 协议与 `handoff/` 布局；8 个命令；`config.toml`；能力差异表；memory 只读。
   - v3.1：`--syncall` 改名并只允许从源仓库运行；迁移语义（能力表可搬、`sync-paths` 不带）；`--printpath` 显示宿主来源、能力表日期与全部副本状态。
+  - v3.2：副本同步与 push 收归 `--suspend` 显式执行；`post-commit` 降级为可选加速、不再自动 push；`core.hooksPath` 不再是必需状态。
   - 文档重整：README 安装/使用分章并补换机迁移；DESIGN 完整历程、版本表收敛、废弃表补全；交接主体统一为 agent；5 份模板对齐。
   - 安装副本 5 份（Qoder / OpenCode / ZCode / WorkBuddy / Claude）同步到当前 HEAD。
   - Claude `--probe --live` 通过：`CreateSession` 投递、`ReadSession` 读回；能力表补 `workDir` 落 worktree 的实测结论。
@@ -42,21 +43,20 @@
 1. 双平台往返测试：临时 git 项目跑 `--resume` → `--suspend` → `--resume`，再跑 `--doc`、`--check`、`--fix`、`--probe`。
 2. 非 git 项目、Windows Git Bash、Ubuntu 路径测试（`$HOME`、XDG、`%APPDATA%`、空格路径）。
 3. 现有项目逐个 `--check` → `--fix` 迁移，不默认扫描全盘。
-4. 每次提交前跑 `--check`，核对 `core.hooksPath` 和副本状态（worktree 会话后尤其要查）。
 
 ## 坑与约束
 
 协议级边界（写入根、任务文档位置、迁移范围、单写者、`PROMPT`、git、memory）见 `SKILL.md` 与 `DESIGN.md` 第 7 节，本卡不重复。平时可追加；`--suspend` 时归并，同类合并、删重复，类别 ≤10。
 
-- 钩子：worktree 会话可能把共享 `core.hooksPath` 改成 `.git/hooks`，提交时钩子静默不跑；提交前 `--check` 看，`--fix` 恢复。
+- 钩子：`post-commit` 只是可选加速；worktree 会话可能改共享 `core.hooksPath` 让它静默不跑，但副本同步与 push 由 `--suspend` 显式执行，不影响正确性。
 - 安装：`install.sh` 只装 HEAD，工作树未提交时副本仍是上一个 commit；`--syncall` 只从源仓库跑（副本没有 HEAD，硬跑会把副本写成 `commit=unknown`）。
-- 注册表：`$AGENT_CONFIG/sync-paths` 是本机安装注册表，提交后 `post-commit` 自动对齐；换机不带，新机器重建。
+- 注册表：`$AGENT_CONFIG/sync-paths` 是本机安装注册表，`--suspend` 与可选 `post-commit` 按它对齐副本；换机不带，新机器重建。
 - 能力表：固定 `$AGENT_CONFIG/AGENT_CAPABILITIES.md`；只在不存在时从模板播种，已存在不覆盖；换机整表复制、只重填「本机环境」块。
 - GitHub：有 remote 才生成 `.github/README.md`，会覆盖根 README 首页（预期）。
 - 发布：包文件（`SKILL.md`、`install.sh`、`安装.bat`、`assets/`、`LICENSE`、`.githooks/`）必须留根。
 - 工作区文档：`AGENTS.md` / `PROJECT_RULES.md` 缺失时 `--check` 报 🟡，`--fix` 确认后从模板播种；已存在的只报过期。
 - 文档：模板不会被 `--check` 校验；改协议或文档结构后手动扫 `assets/*.tpl`，避免模板与正文互相矛盾。
-- git：`post-commit` 默认自动 push；`--suspend --commit` 没给 `--push` 时必须设 `SKIP_AUTO_PUSH=1`，否则会把提交推上去。
+- git：钩子不自动 push；只有 `--push` 会显式推送，`--commit` 只提交 `handoff/`。
 
 ## 交接记录（只记关键动作，≤10 条）
 

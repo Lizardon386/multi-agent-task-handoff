@@ -1,11 +1,11 @@
-> **自动生成，源文件在 handoff/README.md；不要手改。** 最近同步：2026-11-04
+> **自动生成，源文件在 handoff/README.md；不要手改。** 最近同步：2026-11-05
 
 # multi-agent-task-handoff（任务交接）· 使用说明
 
 > 换 agent、换宿主、隔天回来，任务还能接着干：把状态写进项目目录的 `handoff/`，下一个 agent 读卡即可接手。
 > 一个 skill、一个目录、一份交接卡；不装常驻服务，不绑定宿主，不复制聊天历史。
 > 本文件是 `handoff/README.md`，任务/产品 README 的唯一源；GitHub 首页由它生成。
-> 最近更新：2026-11-04
+> 最近更新：2026-11-05
 
 ## 文档
 
@@ -61,7 +61,7 @@ bash install.sh               # 只装当前宿主
 
 Windows 可直接双击根目录的 `安装.bat`：它自动找 git/bash 并调用 `install.sh`，识别不出宿主时会提示选择。
 
-需要安装到多个宿主时，对每个宿主各执行一次 `--host` 安装；提交后 `install.sh --syncall` 会把各副本对齐到当前 HEAD，幂等，可随时手动重跑。
+需要安装到多个宿主时，对每个宿主各执行一次 `--host` 安装；收工时 `--suspend` 会跑 `install.sh --syncall` 对齐各副本，提交钩子只是可选加速，两者都幂等、可随时手动重跑。
 
 ### 2.3 由 agent 安装
 
@@ -90,7 +90,7 @@ agent 会把 skill 安装到当前宿主的 `skills/multi-agent-task-handoff`，
 |---|---|---|
 | 新任务开工 | `--doc` | 在 `<项目目录>/handoff/` 建 CONTEXT，需要时补 README/DESIGN |
 | 接手别人的任务 | `接手` / `--resume` | 读 PROMPT → CONTEXT，核锚点、跑验证 |
-| 本轮收工 | `收工` / `--suspend` | 按需压卡、写 CONTEXT、覆盖 PROMPT |
+| 本轮收工 | `收工` / `--suspend` | 按需压卡、写 CONTEXT、覆盖 PROMPT、对齐安装副本 |
 | 交给指定 agent | `--suspend <ID>` | 写卡后按会话 ID 只发一段指针，不贴全文 |
 | 体检/修复 | `--check` / `--fix` | 检查安装、布局、配置、链接；`--fix` 修可自动项，含把落后的安装副本快进到当前提交 |
 | 摸底宿主能力 | `--probe` | 实测当前 agent 并更新能力表；`--live` 会实际建会话 |
@@ -118,7 +118,7 @@ agent 会把 skill 安装到当前宿主的 `skills/multi-agent-task-handoff`，
 | 历史归档 | `handoff/压卡备份.md` | 卡超限时把日志搬出 |
 | 能力缓存 | `$AGENT_CONFIG/AGENT_CAPABILITIES.md` | 宿主差异与实测结论 |
 | 机器配置 | `$AGENT_CONFIG/config.toml` | 工作区根等偏好 |
-| 安装注册表 | `$AGENT_CONFIG/sync-paths` | 本机已安装的宿主副本，提交后自动同步 |
+| 安装注册表 | `$AGENT_CONFIG/sync-paths` | 本机已安装的宿主副本，`--suspend` 收工时同步 |
 
 项目自己的 `README.md`、`docs/`、源码都不动；任务文档只在 `handoff/`。
 
@@ -147,7 +147,7 @@ agent 会把 skill 安装到当前宿主的 `skills/multi-agent-task-handoff`，
 ## 6. 限制与注意事项
 
 - 不后台捕获 agent 上下文；必须显式触发一次。
-- 不在项目目录装钩子，不写全局规则，不起后台服务。
+- 不依赖提交钩子，不写全局规则，不起后台服务；机械动作由显式命令执行。
 - 一个项目同一时间一个写者；交接后旧 agent 停写。
 - memory 只读提升，不复制、不写回。
 - `PROMPT.md` 含本机路径，由 `--doc` 加入项目 `.gitignore`；敏感信息不提交。

@@ -2,7 +2,7 @@
 
 > 面向改这套协议的人：为什么任务文档固定在 `handoff/`、项目与工作区根怎么分、命令如何收敛、宿主差异如何驱动自动化。
 > 文档表见 [CONTEXT.md](CONTEXT.md)；使用者说明见 [README.md](README.md)，协议正文见 [SKILL.md](../SKILL.md)。
-> 最近更新：2026-11-04
+> 最近更新：2026-11-05
 
 ## 1. 目标与约束
 
@@ -10,7 +10,7 @@ agent 的上下文是易失的：换 agent、换宿主、换机器，接盘的�
 
 目标：任务文档固定在项目目录的 `handoff/`；交接只发状态和指针；能自动的自动做，做不到的明确列给用户；宿主差异不写进协议正文。
 
-约束：不装常驻服务、不写全局规则、不调用模型；git 可选；任何 agent 读文件即可介入。
+约束：不装常驻服务、不写全局规则、不依赖提交钩子、不调用模型；git 可选；任何 agent 读文件即可介入。
 
 非目标：自动记忆、会话回放、AI 摘要、向量检索、强制合规、命令叠加。
 
@@ -65,7 +65,7 @@ flowchart LR
 |---|---|---|---|---|
 | 开工 | `--doc` | 确保 CONTEXT；补 README/DESIGN；写 `模式：三档`；同意后把 PROMPT 加入 `.gitignore` | `handoff/` 三档 | 目标已存在且非本协议生成 → 停 |
 | 工作 | — | 改代码/文档；状态或坑变化时更新 CONTEXT | 可交接的当前状态 | 一个项目同一时间一个写者 |
-| 收工 | `--suspend` | 超限先压卡；写现在/下一步/坑/记录；覆盖 PROMPT；按需读 memory 提升事实 | CONTEXT 更新 + PROMPT 覆盖 | 默认不动 git；`--commit` 只提交 `handoff/`，无 `--push` 时设 `SKIP_AUTO_PUSH=1`；`--push` 隐含 commit |
+| 收工 | `--suspend` | 超限先压卡；写现在/下一步/坑/记录；覆盖 PROMPT；按需读 memory 提升事实；提交/推送后对齐副本 | CONTEXT 更新 + PROMPT 覆盖 + 副本对齐 | 默认不动 git；`--commit` 只提交 `handoff/`；`--push` 隐含 commit 并显式 push |
 | 交给指定 agent | `--suspend <ID>` | 写卡后按会话 ID 只发指针；目标读不到文件才附全文 | 目标 agent 可接手 | 活会话不搬运 |
 | 接手 | `--resume` | PROMPT → CONTEXT → 三档 → 规则；核锚点、跑验证；有 ID 可读回 | 恢复上下文 | 冲突以 CONTEXT 为准；旧布局提示 `--check` / `--fix` |
 | 维护 | `--check` / `--fix` / `--probe` / `--printpath` | 只读检查 / 自动修复 / 实测能力 / 路径诊断 | 报告或修复 | 默认不提交；冲突项询问 |
@@ -94,7 +94,7 @@ multi-agent-task-handoff/
 ├─ LICENSE
 ├─ assets/                  # HELP / 模板 / 示例
 ├─ .github/README.md        # 由 handoff/README.md 生成
-├─ .githooks/post-commit    # 同步安装副本 + 自动 push
+├─ .githooks/post-commit    # 可选加速：只同步安装副本，不自动 push
 ├─ .gitignore
 └─ handoff/
    ├─ README.md             # 产品/任务 README 源
@@ -119,7 +119,7 @@ multi-agent-task-handoff/
 | `handoff/*` | 任务状态 | 项目目录 |
 
 - `$AGENT_CONFIG`：Linux/macOS `${XDG_CONFIG_HOME:-$HOME/.config}/multi-agent-task-handoff`；Windows `%APPDATA%\multi-agent-task-handoff`；可用 `AGENT_CONFIG` 覆盖。
-- `sync-paths` 是“一行一个安装目录”的纯文本，由 `install.sh` 追加；`--syncall` 与 `post-commit` 都读它。
+- `sync-paths` 是“一行一个安装目录”的纯文本，由 `install.sh` 追加；`--syncall` 是主路径，可选 `post-commit` 也读它。
 - `--syncall` 只允许从源仓库运行：安装副本没有 HEAD，强行同步会把所有副本写成 `commit=unknown`，等于降级。
 - 旧位置 `<repo>/.skill-sync-paths` 由 `install.sh` / `post-commit` 一次性迁到新位置后删除。
 - 三者不合并成一个文件：偏好（人工低频编辑）、能力缓存（Markdown 表）、注册表（工具追加、可重建）的写入者和失败域不同，合并会让 bash 解析变脆，并把“装到哪”和“同步哪些”绑在一起。
@@ -146,11 +146,12 @@ multi-agent-task-handoff/
 | 交接只发指针 | 跨 agent 不复制聊天历史；PROMPT 可复用 | 目标读不到文件时要附全文 |
 | `PROMPT.md` 自动生成并 gitignore | 含会话 ID/本机路径，默认不提交 | 跨机交接要另发内容 |
 | 默认不操作 git | commit/push 是外部可见动作 | 要落锚点时必须显式 `--commit`/`--push` |
+| 机械动作由显式命令执行 | 提交钩子依赖本机 `core.hooksPath`，外部宿主可改；把同步与 push 收归 `--suspend` 后不再受它影响 | 不走 `--suspend` 的普通提交不会自动对齐副本 |
 | 能力表按差异拆分 | 宿主叫法、目录来源、会话能力各不同 | 表多，首次要填 |
 | memory 只读提升 | 保持 `CONTEXT.md` 是唯一可移植真源 | 宿主记忆的细节不自动搬运 |
 | `.github/README.md` 由 `handoff/README.md` 生成 | GitHub 首页只认 `.github`/根/`docs` | 会覆盖根 README 的首页展示 |
 | 安装只认当前宿主 | 不替没打开它的 agent 铺副本 | 换宿主要重跑一次 |
-| 自动化只留机械动作 | 提示层（入口文件、模型遵守）不可靠；v1 的强制层已证明成本高于收益 | 需要保证的动作只能靠 git hook 或显式命令 |
+| 自动化只留机械动作 | 提示层（入口文件、模型遵守）不可靠；v1 的强制层已证明成本高于收益 | 需要保证的动作靠显式命令；git hook 只作可选加速 |
 
 ## 7. 已定语义与边界
 
@@ -162,14 +163,14 @@ multi-agent-task-handoff/
 | 交接卡 | CONTEXT ≤100 行；交接记录 ≤10 条；坑类别 ≤10；只记关键动作 |
 | PROMPT | 每次覆盖；带生成时间；默认 gitignore；不写真实会话 ID |
 | 命令 | 一次一个；`--workspace`/`--nosave` 全局；子参数只跟所属命令 |
-| git | 默认不操作；`--commit` 只提交 `handoff/`，无 `--push` 时抑制钩子推送；`--push` 隐含 commit |
+| git | 默认不操作；`--commit` 只提交 `handoff/`；`--push` 隐含 commit 并显式 push；钩子不自动 push |
 | memory | 只读提升；不复制、不写回；项目内 memory 必须 gitignore |
 | GitHub | 有 remote 即生成 `.github/README.md`；无 remote 不生成；不用 symlink |
 | 一个写者 | 同一项目同一时间一个 agent 写；交接后旧 agent 停写 |
 | 跨任务规则 | 项目目录 → 父目录 → `$AGENT_CONFIG/PROJECT_RULES.md` |
 | 能力表 | `$AGENT_CONFIG/AGENT_CAPABILITIES.md`；差异表驱动，协议不写宿主分支 |
 | 机器级状态 | `config.toml`、`AGENT_CAPABILITIES.md`、`sync-paths` 统一放 `$AGENT_CONFIG`；工作区根只放规则与入口 |
-| 触发分层 | 上下文注入（`AGENTS.md` 读序）+ 显式命令（接手/收工）+ 机械动作（`post-commit`）；`AGENTS.md` 只做指针，不触发机械动作 |
+| 触发分层 | 上下文注入（`AGENTS.md` 读序）+ 显式命令（接手/收工，含副本同步与 push）；`post-commit` 只作可选加速；`AGENTS.md` 只做指针 |
 | 换机迁移 | 能力表整表带走，只重填「本机环境」块；`AGENTS.md` / `PROJECT_RULES.md` 复制；`sync-paths` 与宿主 memory 不带；`config.toml` 只改 workspace |
 | 迁移范围 | 只迁符合模版的同名任务文档（`CONTEXT` / `README` / `DESIGN` / `压卡备份`）；客制化名文档（`实施方案`、`架构设计` 等）留根，由 `CONTEXT` 的文档表用 `../` 引用 |
 | 迁移判定 | root `CONTEXT.md` 存在且 `模式：三档`，或文档带模版特征；产品 README/DESIGN 不动 |
@@ -187,7 +188,7 @@ multi-agent-task-handoff/
 - 安装只装 HEAD；工作树未提交时只装上一个 commit。
 - 换机迁移只带知识，不带本机状态：能力表本身可搬（覆盖模板），`sync-paths` 重建，宿主 memory 不搬，`PROMPT.md` 不带走。
 - 机器级状态只放 `$AGENT_CONFIG`，不放仓库；仓库里不留 `.skill-sync-paths`。
-- worktree 会话可能修改共享的 `core.hooksPath`；`--check` 校验，`--fix` 恢复，不静默接受。
+- worktree 会话可能修改共享的 `core.hooksPath`，但同步与 push 已收归 `--suspend` 显式执行，钩子失效不影响正确性；`--printpath` 仅作提示。
 - 模板只播种、不覆盖：缺失的 `AGENT_CAPABILITIES.md` / `AGENTS.md` / `PROJECT_RULES.md` 可确认后从模板创建；已存在的不改写，只报过期。
 - 文档只留单一事实源：协议在 `SKILL.md`、取舍在 `DESIGN.md`、状态在 `CONTEXT.md`；其他文件用指针，不复制正文。
 - 文档分工：README 只答“是什么 / 怎么用”，SKILL 只答“怎么做”，DESIGN 只答“为什么”，CONTEXT 只答“现在在哪”；进度与待办只进 CONTEXT。
@@ -211,6 +212,7 @@ multi-agent-task-handoff/
 | v2.1 | 2026-10-29 | 对外可用：路径不绑作者机器 | `AGENT_WORKSPACE`、MIT、历史脱敏 |
 | v3 | 2026-11-03 | 从「cwd 即任务根」转向「项目目录」；工作区根只作容器；宿主差异决定自动化 | `handoff/`；8 个命令；`config.toml`；能力差异表；memory 只读提升 |
 | v3.1 | 2026-11-04 | 能力表是知识、不是本机状态；安装副本没有资格决定 HEAD | `--syncall` 护栏；迁移语义；能力表路径固定 |
+| v3.2 | 2026-11-05 | 机械动作不再押在可被外部改写的 `core.hooksPath` 上 | 同步与 push 收归 `--suspend` 显式执行；`post-commit` 降级为可选加速、不再自动 push |
 
 ### 9.2 已废弃方案
 
@@ -231,3 +233,5 @@ multi-agent-task-handoff/
 | v3 | agent 主动打开文件夹并迁移会话 | 多数宿主不支持搬运活会话 | 新建会话 + `PROMPT.md` 指针 |
 | v3 | 工作区 = 宿主打开的文件夹；草稿根 = `AGENT_WORKSPACE` | 与最终定义冲突（评审第 1 条被后续纠正推翻） | 项目目录写、工作区根只作容器 |
 | v3 | `--coding`、命令叠加 | 名字歧义；组合顺序难维护 | `--doc`；一次只用一个命令 |
+| v3.1 | `post-commit` 自动 push + 靠 `SKIP_AUTO_PUSH` 抑制 | 与「默认不操作 git」冲突；普通提交会静默推送 | push 只由 `--push` 显式执行（v3.2） |
+| v3.1 | 靠 `--check` / `--fix` 恢复 `core.hooksPath` 兜底同步 | 外部宿主可反复改写，兜底会常态化 | 同步收归 `--suspend`；钩子降为可选（v3.2） |

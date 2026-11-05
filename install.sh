@@ -296,9 +296,9 @@ if [ "$print_paths" = 1 ]; then
     head_full=$(git -C "$hook_repo" rev-parse HEAD 2>/dev/null || true)
     hooks_path=$(git -C "$hook_repo" config --local --get core.hooksPath 2>/dev/null || true)
     case "$hooks_path" in
-      .githooks) hooks_status='已启用' ;;
-      '') hooks_status='未设置，钩子不会跑' ;;
-      *) hooks_status="未指向 .githooks，提交时钩子不会跑" ;;
+      .githooks) hooks_status='可选钩子已启用' ;;
+      '') hooks_status='未设置（可选钩子不跑；同步由 --suspend 负责）' ;;
+      *) hooks_status='未指向 .githooks（可选钩子不跑；同步由 --suspend 负责）' ;;
     esac
   else
     hooks_path=未知
@@ -583,7 +583,7 @@ if [ "$hook" = 1 ] && [ "$is_git" = 1 ]; then
   elif [ "$cur" = ".githooks" ]; then
     echo "钩子已启用（core.hooksPath=.githooks）"
   else
-    echo "注意: core.hooksPath 已是 $cur，未覆盖；提交不会自动同步" >&2
+    echo "提示: core.hooksPath 已是 $cur，未覆盖；可选钩子不生效，--suspend 会显式同步" >&2
   fi
 fi
 

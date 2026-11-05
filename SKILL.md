@@ -23,7 +23,7 @@ argument-hint: "[--help | --resume | --suspend [ID] [--commit] [--push] | --doc 
 | 参数 | 作用 |
 |---|---|
 | 无 / `--resume` | 接盘：读 PROMPT → CONTEXT，核锚点、跑验证 |
-| `--suspend [ID] [--commit] [--push]` | 压卡（按需）+ 收工 + 写 PROMPT；有 ID 发指针 |
+| `--suspend [ID] [--commit] [--push]` | 压卡（按需）+ 收工 + 写 PROMPT + 对齐副本；有 ID 发指针 |
 | `--doc` | 补全 `handoff/` 三档 |
 | `--check` | 只读检查 |
 | `--fix` | 检查 + 修可自动修复项 |
@@ -67,7 +67,7 @@ argument-hint: "[--help | --resume | --suspend [ID] [--commit] [--push] | --doc 
 3. 覆盖写 `handoff/PROMPT.md`：项目目录、读卡顺序、文档表、锚点、验证命令、下一步 1–3 条、勿动文件、已决策、旧 ID、规则指针；文件头注明自动生成。
 4. 有 ID：发短指针“请读 `<项目目录>/handoff/PROMPT.md` 接盘”；目标读不到文件时才附全文。
 5. 无 ID：写完就停，报告路径。
-6. 默认不操作 git；`--commit` 只提交 `handoff/` 下的文件，未给 `--push` 时设 `SKIP_AUTO_PUSH=1`（否则 `post-commit` 会自动推送）；`--push` 隐含 commit；失败留本地并报告。
+6. 默认不操作 git；`--commit` 只提交 `handoff/` 下的文件；`--push` 隐含 commit 并显式执行 `git push`，失败留本地并报告。提交/推送后跑 `install.sh --syncall` 对齐副本（幂等，只补落后）。`post-commit` 不自动 push。
 7. memory：按能力表「memory 读取」定位宿主 memory；读 `MEMORY.md` 指针 + 相关条目；只把“会影响下一家”的事实提升到 CONTEXT/DESIGN；不复制原文、不写回、不搬运；冲突以 CONTEXT/DESIGN/git 为准。
 8. 不强制结束会话；可当 checkpoint 用。
 
@@ -91,9 +91,9 @@ argument-hint: "[--help | --resume | --suspend [ID] [--commit] [--push] | --doc 
 
 ## --check / --fix
 
-- `--check` 只读：安装版本、布局、config/workspace、能力表日期、`sync-paths`、git 钩子（`core.hooksPath`）、memory gitignore、`.github/README.md` 链接与 drift、PROMPT 是否过期、工作区文档（AGENTS/PROJECT_RULES 是否存在、是否指向 `$AGENT_CONFIG` 与 `handoff/`、是否残留旧路径）、CONTEXT 行数/记录数/坑类别是否超限；不改文件。
+- `--check` 只读：安装版本、布局、config/workspace、能力表日期、`sync-paths`、git 钩子状态（仅提示，不作为必需）、memory gitignore、`.github/README.md` 链接与 drift、PROMPT 是否过期、工作区文档（AGENTS/PROJECT_RULES 是否存在、是否指向 `$AGENT_CONFIG` 与 `handoff/`、是否残留旧路径）、CONTEXT 行数/记录数/坑类别是否超限；不改文件。
 - `--fix`：先跑同一套检查，再修可自动修复项；冲突/不可逆项询问。
-- 可修：安装副本快进（分叉停）、根 CONTEXT/压卡备份迁入 `handoff/`、协议标记的 README/DESIGN 迁入 `handoff/`、`.github/README.md` 重新生成、`core.hooksPath` 不是 `.githooks` 时恢复（仅当 `.githooks/post-commit` 存在）、缺失的 AGENTS/PROJECT_RULES 确认后从模板播种；已存在的不改写，只报过期。
+- 可修：安装副本快进（分叉停）、根 CONTEXT/压卡备份迁入 `handoff/`、协议标记的 README/DESIGN 迁入 `handoff/`、`.github/README.md` 重新生成、缺失的 AGENTS/PROJECT_RULES 确认后从模板播种；已存在的不改写，只报过期。
 - 安装副本对齐跑 `<skill 目录>/install.sh --syncall`：只从源仓库运行（安装副本没有 HEAD，会被拒绝），只补落后副本，已最新跳过。
 - 默认不提交；由 `--suspend --commit` 一起提交。
 - 无 `handoff/` 且无旧文档 → 提示 `--doc`，不自动建。
@@ -119,7 +119,7 @@ argument-hint: "[--help | --resume | --suspend [ID] [--commit] [--push] | --doc 
 | 能力表 |  | ✅ 存在（更新日期）/ ⚠️ 不存在 |
 | 安装注册表 |  | N 条 / 缺失 |
 | 源仓库 |  | — |
-| Git 钩子 | .githooks | ✅ 已启用 / ⚠️ 未指向 |
+| Git 钩子 | 当前值 | 仅提示；同步由 `--suspend` 负责 |
 | 宿主 |  | 识别来源: env / --host / --target |
 | 副本清单 | 逐行 路径 + commit | ✅ 当前 / ⚠️ 落后 / ❌ 缺失 |
 
@@ -139,7 +139,7 @@ argument-hint: "[--help | --resume | --suspend [ID] [--commit] [--push] | --doc 
 - 冲突停，不覆盖、不换路径。
 - 文件迁移默认不做；用户明确要求才复制顶层非隐藏文件。
 - 活会话不搬运；换 agent 用新会话 + PROMPT 指针。
-- 不装常驻钩子、不写全局规则、不起后台服务、不调用模型。
+- 不依赖提交钩子、不写全局规则、不起后台服务、不调用模型。
 - 工作区 `AGENTS.md` 只做入口指针；不承载协议正文，不触发机械动作。
 - 敏感信息不提交；PROMPT 默认 gitignore。
 - 宿主差异进能力表；SKILL 不写宿主分支。
