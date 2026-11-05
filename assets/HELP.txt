@@ -1,7 +1,7 @@
 multi-agent-task-handoff — 多 agent 任务交接
 
 用法:
-  multi-agent-task-handoff [--workspace <PATH>] [--nosave] [--help | --resume | --suspend [ID] [--local | --commit | --push] | --doc | --check | --fix | --probe [--static | --live] | --printpath]
+  multi-agent-task-handoff [--workspace <PATH>] [--nosave] [--help | --resume | --suspend [ID] [--local | --commit | --push] | --doc | --check | --fix | --probe [--static | --live] | --printpath [--host NAME | --target DIR]]
 
 命令:
   --resume                  接盘 / 接手：读 handoff/PROMPT.md → handoff/CONTEXT.md，

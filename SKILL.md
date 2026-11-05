@@ -26,7 +26,7 @@ argument-hint: "[--workspace <PATH>] [--nosave] [--help | --resume | --suspend [
 | `--check` | 只读检查 |
 | `--fix` | 检查 + 修可自动修复项 |
 | `--probe [--static \| --live]` | 检查 + 实测能力；`--live` 实际建会话/发送/读回 |
-| `--printpath` | 只读路径诊断：config / workspace / 能力表 / 源仓库 / 宿主 / 副本清单 |
+| `--printpath [--host NAME \| --target DIR]` | 只读路径诊断：config / workspace / 能力表 / 源仓库 / 宿主 / 副本清单 |
 | `--workspace <PATH> [--nosave]` | 指定工作区根；默认写回 `config.toml` |
 | `--help` | 输出完整帮助 |
 
@@ -94,7 +94,7 @@ argument-hint: "[--workspace <PATH>] [--nosave] [--help | --resume | --suspend [
 
 ## --check / --fix
 
-- `--check` 只读：安装副本 commit（`.skill-version`）与源仓库 HEAD、布局、config/workspace、能力表日期、`sync-paths`、PROMPT 与项目内 memory 是否 gitignore、`.github/README.md` 链接与 drift、PROMPT 是否过期、工作区文档（AGENTS/PROJECT_RULES 是否存在、是否指向 `$AGENT_CONFIG` 与 `handoff/`、是否残留旧路径）、CONTEXT 行数/记录数/坑类别是否超限；源仓库（根有 `SKILL.md` + `scripts/`）额外核对 SKILL 正文与 scripts/HELP/模板的命令、参数、路径、输出是否一致（只报告）；不改文件。
+- `--check` 只读：安装副本 commit（`.skill-version`）与源仓库 HEAD、布局、config/workspace、能力表日期、`sync-paths`、PROMPT 与项目内 memory 是否 gitignore、`.github/README.md` 链接与 drift、PROMPT 是否过期、工作区文档（AGENTS/PROJECT_RULES 是否存在、是否指向 `$AGENT_CONFIG` 与 `handoff/`、是否残留旧路径）、CONTEXT 行数/记录数/坑类别是否超限；源仓库（根有 `SKILL.md` + `scripts/`）额外核对 SKILL 正文与 scripts/HELP/模板的命令、参数、路径、输出是否一致（只报告）；`--save` 是脚本层维护命令，不进 SKILL/HELP 命令表，缺失不报；不改文件。
 - `--fix`：先跑同一套检查，再修可自动修复项；冲突/不可逆项询问；SKILL 正文差异只报告，不自动改（语义取舍需人工）。
 - 可修：安装副本对齐（从源仓库跑 `--syncall`，见下）、根 CONTEXT/COMPACT_BACKUP 迁入 `handoff/`、协议标记的 README/DESIGN 迁入 `handoff/`、`.github/README.md` 重新生成、缺失的 `AGENTS.md` / `PROJECT_RULES.md` 确认后从 `assets/examples/AGENTS.md` / `assets/PROJECT_RULES.md.tpl` 播种；已存在的不改写，只报过期。
 - 安装副本对齐只从源仓库跑 `scripts/handoff.sh --syncall`：安装副本没有 HEAD，会被拒绝；按 commit 只补落后，已最新跳过；整体重装，副本内改动会被覆盖。
