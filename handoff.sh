@@ -24,9 +24,9 @@ usage() {
 
   --printpath [--host NAME | --target DIR]
                    路径诊断：配置 / 工作区 / 能力表 / 源仓库 / 宿主 / 副本清单 / 钩子
-  --syncall [--dry-run]
+  --syncall [--dryrun]
                    按 $AGENT_CONFIG/sync-paths 逐份对齐到当前 HEAD，只补落后的
-                   （必须从源仓库运行；--dry-run 只打印）
+                   （必须从源仓库运行；--dryrun 只打印）
   --push [--retries N] [--delay S]
                    显式推送当前分支；只重试网络类错误（默认 3 次，间隔 3 秒）
   -h, --help       显示本表
@@ -43,7 +43,7 @@ while [ $# -gt 0 ]; do
     --printpath) [ -z "$mode" ] || usage_die "一次只用一个命令"; mode=printpath ;;
     --syncall) [ -z "$mode" ] || usage_die "一次只用一个命令"; mode=syncall ;;
     --push) [ -z "$mode" ] || usage_die "一次只用一个命令"; mode=push ;;
-    --dry-run) dry=1 ;;
+    --dryrun) dry=1 ;;
     --retries) [ $# -ge 2 ] || usage_die "--retries 需要一个值"; retries=$2; retries_set=1; shift ;;
     --retries=*) retries=${1#*=}; retries_set=1 ;;
     --delay) [ $# -ge 2 ] || usage_die "--delay 需要一个值"; delay=$2; delay_set=1; shift ;;
@@ -66,7 +66,7 @@ if [ "$mode" != printpath ] && { [ -n "$target_arg" ] || [ -n "$host_arg" ]; }; 
   usage_die "--host / --target 只能跟 --printpath"
 fi
 if [ "$mode" != syncall ] && [ "$dry" = 1 ]; then
-  usage_die "--dry-run 只能跟 --syncall"
+  usage_die "--dryrun 只能跟 --syncall"
 fi
 if [ "$mode" != push ] && { [ "$retries_set" = 1 ] || [ "$delay_set" = 1 ]; }; then
   usage_die "--retries / --delay 只能跟 --push"
@@ -141,7 +141,7 @@ if [ "$mode" = syncall ]; then
       continue
     fi
     # 子进程单独跑，stdin 接 /dev/null：循环体读的是 fd 3，不会被吃掉
-    if sh "$repo/install.sh" --target "$dest" --no-hook --no-register </dev/null >/dev/null 2>&1; then
+    if sh "$repo/install.sh" --target "$dest" --nohook --noregister </dev/null >/dev/null 2>&1; then
       printf '已同步: %s\n' "$dest"
     else
       printf '同步失败: %s（手动: sh %s/install.sh --target "%s"）\n' "$dest" "$repo" "$dest" >&2

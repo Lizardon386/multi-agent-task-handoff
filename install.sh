@@ -35,12 +35,12 @@ usage() {
 源可以是 git 克隆，也可以是解压后的非 git 副本（后者装工作树）。
 
 选项:
-  --dry-run        只打印将要做什么，不写文件
+  --dryrun        只打印将要做什么，不写文件
   --host NAME      qoder | claude | codex | opencode | zcode | workbuddy（识别不出时显式指定）
   --target DIR     直接指定安装目录（与 --host 二选一）
   --force          覆盖没有 .skill-version 的非空目录
-  --no-hook        不改仓库本地 core.hooksPath
-  --no-register    不把目标写进 $AGENT_CONFIG/sync-paths
+  --nohook        不改仓库本地 core.hooksPath
+  --noregister    不把目标写进 $AGENT_CONFIG/sync-paths
   -h, --help       显示本表
 
 退出码: 0 成功 / 1 用法或环境错误 / 2 识别不出宿主
@@ -52,10 +52,10 @@ usage_die() { printf '%s\n' "错误: $*" >&2; usage >&2; exit 1; }
 
 while [ $# -gt 0 ]; do
   case "$1" in
-    --dry-run) dry=1 ;;
+    --dryrun) dry=1 ;;
     --force) force=1 ;;
-    --no-hook) hook=0 ;;
-    --no-register) register=0 ;;
+    --nohook) hook=0 ;;
+    --noregister) register=0 ;;
     --host) [ $# -ge 2 ] || usage_die "--host 需要一个值"; host_arg=$2; shift ;;
     --host=*) host_arg=${1#*=} ;;
     --target) [ $# -ge 2 ] || usage_die "--target 需要一个值"; target_arg=$2; shift ;;
@@ -176,7 +176,7 @@ if [ "$register" = 1 ]; then
     echo "登记: 会追加到 sync-paths -> $reg"
   fi
 else
-  echo "登记: 跳过（--no-register）"
+  echo "登记: 跳过（--noregister）"
 fi
 
 if [ "$hook" = 1 ]; then
@@ -193,7 +193,7 @@ if [ "$hook" = 1 ]; then
     fi
   fi
 else
-  echo "钩子: 跳过（--no-hook）"
+  echo "钩子: 跳过（--nohook）"
 fi
 
 cfg_file=$config_dir/config.toml

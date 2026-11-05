@@ -182,6 +182,7 @@ multi-agent-task-handoff/
 ## 8. 工程约束
 
 - 一次只用一个命令；不提供 `+` / 空格叠加。
+- 参数名不带中间连字符：`--dryrun`、`--syncall`、`--nohook`、`--noregister`；多词直接连写。
 - `SKILL.md` 单文件，硬上限 150 行、目标 120；超出才拆 `references/`。
 - 协议护栏（冲突停、不搬活会话、单写者、memory 只读）必须留在 `SKILL.md`，不能只放 `PROJECT_RULES.md` 或 README。
 - 宿主差异只进 `$AGENT_CONFIG/AGENT_CAPABILITIES.md`；`SKILL.md` 不写宿主分支。
@@ -209,8 +210,8 @@ multi-agent-task-handoff/
 ### 9.1 日常改动流程
 
 1. 改文件；涉及协议/脚本时同步改 `SKILL.md`、README、DESIGN、模板。
-2. 自检：`sh -n lib.sh install.sh handoff.sh`；`bash install.sh --dry-run`。
-3. 诊断：`bash handoff.sh --printpath`；`bash handoff.sh --syncall --dry-run`。
+2. 自检：`sh -n lib.sh install.sh handoff.sh`；`bash install.sh --dryrun`。
+3. 诊断：`bash handoff.sh --printpath`；`bash handoff.sh --syncall --dryrun`。
 4. 提交：只 `git add` 相关文件；不提交 `handoff/PROMPT.md`、`$AGENT_CONFIG/*`、会话 ID、凭据。
 5. 推送：`bash handoff.sh --push`（默认 3 次 / 3 秒，只重试网络错误）。
 6. 同步：`bash handoff.sh --syncall`；5 份副本应到同一 commit。
@@ -252,6 +253,7 @@ multi-agent-task-handoff/
 | v3.2 | 2026-11-05 | 机械动作不再押在可被外部改写的 `core.hooksPath` 上 | 同步与 push 收归 `--suspend` 显式执行；`post-commit` 降级为可选加速、不再自动 push |
 | v3.3 | 2026-11-05 | 入口按动作拆分：安装与运行时分离 | `install.sh` 只安装；`handoff.sh` / `handoff.bat` 负责诊断与同步；`lib.sh` 共享函数 |
 | v3.3.1 | 2026-11-05 | 推送失败可恢复：显式重试只针对网络错误 | `handoff.sh --push` 默认 3 次 / 3 秒；认证与冲突不重试 |
+| v3.3.2 | 2026-11-05 | 参数命名统一：多词直接连写 | `--dryrun` / `--nohook` / `--noregister`；旧参数立即失效 |
 
 ### 10.2 已废弃方案
 

@@ -53,7 +53,7 @@ flowchart LR
 ```bash
 git clone https://github.com/Lizardon386/multi-agent-task-handoff.git
 cd multi-agent-task-handoff
-bash install.sh --dry-run     # 确认安装目标
+bash install.sh --dryrun     # 确认安装目标
 bash install.sh               # 只装当前宿主
 ```
 
@@ -69,7 +69,7 @@ Windows 上诊断和同步用 `handoff.bat --printpath` / `handoff.bat --syncall
 
 ```text
 克隆 https://github.com/Lizardon386/multi-agent-task-handoff，
-先跑 install.sh --dry-run 确认安装目标，再跑 install.sh 只装当前宿主；识别不出宿主就用 --host 指定。
+先跑 install.sh --dryrun 确认安装目标，再跑 install.sh 只装当前宿主；识别不出宿主就用 --host 指定。
 ```
 
 agent 会把 skill 安装到当前宿主的 `skills/multi-agent-task-handoff`，把目标登记到 `$AGENT_CONFIG/sync-paths`；首次安装还会创建 `config.toml` 和能力表模板。
