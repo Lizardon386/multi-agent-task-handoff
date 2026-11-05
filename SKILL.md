@@ -67,7 +67,7 @@ argument-hint: "[--help | --resume | --suspend [ID] [--commit] [--push] | --doc 
 3. 覆盖写 `handoff/PROMPT.md`：项目目录、读卡顺序、文档表、锚点、验证命令、下一步 1–3 条、勿动文件、已决策、旧 ID、规则指针；文件头注明自动生成。
 4. 有 ID：发短指针“请读 `<项目目录>/handoff/PROMPT.md` 接盘”；目标读不到文件时才附全文。
 5. 无 ID：写完就停，报告路径。
-6. 默认不操作 git；`--commit` 只提交 `handoff/` 下的文件；`--push` 隐含 commit 并调 `handoff.sh --push`（3 次 / 3 秒，只重试网络错误），失败留本地并报告。收工末尾总是跑 `handoff.sh --syncall` 对齐副本（有提交/推送时放在其后；幂等，只补落后）。`post-commit` 不自动 push；写卡与指针按实际推送结果记「已推送 / 待推送」，未确认不写已推送。
+6. 默认不操作 git；`--commit` 只提交 `handoff/` 下的文件；`--push` 隐含 commit 并调 `scripts/handoff.sh --push`（3 次 / 3 秒，只重试网络错误），失败留本地并报告。收工末尾总是跑 `scripts/handoff.sh --syncall` 对齐副本（有提交/推送时放在其后；幂等，只补落后）。`post-commit` 不自动 push；写卡与指针按实际推送结果记「已推送 / 待推送」，未确认不写已推送。
 7. memory：按能力表「memory 读取」定位宿主 memory；读 `MEMORY.md` 指针 + 相关条目；只把“会影响下一家”的事实提升到 CONTEXT/DESIGN；不复制原文、不写回、不搬运；冲突以 CONTEXT/DESIGN/git 为准。
 8. 不强制结束会话；可当 checkpoint 用。
 
@@ -76,25 +76,25 @@ argument-hint: "[--help | --resume | --suspend [ID] [--commit] [--push] | --doc 
 1. 确保 `handoff/CONTEXT.md`；补 `handoff/README.md` + `handoff/DESIGN.md`；CONTEXT 写 `模式：三档`。
 2. 路径固定 `handoff/`，无 `docs/` 兜底；目标已存在且非本协议生成 → 停。
 3. 已有协议文件只更新文档表/日期/链接，不重写正文。
-4. 根 `README.md` / `DESIGN.md` / `CONTEXT.md` / `压卡备份.md` 视为项目文档，不自动搬；迁移按 `--fix` 规则。
+4. 根 `README.md` / `DESIGN.md` / `CONTEXT.md` / `ARCHIVE.md` 视为项目文档，不自动搬；迁移按 `--fix` 规则。
 5. 不跑完整能力矩阵；只查写权限、git 状态、文档冲突。
 6. `--doc` 在项目 `.gitignore` 追加 `handoff/PROMPT.md`（git 仓、未忽略、用户同意）。
 
 ## 迁移规则（`--fix` 用）
 
-- 只迁**符合模版的同名任务文档**：`CONTEXT.md`、`README.md`、`DESIGN.md`、`压卡备份.md`（`PROMPT.md` 由 `--suspend` 生成，不算迁移源）。
+- 只迁**符合模版的同名任务文档**：`CONTEXT.md`、`README.md`、`DESIGN.md`、`ARCHIVE.md`（`PROMPT.md` 由 `--suspend` 生成，不算迁移源）。
 - **任何客制化名文档一律不迁**（`实施方案` / `架构设计` / 其他复合名），留在根，由 `CONTEXT.md` 的 `## 文档` 表用 `../` 链接指过去。
 - 判定任务文档：root `CONTEXT.md` 存在且 `模式：三档`，或文档带模版特征（`## 文档` 表 + `最近更新`）。
 - 不符合模版的产品 `README` / `DESIGN`（如 3178）不动，是项目文档。
-- 单档：只迁 `CONTEXT` + `压卡备份`；README/DESIGN 是项目文档，不迁。
+- 单档：只迁 `CONTEXT` + `ARCHIVE`；README/DESIGN 是项目文档，不迁。
 - 迁移前出清单，确认再动；有 git 用 `git mv`；`../` 链接改同级。
 
 ## --check / --fix
 
 - `--check` 只读：安装版本、布局、config/workspace、能力表日期、`sync-paths`、git 钩子状态（仅提示，不作为必需）、memory gitignore、`.github/README.md` 链接与 drift、PROMPT 是否过期、工作区文档（AGENTS/PROJECT_RULES 是否存在、是否指向 `$AGENT_CONFIG` 与 `handoff/`、是否残留旧路径）、CONTEXT 行数/记录数/坑类别是否超限；不改文件。
 - `--fix`：先跑同一套检查，再修可自动修复项；冲突/不可逆项询问。
-- 可修：安装副本快进（分叉停）、根 CONTEXT/压卡备份迁入 `handoff/`、协议标记的 README/DESIGN 迁入 `handoff/`、`.github/README.md` 重新生成、缺失的 AGENTS/PROJECT_RULES 确认后从模板播种；已存在的不改写，只报过期。
-- 安装副本对齐跑 `<skill 目录>/handoff.sh --syncall`：只从源仓库运行（安装副本没有 HEAD，会被拒绝），只补落后副本，已最新跳过。
+- 可修：安装副本快进（分叉停）、根 CONTEXT/ARCHIVE 迁入 `handoff/`、协议标记的 README/DESIGN 迁入 `handoff/`、`.github/README.md` 重新生成、缺失的 AGENTS/PROJECT_RULES 确认后从模板播种；已存在的不改写，只报过期。
+- 安装副本对齐跑 `<skill 目录>/scripts/handoff.sh --syncall`：只从源仓库运行（安装副本没有 HEAD，会被拒绝），只补落后副本，已最新跳过。
 - 默认不提交；由 `--suspend --commit` 一起提交。
 - 无 `handoff/` 且无旧文档 → 提示 `--doc`，不自动建。
 
@@ -106,7 +106,7 @@ argument-hint: "[--help | --resume | --suspend [ID] [--commit] [--push] | --doc 
 
 ## --printpath
 
-只读诊断，不写文件。优先运行 `<skill 目录>/handoff.sh --printpath`（宿主注入的 base directory；Windows 用 Git Bash 的 sh）；没有 shell 时按 `$AGENT_CONFIG`、`config.toml`、默认值自行解析。
+只读诊断，不写文件。优先运行 `<skill 目录>/scripts/handoff.sh --printpath`（宿主注入的 base directory；Windows 用 Git Bash 的 sh）；没有 shell 时按 `$AGENT_CONFIG`、`config.toml`、默认值自行解析。
 
 输出用表格，缺项标 ⚠️/❌：
 

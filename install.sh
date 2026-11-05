@@ -7,8 +7,8 @@ set -u
 script_dir=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd -P) || { echo "错误: 找不到脚本所在目录" >&2; exit 1; }
 repo=$script_dir
 [ -f "$repo/SKILL.md" ] || { echo "错误: 脚本必须放在仓库根目录（找不到 SKILL.md）" >&2; exit 1; }
-[ -f "$repo/lib.sh" ] || { echo "错误: 缺少 lib.sh" >&2; exit 1; }
-. "$repo/lib.sh"
+[ -f "$repo/scripts/lib.sh" ] || { echo "错误: 缺少 scripts/lib.sh" >&2; exit 1; }
+. "$repo/scripts/lib.sh"
 
 dry=0
 force=0

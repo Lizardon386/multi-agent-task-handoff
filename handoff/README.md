@@ -13,7 +13,7 @@
 | [DESIGN.md](DESIGN.md) | 评审 / 开发 | 目标、架构、流程、决策 |
 | [CONTEXT.md](CONTEXT.md) | 接手 agent | 完整文档表、当前状态、下一步、坑 |
 
-完整文档表（含 PROMPT、SKILL、HELP、压卡备份）见 [CONTEXT.md](CONTEXT.md)。
+完整文档表（含 PROMPT、SKILL、HELP、ARCHIVE）见 [CONTEXT.md](CONTEXT.md)。
 
 ## 1. 这是什么
 
@@ -59,9 +59,9 @@ bash install.sh               # 只装当前宿主
 
 Windows 可直接双击根目录的 `安装.bat`：它自动找 git/bash 并调用 `install.sh`，识别不出宿主时会提示选择。
 
-需要安装到多个宿主时，对每个宿主各执行一次 `--host` 安装；收工时 `--suspend` 会跑 `handoff.sh --syncall` 对齐各副本，提交钩子只是可选加速，两者都幂等、可随时手动重跑。
+需要安装到多个宿主时，对每个宿主各执行一次 `--host` 安装；收工时 `--suspend` 会跑 `scripts/handoff.sh --syncall` 对齐各副本，提交钩子只是可选加速，两者都幂等、可随时手动重跑。
 
-Windows 上诊断和同步用 `handoff.bat --printpath` / `handoff.bat --syncall`；安装仍用 `安装.bat`。
+Windows 上诊断和同步用 `scripts\运行时.bat --printpath` / `scripts\运行时.bat --syncall`；安装仍用 `安装.bat`。
 
 ### 2.3 由 agent 安装
 
@@ -108,14 +108,14 @@ agent 会把 skill 安装到当前宿主的 `skills/multi-agent-task-handoff`，
 ├─ README.md       # 任务说明（本文的源）
 ├─ DESIGN.md       # 设计取舍（需要时）
 ├─ PROMPT.md       # 交接指针，自动生成，默认 gitignore
-└─ 压卡备份.md      # 压卡搬出的历史
+└─ ARCHIVE.md      # 压卡搬出的历史
 ```
 
 | 产物 | 位置 | 用途 |
 |---|---|---|
 | 交接卡 | `handoff/CONTEXT.md` | 下一位 agent 的入口 |
 | 交接指针 | `handoff/PROMPT.md` | 发送给接手 agent 的短消息源 |
-| 历史归档 | `handoff/压卡备份.md` | 卡超限时把日志搬出 |
+| 历史归档 | `handoff/ARCHIVE.md` | 卡超限时把日志搬出 |
 | 能力缓存 | `$AGENT_CONFIG/AGENT_CAPABILITIES.md` | 宿主差异与实测结论 |
 | 机器配置 | `$AGENT_CONFIG/config.toml` | 工作区根等偏好 |
 | 安装注册表 | `$AGENT_CONFIG/sync-paths` | 本机已安装的宿主副本，`--suspend` 收工时同步 |

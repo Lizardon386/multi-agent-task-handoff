@@ -65,7 +65,7 @@ flowchart LR
 |---|---|---|---|---|
 | 开工 | `--doc` | 确保 CONTEXT；补 README/DESIGN；写 `模式：三档`；同意后把 PROMPT 加入 `.gitignore` | `handoff/` 三档 | 目标已存在且非本协议生成 → 停 |
 | 工作 | — | 改代码/文档；状态或坑变化时更新 CONTEXT | 可交接的当前状态 | 一个项目同一时间一个写者 |
-| 收工 | `--suspend` | 超限先压卡；写现在/下一步/坑/记录；覆盖 PROMPT；按需读 memory 提升事实；末尾总是对齐副本（提交/推送时在其后） | CONTEXT 更新 + PROMPT 覆盖 + 副本对齐 | 默认不动 git；`--commit` 只提交 `handoff/`；`--push` 隐含 commit 并调 `handoff.sh --push`（3 次 / 3 秒，只重试网络错误）；未确认推送成功写「待推送」 |
+| 收工 | `--suspend` | 超限先压卡；写现在/下一步/坑/记录；覆盖 PROMPT；按需读 memory 提升事实；末尾总是对齐副本（提交/推送时在其后） | CONTEXT 更新 + PROMPT 覆盖 + 副本对齐 | 默认不动 git；`--commit` 只提交 `handoff/`；`--push` 隐含 commit 并调 `scripts/handoff.sh --push`（3 次 / 3 秒，只重试网络错误）；未确认推送成功写「待推送」 |
 | 交给指定 agent | `--suspend <ID>` | 写卡后按会话 ID 只发指针；目标读不到文件才附全文 | 目标 agent 可接手 | 活会话不搬运 |
 | 接手 | `--resume` | PROMPT → CONTEXT → 三档 → 规则；核对 cwd 与项目目录；核锚点、跑验证；有 ID 可读回 | 恢复上下文 | 冲突以 CONTEXT 为准；cwd 不一致先回主项目或注明 worktree；旧布局提示 `--check` / `--fix` |
 | 维护 | `--check` / `--fix` / `--probe` / `--printpath` | 只读检查 / 自动修复 / 实测能力 / 路径诊断 | 报告或修复 | 默认不提交；冲突项询问 |
@@ -89,11 +89,12 @@ flowchart LR
 ```text
 multi-agent-task-handoff/
 ├─ SKILL.md                 # 协议正文（包文件，必须在根）
-├─ lib.sh                   # 共享：配置 / 宿主 / 路径函数
 ├─ install.sh               # 只安装：宿主识别、target、注册表
-├─ handoff.sh               # 运行时：--printpath / --syncall
 ├─ 安装.bat                  # Windows 安装入口
-├─ handoff.bat              # Windows 运行时入口
+├─ scripts/
+│  ├─ handoff.sh            # 运行时：--printpath / --syncall / --push
+│  ├─ lib.sh                # 共享：配置 / 宿主 / 路径函数
+│  └─ 运行时.bat             # Windows 运行时入口
 ├─ LICENSE
 ├─ assets/                  # HELP / 模板 / 示例
 ├─ .github/README.md        # 由 handoff/README.md 生成
@@ -104,10 +105,10 @@ multi-agent-task-handoff/
    ├─ DESIGN.md             # 本文件
    ├─ CONTEXT.md            # 当前状态
    ├─ PROMPT.md             # 自动生成（gitignore）
-   └─ 压卡备份.md            # 历史
+   └─ ARCHIVE.md            # 历史
 ```
 
-包文件（`SKILL.md`、`lib.sh`、`install.sh`、`handoff.sh`、`安装.bat`、`handoff.bat`、`assets/`、`LICENSE`、`.githooks/`）必须在根；任务文档进 `handoff/`。
+包文件（`SKILL.md`、`scripts/`、`install.sh`、`安装.bat`、`assets/`、`LICENSE`、`.githooks/`）必须在根；任务文档进 `handoff/`。
 
 #### 5.1.1 机器级状态统一放 `$AGENT_CONFIG`
 
@@ -122,7 +123,7 @@ multi-agent-task-handoff/
 | `handoff/*` | 任务状态 | 项目目录 |
 
 - `$AGENT_CONFIG`：Linux/macOS `${XDG_CONFIG_HOME:-$HOME/.config}/multi-agent-task-handoff`；Windows `%APPDATA%\multi-agent-task-handoff`；可用 `AGENT_CONFIG` 覆盖。
-- `sync-paths` 是“一行一个安装目录”的纯文本，由 `install.sh` 追加；`handoff.sh --syncall` 是主路径，可选 `post-commit` 也读它。
+- `sync-paths` 是“一行一个安装目录”的纯文本，由 `install.sh` 追加；`scripts/handoff.sh --syncall` 是主路径，可选 `post-commit` 也读它。
 - `--syncall` 只允许从源仓库运行：安装副本没有 HEAD，强行同步会把所有副本写成 `commit=unknown`，等于降级。
 - 旧位置 `<repo>/.skill-sync-paths` 由 `install.sh` / `post-commit` 一次性迁到新位置后删除。
 - 三者不合并成一个文件：偏好（人工低频编辑）、能力缓存（Markdown 表）、注册表（工具追加、可重建）的写入者和失败域不同，合并会让 bash 解析变脆，并把“装到哪”和“同步哪些”绑在一起。
@@ -161,12 +162,12 @@ multi-agent-task-handoff/
 | 主题 | 约定 |
 |---|---|
 | 写入根 | 项目目录；工作区根永远不直接写 `handoff/` |
-| 文档路径 | `<项目目录>/handoff/{CONTEXT,README,DESIGN,PROMPT,压卡备份}.md` |
+| 文档路径 | `<项目目录>/handoff/{CONTEXT,README,DESIGN,PROMPT,ARCHIVE}.md` |
 | 冲突 | 目标已存在且非本协议生成 → 停，不覆盖、不换路径 |
 | 交接卡 | CONTEXT ≤100 行；交接记录 ≤10 条；坑类别 ≤10；只记关键动作 |
 | PROMPT | 每次覆盖；带生成时间；默认 gitignore；不写真实会话 ID |
 | 命令 | 一次一个；`--workspace`/`--nosave` 全局；子参数只跟所属命令 |
-| git | 默认不操作；`--commit` 只提交 `handoff/`；`--push` 隐含 commit 并调 `handoff.sh --push`（3 次 / 3 秒，只重试网络错误）；钩子不自动 push；未确认推送成功写「待推送」 |
+| git | 默认不操作；`--commit` 只提交 `handoff/`；`--push` 隐含 commit 并调 `scripts/handoff.sh --push`（3 次 / 3 秒，只重试网络错误）；钩子不自动 push；未确认推送成功写「待推送」 |
 | memory | 只读提升；不复制、不写回；项目内 memory 必须 gitignore |
 | GitHub | 有 remote 即生成 `.github/README.md`；无 remote 不生成；不用 symlink |
 | 一个写者 | 同一项目同一时间一个 agent 写；交接后旧 agent 停写 |
@@ -175,7 +176,7 @@ multi-agent-task-handoff/
 | 机器级状态 | `config.toml`、`AGENT_CAPABILITIES.md`、`sync-paths` 统一放 `$AGENT_CONFIG`；工作区根只放规则与入口 |
 | 触发分层 | 上下文注入（`AGENTS.md` 读序）+ 显式命令（接手/收工，含副本同步与 push）；`post-commit` 只作可选加速；`AGENTS.md` 只做指针 |
 | 换机迁移 | 能力表整表带走，只重填「本机环境」块；`AGENTS.md` / `PROJECT_RULES.md` 复制；`sync-paths` 与宿主 memory 不带；`config.toml` 只改 workspace |
-| 迁移范围 | 只迁符合模版的同名任务文档（`CONTEXT` / `README` / `DESIGN` / `压卡备份`）；客制化名文档（`实施方案`、`架构设计` 等）留根，由 `CONTEXT` 的文档表用 `../` 引用 |
+| 迁移范围 | 只迁符合模版的同名任务文档（`CONTEXT` / `README` / `DESIGN` / `ARCHIVE`）；客制化名文档（`实施方案`、`架构设计` 等）留根，由 `CONTEXT` 的文档表用 `../` 引用 |
 | 迁移判定 | root `CONTEXT.md` 存在且 `模式：三档`，或文档带模版特征；产品 README/DESIGN 不动 |
 | 完成定义 | 文档与安装副本一致；`--help` 与命令表一致；`--check` 无 ⛔；卡 ≤100 行 |
 
@@ -191,7 +192,7 @@ multi-agent-task-handoff/
 - `.github/README.md` 覆盖根 README 的首页展示是预期行为；要求项目 README 当首页的仓不适用。
 - 安装只装 HEAD；工作树未提交时只装上一个 commit。
 - 状态以 git 为准：未确认推送成功，不写「已推送」；卡与指针记「已提交，待推送」或实际结果。
-- `handoff.sh --push` 只重试网络类错误（TLS / reset / timeout 等）；认证失败、非快进、保护分支立即失败。
+- `scripts/handoff.sh --push` 只重试网络类错误（TLS / reset / timeout 等）；认证失败、非快进、保护分支立即失败。
 - 换机迁移只带知识，不带本机状态：能力表本身可搬（覆盖模板），`sync-paths` 重建，宿主 memory 不搬，`PROMPT.md` 不带走。
 - 机器级状态只放 `$AGENT_CONFIG`，不放仓库；仓库里不留 `.skill-sync-paths`。
 - worktree 会话可能修改共享的 `core.hooksPath`，但同步与 push 已收归 `--suspend` 显式执行，钩子失效不影响正确性；`--printpath` 仅作提示。
@@ -210,28 +211,28 @@ multi-agent-task-handoff/
 ### 9.1 日常改动流程
 
 1. 改文件；涉及协议/脚本时同步改 `SKILL.md`、README、DESIGN、模板。
-2. 自检：`sh -n lib.sh install.sh handoff.sh`；`bash install.sh --dryrun`。
-3. 诊断：`bash handoff.sh --printpath`；`bash handoff.sh --syncall --dryrun`。
+2. 自检：`sh -n scripts/lib.sh scripts/handoff.sh install.sh`；`bash install.sh --dryrun`。
+3. 诊断：`bash scripts/handoff.sh --printpath`；`bash scripts/handoff.sh --syncall --dryrun`。
 4. 提交：只 `git add` 相关文件；不提交 `handoff/PROMPT.md`、`$AGENT_CONFIG/*`、会话 ID、凭据。
-5. 推送：`bash handoff.sh --push`（默认 3 次 / 3 秒，只重试网络错误）。
-6. 同步：`bash handoff.sh --syncall`；5 份副本应到同一 commit。
-7. 核对：`git status -sb` 无 ahead；`handoff.sh --printpath` 副本全部「当前」。
+5. 推送：`bash scripts/handoff.sh --push`（默认 3 次 / 3 秒，只重试网络错误）。
+6. 同步：`bash scripts/handoff.sh --syncall`；5 份副本应到同一 commit。
+7. 核对：`git status -sb` 无 ahead；`scripts/handoff.sh --printpath` 副本全部「当前」。
 
 ### 9.2 两条提交路径
 
 | 场景 | 命令 | 提交范围 | 同步 |
 |---|---|---|---|
-| 直接维护仓库 | `git commit` + `handoff.sh --push` | 你改的文件 | 手动 `handoff.sh --syncall` |
+| 直接维护仓库 | `git commit` + `scripts/handoff.sh --push` | 你改的文件 | 手动 `scripts/handoff.sh --syncall` |
 | 任务收工 | `--suspend --commit` / `--push` | 只提交 `handoff/` | 收工末尾自动 `--syncall` |
 
 - `post-commit` 只是可选加速，不参与正确性；不自动 push。
-- `handoff.sh --push` 只重试网络错误；认证失败、非快进、保护分支立即失败。
+- `scripts/handoff.sh --push` 只重试网络错误；认证失败、非快进、保护分支立即失败。
 - 推送失败时，卡与指针写「待推送」；不 force push，分叉先停下报告。
 
 ### 9.3 发布边界
 
-- 包文件必须在根：`SKILL.md`、`lib.sh`、`install.sh`、`handoff.sh`、`安装.bat`、`handoff.bat`、`assets/`、`LICENSE`、`.githooks/`。
-- 改 `lib.sh` / `handoff.sh` 后必须 `--syncall`，否则安装副本仍是旧入口。
+- 包文件必须在根：`SKILL.md`、`scripts/`、`install.sh`、`安装.bat`、`assets/`、`LICENSE`、`.githooks/`。
+- 改 `scripts/lib.sh` / `scripts/handoff.sh` 后必须 `--syncall`，否则安装副本仍是旧入口。
 - `.bat` 必须 CRLF；仓库用 `*.bat text eol=crlf`，`git archive` 会按属性输出。
 - 普通提交不会自动同步副本；不要假设钩子跑了。
 
@@ -251,9 +252,10 @@ multi-agent-task-handoff/
 | v3 | 2026-11-03 | 从「cwd 即任务根」转向「项目目录」；工作区根只作容器；宿主差异决定自动化 | `handoff/`；8 个命令；`config.toml`；能力差异表；memory 只读提升 |
 | v3.1 | 2026-11-04 | 能力表是知识、不是本机状态；安装副本没有资格决定 HEAD | `--syncall` 护栏；迁移语义；能力表路径固定 |
 | v3.2 | 2026-11-05 | 机械动作不再押在可被外部改写的 `core.hooksPath` 上 | 同步与 push 收归 `--suspend` 显式执行；`post-commit` 降级为可选加速、不再自动 push |
-| v3.3 | 2026-11-05 | 入口按动作拆分：安装与运行时分离 | `install.sh` 只安装；`handoff.sh` / `handoff.bat` 负责诊断与同步；`lib.sh` 共享函数 |
-| v3.3.1 | 2026-11-05 | 推送失败可恢复：显式重试只针对网络错误 | `handoff.sh --push` 默认 3 次 / 3 秒；认证与冲突不重试 |
+| v3.3 | 2026-11-05 | 入口按动作拆分：安装与运行时分离 | `install.sh` 只安装；`scripts/` 下的 `handoff.sh` / `运行时.bat` 负责诊断与同步；`scripts/lib.sh` 共享函数 |
+| v3.3.1 | 2026-11-05 | 推送失败可恢复：显式重试只针对网络错误 | `scripts/handoff.sh --push` 默认 3 次 / 3 秒；认证与冲突不重试 |
 | v3.3.2 | 2026-11-05 | 参数命名统一：多词直接连写 | `--dryrun` / `--nohook` / `--noregister`；旧参数立即失效 |
+| v3.3.3 | 2026-11-05 | 运行时归入 `scripts/`，归档文件英文大写 | `install.sh` 留根；`scripts/{handoff.sh,lib.sh,运行时.bat}`；`handoff/ARCHIVE.md` |
 
 ### 10.2 已废弃方案
 

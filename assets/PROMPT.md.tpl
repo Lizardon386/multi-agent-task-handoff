@@ -18,7 +18,7 @@
 | CONTEXT | handoff/CONTEXT.md |
 | README | handoff/README.md |
 | DESIGN | handoff/DESIGN.md |
-| 压卡备份 | handoff/压卡备份.md |
+| ARCHIVE | handoff/ARCHIVE.md |
 
 ## 状态锚点
 - git HEAD / 时间戳：

@@ -17,12 +17,12 @@ if [ ! -f "$sync_paths" ] && [ -f "$repo/.skill-sync-paths" ]; then
   cp "$repo/.skill-sync-paths" "$sync_paths" 2>/dev/null && rm -f "$repo/.skill-sync-paths"
 fi
 
-if [ -f "$repo/handoff.sh" ] && command -v sh >/dev/null 2>&1; then
+if [ -f "$repo/scripts/handoff.sh" ] && command -v sh >/dev/null 2>&1; then
   # --syncall 幂等：只补落后的副本，已最新的直接跳过。
   # 清掉钩子注入的 GIT_* 变量，避免 install.sh 误判仓库状态。
   env -u GIT_DIR -u GIT_WORK_TREE -u GIT_INDEX_FILE \
-    sh "$repo/handoff.sh" --syncall </dev/null \
-    || printf '%s\n' "副本同步未全部成功；手动补齐: sh \"$repo/handoff.sh\" --syncall" >&2
+    sh "$repo/scripts/handoff.sh" --syncall </dev/null \
+    || printf '%s\n' "副本同步未全部成功；手动补齐: sh \"$repo/scripts/handoff.sh\" --syncall" >&2
 elif [ -f "$sync_paths" ]; then
   # 兜底：没有 install.sh 时按清单逐份解包（用 fd 3 读，避免循环体吃掉清单剩余行）
   head_commit=$(git -C "$repo" rev-parse HEAD)

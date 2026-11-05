@@ -4,10 +4,10 @@
 set -u
 
 script_dir=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd -P) || { echo "错误: 找不到脚本所在目录" >&2; exit 1; }
-repo=$script_dir
-[ -f "$repo/SKILL.md" ] || { echo "错误: 脚本必须放在仓库根目录（找不到 SKILL.md）" >&2; exit 1; }
-[ -f "$repo/lib.sh" ] || { echo "错误: 缺少 lib.sh" >&2; exit 1; }
-. "$repo/lib.sh"
+repo=$(CDPATH= cd -- "$script_dir/.." && pwd -P) || { echo "错误: 找不到仓库根目录" >&2; exit 1; }
+[ -f "$repo/SKILL.md" ] || { echo "错误: 脚本必须放在仓库的 scripts/ 目录（找不到上层 SKILL.md）" >&2; exit 1; }
+[ -f "$script_dir/lib.sh" ] || { echo "错误: 缺少 scripts/lib.sh" >&2; exit 1; }
+. "$script_dir/lib.sh"
 
 mode=
 dry=0
