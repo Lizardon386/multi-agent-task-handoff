@@ -46,6 +46,32 @@
 - 2026-10-28：压卡收成正式命令（`--help` 可见）；snippet 加压卡检查，uno-online / handoff-pilot-test 的 AGENTS 同步（fixture 432 字节）。
 - 2026-10-28：`接手/工程化/压卡/接续` 的任务名改为可选，默认 cwd 目录名；只有操作别的目录时才带名字。
 
+## 已完成流水（2026-11-05 自 CONTEXT §3 搬出）
+
+> 原样保留；当前状态以 [CONTEXT.md](CONTEXT.md) 为准。
+
+- V3 协议与 `handoff/` 布局；8 个命令；`config.toml`；能力差异表；memory 只读。
+- v3.1：`--syncall` 改名并只允许从源仓库运行；迁移语义（能力表可搬、`sync-paths` 不带）；`--printpath` 显示宿主来源、能力表日期与全部副本状态。
+- v3.2：副本同步与 push 收归 `--suspend` 显式执行；`post-commit` 降级为可选加速、不再自动 push；`core.hooksPath` 不再是必需状态。
+- v3.3：入口按动作拆分——`install.sh` 只安装；`scripts/` 下的 `handoff.sh` / `运行时.bat` 负责诊断与同步，`lib.sh` 共享函数。
+- v3.3.1：`--push` 走 `scripts/handoff.sh --push`，默认重试 3 次 / 3 秒，只重试网络错误；认证/冲突立即失败。
+- v3.3.2：参数名去掉中间连字符——`--dryrun` / `--nohook` / `--noregister`，旧参数立即失效。
+- v3.3.3：运行时脚本归入 `scripts/`（`handoff.sh` / `lib.sh` / `运行时.bat`），`install.sh` 留根；归档为 `handoff/压卡备份.md`。
+- v3.4：新增 `scripts/handoff.sh --save`（提交+同步+推送重试）；`[defaults].suspend` / `.probe` 挡位，本机 `push` / `live`。
+- v3.5：删除 `.githooks`，同步/推送全部显式执行；归档文件名改回 `压卡备份.md`。
+- v3.6：归档文件名改为 `COMPACTION_BACKUP.md`（精确英文）；H1 保持中文。
+- v3.7：handoff 文档头块统一（用途 / 阅读对象 / 更新 / 项目目录）；CONTEXT 章节加编号。
+- v3.8：DESIGN 维护章同步 `--save`、挡位默认与「命令内部」流程图。
+- v3.9：撤销顶块版本摘要，改为稳定描述；各文档章节补用法头。
+- 文档：README 按落地页重构（快速导航、平台安装表、最短路径、样例卡、FAQ、参与）；模板同步。
+- v3.10：归档文件名改为 `COMPACT_BACKUP.md`（H1 保持中文）；文档、模板、规则引用同步。
+- v3.2 后续：评估「全自动化 + 删 `--commit`/`--push`」后不采纳，理由记入「坑与约束」；一条显式封装命令列为候选，未实施。
+- 文档重整：README 安装/使用分章并补换机迁移；DESIGN 完整历程、版本表收敛、废弃表补全；交接主体统一为 agent；5 份模板对齐。
+- 安装副本 5 份（Qoder / OpenCode / ZCode / WorkBuddy / Claude）同步到当前 HEAD。
+- Claude `--probe --live` 通过：`CreateSession` 投递、`ReadSession` 读回；能力表补 `workDir` 落 worktree 的实测结论。
+- WorkBuddy `--probe --live` 通过：前台子会话投递、同步读回，回传内容一致，无残留。
+- 推送状态以 `git status -sb` 为准（网络异常时可能 ahead）。
+
 ## 交接记录（压卡沉降）
 
 > 交接记录超 10 条时先沉降到本节，条目一字未改。
@@ -54,3 +80,4 @@
 - 2026-10-28 Qoder：AGENTS 片段改为稳定入口，协议细则不再复制到任务目录。
 - 2026-10-30 WorkBuddy：能力表拆两张；PROJECT_RULES 定「宿主差异只进能力表」。
 - 2026-10-30 WorkBuddy：加 workbuddy 宿主；能力表补 WorkBuddy 行；`.workbuddy-ai/` 进 gitignore。
+- 2026-11-05 WorkBuddy：v3.2 落地（推送状态以 git 为准）；全自动方案评估后不采纳（理由见坑）；本次 `--suspend --push` 走显式 push + `--syncall` 收工；Claude 修正推送状态表述、收工末尾总是 `--syncall`、`--resume` 核对 cwd 与项目目录；v3.3 拆分 install/handoff 入口；v3.3.1 加 `scripts/handoff.sh --push` 网络错误重试；DESIGN 加开发者维护章，模板同步（提交/推送/同步）；v3.3.2 参数去中间连字符（`--dryrun` / `--nohook` / `--noregister`）；v3.3.3 运行时归入 `scripts/`，归档改回 `压卡备份.md`；DESIGN 版本表只留主版本，小版本细节归本卡与 `压卡备份.md`；主版本表的「结果」改为「理由与结果」，写出转向原因；维护流程标出手动/自动并补流程图；CONTEXT 增 `MEMORY 提炼` 章，承接跨 agent 的规则/偏好；新增 `--save` 与 `[defaults]` 挡位（本机 push / live）；CONTEXT 各章加用法头，模板同步；删除 `.githooks`，同步/推送全部显式执行；v3.5 归档名改回 `压卡备份.md`；v3.6 文件名改 `COMPACTION_BACKUP.md`（H1 中文）；v3.7 文档头块统一，CONTEXT 章节编号；v3.8 DESIGN 维护章同步 `--save`/挡位/流程图；v3.9 撤销顶块版本摘要，各文档章节补用法头；README 按落地页重构（快速导航、平台安装表、最短路径、样例卡、FAQ、参与），模板同步；v3.10 归档文件名改为 `COMPACT_BACKUP.md`，文档/模板/工作区规则同步。

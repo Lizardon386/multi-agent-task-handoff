@@ -13,8 +13,7 @@ argument-hint: "[--help | --resume | --suspend [ID] [--local | --commit | --push
 - **项目目录**：项目的绝对路径，**唯一写入根**；来自宿主已打开的目录，或无项目时新建的目录。
 - **工作区根**：`AGENT_WORKSPACE` 容器；只用来新建项目目录，**不是写入目标**。
 - **当前目录**：`pwd`；可 `cd`，不改变项目。
-- 任务文档只在 `<项目目录>/handoff/`；不写工作区根，不往子目录铺。
-- 宿主差异与项目目录来源查 `$AGENT_CONFIG/AGENT_CAPABILITIES.md`；SKILL 不写宿主分支。
+- 任务文档只在 `<项目目录>/handoff/`；不写工作区根，不往子目录铺；宿主差异与项目目录来源查 `$AGENT_CONFIG/AGENT_CAPABILITIES.md`，SKILL 不写宿主分支。
 
 ## 用法
 
@@ -62,14 +61,17 @@ argument-hint: "[--help | --resume | --suspend [ID] [--local | --commit | --push
 
 ## --suspend
 
-1. 确保 `handoff/CONTEXT.md`；只在 >100 行或 >10 条记录时压卡；没超报“无需压卡”。
-2. 先压卡，再写本次「现在/下一步/坑/交接记录」；坑按类归并、删重复与协议复述，类别 ≤10；报告 before/after。
-3. 覆盖写 `handoff/PROMPT.md`：项目目录、读卡顺序、文档表、锚点、验证命令、下一步 1–3 条、勿动文件、已决策、旧 ID、规则指针；文件头注明自动生成。
-4. 有 ID：发短指针“请读 `<项目目录>/handoff/PROMPT.md` 接盘”；目标读不到文件时才附全文。
-5. 无 ID：写完就停，报告路径。
-6. 默认挡位读 `scripts/handoff.sh --gear suspend`（local / commit / push），显式参数覆盖；local 不操作 git，`--commit` 只提交 `handoff/` 下的文件，`--push` 隐含 commit 并调 `scripts/handoff.sh --push`（3 次 / 3 秒，只重试网络错误），失败留本地并报告。收工末尾总是跑 `scripts/handoff.sh --syncall` 对齐副本（有提交/推送时放在其后；幂等，只补落后）。不装钩子；写卡与指针按实际推送结果记「已推送 / 待推送」，未确认不写已推送。
-7. memory：按能力表「memory 读取」定位宿主 memory；读 `MEMORY.md` 指针 + 相关条目；只把“会影响下一家”的规则/偏好写入 `CONTEXT.md` 的「MEMORY 提炼」章（无则写「无」）；不复制原文、不写回、不搬运；冲突以 CONTEXT/DESIGN/git 为准。
-8. 不强制结束会话；可当 checkpoint 用。
+1. 确保 `handoff/CONTEXT.md`；≤100 行且记录 ≤10 条时报“无需压卡”，否则按第 2 条压卡。
+2. 压卡顺序：
+   - ①「已完成」逐版本流水 → 搬入 `COMPACT_BACKUP.md`，只留当前状态；②「交接记录」>10 条 → 最旧搬入。
+   - ③「坑与约束」合并同类、删协议复述，≤10 类；④「下一步」「在飞文件」删已完成/失效项；⑤「MEMORY 提炼」只留影响下一家的规则。
+3. 再写本次「现在/下一步/坑/交接记录」；报告 before/after 行数与搬出的条目。
+4. 覆盖写 `handoff/PROMPT.md`：项目目录、读卡顺序、文档表、锚点、验证命令、下一步 1–3 条、勿动文件、已决策、旧 ID、规则指针；文件头注明自动生成。
+5. 有 ID：发短指针“请读 `<项目目录>/handoff/PROMPT.md` 接盘”；目标读不到文件时才附全文。
+6. 无 ID：写完就停，报告路径。
+7. 默认挡位读 `scripts/handoff.sh --gear suspend`（local / commit / push），显式参数覆盖；local 不操作 git，`--commit` 只提交 `handoff/` 下的文件，`--push` 隐含 commit 并调 `scripts/handoff.sh --push`（3 次 / 3 秒，只重试网络错误），失败留本地并报告。收工末尾总是跑 `scripts/handoff.sh --syncall` 对齐副本（有提交/推送时放在其后；幂等，只补落后）。不装钩子；写卡与指针按实际推送结果记「已推送 / 待推送」，未确认不写已推送。
+8. memory：按能力表「memory 读取」定位宿主 memory；读 `MEMORY.md` 指针 + 相关条目；只把“会影响下一家”的规则/偏好写入 `CONTEXT.md` 的「MEMORY 提炼」章（无则写「无」）；不复制原文、不写回、不搬运；冲突以 CONTEXT/DESIGN/git 为准。
+9. 不强制结束会话；可当 checkpoint 用。
 
 ## --doc
 
@@ -77,8 +79,7 @@ argument-hint: "[--help | --resume | --suspend [ID] [--local | --commit | --push
 2. 路径固定 `handoff/`，无 `docs/` 兜底；目标已存在且非本协议生成 → 停。
 3. 已有协议文件只更新文档表/日期/链接，不重写正文。
 4. 根 `README.md` / `DESIGN.md` / `CONTEXT.md` / `COMPACT_BACKUP.md` 视为项目文档，不自动搬；迁移按 `--fix` 规则。
-5. 不跑完整能力矩阵；只查写权限、git 状态、文档冲突。
-6. `--doc` 在项目 `.gitignore` 追加 `handoff/PROMPT.md`（git 仓、未忽略、用户同意）。
+5. 不跑完整能力矩阵；只查写权限、git 状态、文档冲突；在项目 `.gitignore` 追加 `handoff/PROMPT.md`（git 仓、未忽略、用户同意）。
 
 ## 迁移规则（`--fix` 用）
 
