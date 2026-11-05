@@ -24,7 +24,7 @@
 | CONTEXT | handoff/CONTEXT.md |
 | README | handoff/README.md |
 | DESIGN | handoff/DESIGN.md |
-| 压卡备份 | handoff/COMPACTION_BACKUP.md |
+| 压卡备份 | handoff/COMPACT_BACKUP.md |
 
 ## 状态锚点
 > 只写可复核的锚点；不写主观判断。
