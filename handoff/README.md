@@ -2,8 +2,10 @@
 
 > 换 agent、换宿主、隔天回来，任务还能接着干：把状态写进项目目录的 `handoff/`，下一个 agent 读卡即可接手。
 > 一个 skill、一个目录、一份交接卡；不装常驻服务，不绑定宿主，不复制聊天历史。
-> 本文件是 `handoff/README.md`，任务/产品 README 的唯一源；GitHub 首页由它生成。
+> 阅读对象：使用者；本文件是 `handoff/README.md`，任务/产品 README 的唯一源。
 > 最近更新：2026-11-05
+> 项目目录：`D:\agent_workspace\multi-agent-task-handoff`
+> GitHub 首页由本文件生成，不要手改生成物。
 
 ## 文档
 

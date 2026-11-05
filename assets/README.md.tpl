@@ -3,9 +3,11 @@
 <!-- 本文件是 handoff/README.md，任务 README 的唯一源；根 README 是项目 README，不是本文件。 -->
 <!-- 只答“是什么 / 怎么用”；协议见 SKILL.md，取舍见 DESIGN.md，当前状态见 CONTEXT.md。 -->
 
+> 阅读对象：使用者；本文件是 `handoff/README.md`，任务/产品 README 的唯一源。
+> 最近更新：YYYY-MM-DD
+> 项目目录：<绝对路径>
 > 有 GitHub remote 时，`.github/README.md` 由本文件生成；不要手改生成物。
 > 指项目根文件用 `../`，例如 `../INTEGRATION_GUIDE.md`。
-> 最近更新：YYYY-MM-DD
 
 ## 文档
 

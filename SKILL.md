@@ -56,7 +56,7 @@ argument-hint: "[--help | --resume | --suspend [ID] [--local | --commit | --push
 ## --resume
 
 1. 读 `handoff/PROMPT.md`；没有再读 `handoff/CONTEXT.md`；冲突以 CONTEXT 为准。
-2. 读跨任务规则；三档时读 `handoff/README.md` / `handoff/DESIGN.md`；读 `CONTEXT.md` 的 `## MEMORY 提炼`。
+2. 读跨任务规则；三档时读 `handoff/README.md` / `handoff/DESIGN.md`；读 `CONTEXT.md` 的「MEMORY 提炼」章。
 3. 核状态锚点，跑验证命令；核对 cwd 与 PROMPT 项目目录，不一致（fork/worktree）时先回主项目或注明只在当前工作树工作；有参考 ID 且信息不足时按能力表读回。
 4. 旧根 `CONTEXT.md` 或根 `README/DESIGN` 带协议标记 → 提示 `--check` / `--fix`，不静默迁移。
 
@@ -68,7 +68,7 @@ argument-hint: "[--help | --resume | --suspend [ID] [--local | --commit | --push
 4. 有 ID：发短指针“请读 `<项目目录>/handoff/PROMPT.md` 接盘”；目标读不到文件时才附全文。
 5. 无 ID：写完就停，报告路径。
 6. 默认挡位读 `scripts/handoff.sh --gear suspend`（local / commit / push），显式参数覆盖；local 不操作 git，`--commit` 只提交 `handoff/` 下的文件，`--push` 隐含 commit 并调 `scripts/handoff.sh --push`（3 次 / 3 秒，只重试网络错误），失败留本地并报告。收工末尾总是跑 `scripts/handoff.sh --syncall` 对齐副本（有提交/推送时放在其后；幂等，只补落后）。不装钩子；写卡与指针按实际推送结果记「已推送 / 待推送」，未确认不写已推送。
-7. memory：按能力表「memory 读取」定位宿主 memory；读 `MEMORY.md` 指针 + 相关条目；只把“会影响下一家”的规则/偏好写入 `CONTEXT.md` 的 `## MEMORY 提炼`（无则写「无」）；不复制原文、不写回、不搬运；冲突以 CONTEXT/DESIGN/git 为准。
+7. memory：按能力表「memory 读取」定位宿主 memory；读 `MEMORY.md` 指针 + 相关条目；只把“会影响下一家”的规则/偏好写入 `CONTEXT.md` 的「MEMORY 提炼」章（无则写「无」）；不复制原文、不写回、不搬运；冲突以 CONTEXT/DESIGN/git 为准。
 8. 不强制结束会话；可当 checkpoint 用。
 
 ## --doc

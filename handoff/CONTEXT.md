@@ -1,13 +1,13 @@
 # multi-agent-task-handoff · 上下文与进展
 
-> V3.6 已落地；推送状态见 `git status -sb`；归档文件名改为 `COMPACTION_BACKUP.md`；待双平台往返测试与旧项目迁移。
+> V3.7 已落地；推送状态见 `git status -sb`；handoff 文档头块统一，CONTEXT 章节编号；待双平台往返测试与旧项目迁移。
 > 最近更新：2026-11-05
 > 模式：三档
 > 项目目录：`D:\agent_workspace\multi-agent-task-handoff`
 > 状态锚点：`git log -1 --oneline`；推 GitHub 前 `gh auth status`
 > 验证命令：`git status -sb`；`bash install.sh --dryrun`；`bash scripts/handoff.sh --printpath`；`bash scripts/handoff.sh --syncall --dryrun`
 
-## 文档
+## 1. 文档
 > 只列任务文档与阅读对象；项目根文档用 `../`；不复制正文。
 
 | 文档 | 阅读对象 | 内容 |
@@ -20,13 +20,13 @@
 | [../SKILL.md](../SKILL.md) | agent | 协议正文 |
 | [../assets/HELP.txt](../assets/HELP.txt) | 使用者 | 完整 `--help` |
 
-## 目标与完成定义
+## 2. 目标与完成定义
 > 目标一句话；完成标准必须可验证，不写过程。
 
-- 目标：V3.6 协议落地；任务文档固定在 `handoff/`；宿主差异由能力表驱动；交接只发指针；机械动作由显式命令执行。
+- 目标：V3.7 协议落地；任务文档固定在 `handoff/`；宿主差异由能力表驱动；交接只发指针；机械动作由显式命令执行。
 - 完成标准（可验证）：`SKILL.md` / `README.md` / `DESIGN.md` 与安装副本一致；8 个命令与 `--help` 一致；`--check` 无 ⛔；`CONTEXT.md` ≤100 行；`install.sh --dryrun`、`scripts/handoff.sh --printpath` / `--syncall` 正常。
 
-## 现在在哪
+## 3. 现在在哪
 > 只写当前状态与在飞文件；已完成项压缩为结果，不写流水账。
 
 - 已完成：
@@ -40,6 +40,7 @@
   - v3.4：新增 `scripts/handoff.sh --save`（提交+同步+推送重试）；`[defaults].suspend` / `.probe` 挡位，本机 `push` / `live`。
   - v3.5：删除 `.githooks`，同步/推送全部显式执行；归档文件名改回 `压卡备份.md`。
   - v3.6：归档文件名改为 `COMPACTION_BACKUP.md`（精确英文）；H1 保持中文。
+  - v3.7：handoff 文档头块统一（用途 / 阅读对象 / 更新 / 项目目录）；CONTEXT 章节加编号。
   - v3.2 后续：评估「全自动化 + 删 `--commit`/`--push`」后不采纳，理由记入「坑与约束」；一条显式封装命令列为候选，未实施。
   - 文档重整：README 安装/使用分章并补换机迁移；DESIGN 完整历程、版本表收敛、废弃表补全；交接主体统一为 agent；5 份模板对齐。
   - 安装副本 5 份（Qoder / OpenCode / ZCode / WorkBuddy / Claude）同步到当前 HEAD。
@@ -49,20 +50,20 @@
 - 进行中：无代码改动。
 - 在飞文件（勿动）：无。
 
-## 下一步
+## 4. 下一步
 > 只写可执行的 1–3 条；不写愿望或背景。
 
 1. 双平台往返测试：临时 git 项目跑 `--resume` → `--suspend` → `--resume`，再跑 `--doc`、`--check`、`--fix`、`--probe`。
 2. 非 git 项目、Windows Git Bash、Ubuntu 路径测试（`$HOME`、XDG、`%APPDATA%`、空格路径）。
 3. 现有项目逐个 `--check` → `--fix` 迁移，不默认扫描全盘。
 
-## MEMORY 提炼
+## 5. MEMORY 提炼
 
 > 只放会影响下一家的规则/偏好；不复制记忆原文、不写本机路径/会话 ID；没有写「无」。
 
 - 直接维护：改完跑 `scripts/handoff.sh --save`（提交 + 同步 + 推送重试），不等用户说「提交」；任务收工仍按 `--suspend` 挡位（默认读 `config.toml`）。
 
-## 坑与约束
+## 6. 坑与约束
 > 只写会踩的坑与约束；协议级边界见 `SKILL.md` / `DESIGN.md`，本卡不重复；平时可追加，`--suspend` 时归并，≤10 类。
 
 - 安装：`install.sh` 只装 HEAD，工作树未提交时副本仍是上一个 commit；`--syncall` 只从源仓库跑（副本没有 HEAD，硬跑会把副本写成 `commit=unknown`）。
@@ -75,10 +76,10 @@
 - git：不装钩子；只有 `--push` 会显式推送，`--commit` 只提交 `handoff/`；`--push` 由 `scripts/handoff.sh --push` 重试 3 次 / 3 秒，只重试网络错误；未确认推送成功不写「已推送」。
 - 不回到全自动：文件改动无法触发 git（边界禁止常驻服务），没有可靠触发器时全自动=全不自动；与「git 可选」「敏感信息不提交」冲突。`--commit` / `--push` 保留；嫌步骤多只能封成一条显式命令。
 
-## 交接记录（只记关键动作，≤10 条）
+## 7. 交接记录（只记关键动作，≤10 条）
 > 超出先压卡到 `COMPACTION_BACKUP.md`；不写日常细节。
 
-- 2026-11-05 WorkBuddy：v3.2 落地（推送状态以 git 为准）；全自动方案评估后不采纳（理由见坑）；本次 `--suspend --push` 走显式 push + `--syncall` 收工；Claude 修正推送状态表述、收工末尾总是 `--syncall`、`--resume` 核对 cwd 与项目目录；v3.3 拆分 install/handoff 入口；v3.3.1 加 `scripts/handoff.sh --push` 网络错误重试；DESIGN 加开发者维护章，模板同步（提交/推送/同步）；v3.3.2 参数去中间连字符（`--dryrun` / `--nohook` / `--noregister`）；v3.3.3 运行时归入 `scripts/`，归档改回 `压卡备份.md`；DESIGN 版本表只留主版本，小版本细节归本卡与 `压卡备份.md`；主版本表的「结果」改为「理由与结果」，写出转向原因；维护流程标出手动/自动并补流程图；CONTEXT 增 `MEMORY 提炼` 章，承接跨 agent 的规则/偏好；新增 `--save` 与 `[defaults]` 挡位（本机 push / live）；CONTEXT 各章加用法头，模板同步；删除 `.githooks`，同步/推送全部显式执行；v3.5 归档名改回 `压卡备份.md`；v3.6 文件名改 `COMPACTION_BACKUP.md`（H1 中文）。
+- 2026-11-05 WorkBuddy：v3.2 落地（推送状态以 git 为准）；全自动方案评估后不采纳（理由见坑）；本次 `--suspend --push` 走显式 push + `--syncall` 收工；Claude 修正推送状态表述、收工末尾总是 `--syncall`、`--resume` 核对 cwd 与项目目录；v3.3 拆分 install/handoff 入口；v3.3.1 加 `scripts/handoff.sh --push` 网络错误重试；DESIGN 加开发者维护章，模板同步（提交/推送/同步）；v3.3.2 参数去中间连字符（`--dryrun` / `--nohook` / `--noregister`）；v3.3.3 运行时归入 `scripts/`，归档改回 `压卡备份.md`；DESIGN 版本表只留主版本，小版本细节归本卡与 `压卡备份.md`；主版本表的「结果」改为「理由与结果」，写出转向原因；维护流程标出手动/自动并补流程图；CONTEXT 增 `MEMORY 提炼` 章，承接跨 agent 的规则/偏好；新增 `--save` 与 `[defaults]` 挡位（本机 push / live）；CONTEXT 各章加用法头，模板同步；删除 `.githooks`，同步/推送全部显式执行；v3.5 归档名改回 `压卡备份.md`；v3.6 文件名改 `COMPACTION_BACKUP.md`（H1 中文）；v3.7 文档头块统一，CONTEXT 章节编号。
 - 2026-11-05 WorkBuddy：`--probe --live` 实测通过；压卡沉降一条旧记录；`--suspend --push` 收工并推送前面未推的提交。
 - 2026-11-04 Claude：v3.1——迁移语义与 `--syncall` 护栏；能力表路径固定；README 增换机迁移；DESIGN 版本/废弃表收敛。
 - 2026-11-04 Claude：文档重整——README 安装/使用分章、DESIGN 完整历程与图表、交接主体统一为 agent、`--printpath` 全量视图、5 份模板对齐；收窄自动提交记忆，`--suspend` 未给 `--push` 时抑制钩子推送；Claude `--probe --live` 通过，能力表补 `CreateSession` 的 worktree 落点。
@@ -89,7 +90,7 @@
 - 2026-11-03 Claude：V3 落地——术语统一、文档迁入 `handoff/`、7 个命令、`config.toml`、能力差异表；删除作者快照与同步脚本；`SKILL.md` 118 行。
 - 2026-10-30 WorkBuddy：收尾写实——三条坑（自动 push、副本同步、验证方法）改成实测表述；验证钩子勿用管道。
 
-## 参考 ID
+## 8. 参考 ID
 > 只放可回读的 ID / 路径；不复制历史。
 
 - 无；本卡自包含，细节按 `git log` 与 [COMPACTION_BACKUP.md](COMPACTION_BACKUP.md) 查。

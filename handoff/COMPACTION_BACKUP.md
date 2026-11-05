@@ -1,7 +1,9 @@
 # multi-agent-task-handoff · 压卡备份
 
-> 状态历史、已完成归档与逐条变更，2026-10-28 从 CONTEXT.md 原样搬出；当前状态以 [CONTEXT.md](CONTEXT.md) 为准。
+> 状态历史、已完成归档与逐条变更；2026-10-28 从 CONTEXT.md 原样搬出。
+> 阅读对象：追溯；当前状态以 [CONTEXT.md](CONTEXT.md) 为准。
 > 最近更新：2026-11-05
+> 项目目录：`D:\agent_workspace\multi-agent-task-handoff`
 > V3 起文档迁入 `handoff/`；本文件是历史归档，不复制当前状态。
 
 ## 状态历史

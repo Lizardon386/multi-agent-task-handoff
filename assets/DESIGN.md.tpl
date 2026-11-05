@@ -3,8 +3,9 @@
 <!-- 本文件是 handoff/DESIGN.md；指项目根文件用 ../。不适用节可删。只写取舍与结构；进度与待办进 CONTEXT.md。 -->
 
 > <一句话：设计目标 / 范围>
-> 文档表见 [CONTEXT.md](CONTEXT.md)。
+> 阅读对象：评审 / 开发；文档表见 [CONTEXT.md](CONTEXT.md)，协议正文见 `../SKILL.md`。
 > 最近更新：YYYY-MM-DD
+> 项目目录：<绝对路径>
 
 ## 1. 目标与约束
 

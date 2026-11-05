@@ -1,8 +1,9 @@
 # multi-agent-task-handoff（任务交接）· 方案设计
 
 > 面向改这套协议的人：为什么任务文档固定在 `handoff/`、项目与工作区根怎么分、命令如何收敛、宿主差异如何驱动自动化。
-> 文档表见 [CONTEXT.md](CONTEXT.md)；使用者说明见 [README.md](README.md)，协议正文见 [SKILL.md](../SKILL.md)。
+> 阅读对象：评审 / 开发；文档表见 [CONTEXT.md](CONTEXT.md)，使用者说明见 [README.md](README.md)，协议正文见 [SKILL.md](../SKILL.md)。
 > 最近更新：2026-11-05
+> 项目目录：`D:\agent_workspace\multi-agent-task-handoff`
 
 ## 1. 目标与约束
 
@@ -198,6 +199,7 @@ multi-agent-task-handoff/
 - 已删除钩子；worktree、外部宿主或本地 git 配置都不再影响同步与 push。
 - 模板只播种、不覆盖：缺失的 `AGENT_CAPABILITIES.md` / `AGENTS.md` / `PROJECT_RULES.md` 可确认后从模板创建；已存在的不改写，只报过期。
 - 文档只留单一事实源：协议在 `SKILL.md`、取舍在 `DESIGN.md`、状态在 `CONTEXT.md`；其他文件用指针，不复制正文。
+- handoff 文档头块统一：用途 → 阅读对象 → 最近更新/生成时间 → 项目目录 → 源/生成关系；正文不重复这些元数据。
 - 文档分工：README 只答“是什么 / 怎么用”，SKILL 只答“怎么做”，DESIGN 只答“为什么”，CONTEXT 只答“现在在哪”；进度与待办只进 CONTEXT。
 - 别名与命令并列写作「别名 / 命令」（斜杠两侧空格，命令用反引号）；同义别名列举写作「接盘/接手」（不加空格）。
 - `--printpath` 是视图不是存储：现读环境变量、`.skill-version`、`git config`，不生成缓存文件。
