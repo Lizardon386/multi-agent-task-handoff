@@ -1,6 +1,6 @@
 # multi-agent-task-handoff · 上下文与进展
 
-> V3.3 已落地；推送状态见 `git status -sb`；安装与运行时入口分离；待双平台往返测试与旧项目迁移。
+> V3.3.1 已落地；推送状态见 `git status -sb`；安装与运行时入口分离；推送失败只重试网络错误；待双平台往返测试与旧项目迁移。
 > 最近更新：2026-11-05
 > 模式：三档
 > 项目目录：`D:\agent_workspace\multi-agent-task-handoff`
@@ -21,7 +21,7 @@
 
 ## 目标与完成定义
 
-- 目标：V3.3 协议落地；任务文档固定在 `handoff/`；宿主差异由能力表驱动；交接只发指针；机械动作由显式命令执行。
+- 目标：V3.3.1 协议落地；任务文档固定在 `handoff/`；宿主差异由能力表驱动；交接只发指针；机械动作由显式命令执行。
 - 完成标准（可验证）：`SKILL.md` / `README.md` / `DESIGN.md` 与安装副本一致；8 个命令与 `--help` 一致；`--check` 无 ⛔；`CONTEXT.md` ≤100 行；`install.sh --dry-run`、`handoff.sh --printpath` / `--syncall` 正常。
 
 ## 现在在哪
@@ -31,6 +31,7 @@
   - v3.1：`--syncall` 改名并只允许从源仓库运行；迁移语义（能力表可搬、`sync-paths` 不带）；`--printpath` 显示宿主来源、能力表日期与全部副本状态。
   - v3.2：副本同步与 push 收归 `--suspend` 显式执行；`post-commit` 降级为可选加速、不再自动 push；`core.hooksPath` 不再是必需状态。
   - v3.3：入口按动作拆分——`install.sh` 只安装，`handoff.sh` / `handoff.bat` 负责诊断与同步，`lib.sh` 共享函数。
+  - v3.3.1：`--push` 走 `handoff.sh --push`，默认重试 3 次 / 3 秒，只重试网络错误；认证/冲突立即失败。
   - v3.2 后续：评估「全自动化 + 删 `--commit`/`--push`」后不采纳，理由记入「坑与约束」；一条显式封装命令列为候选，未实施。
   - 文档重整：README 安装/使用分章并补换机迁移；DESIGN 完整历程、版本表收敛、废弃表补全；交接主体统一为 agent；5 份模板对齐。
   - 安装副本 5 份（Qoder / OpenCode / ZCode / WorkBuddy / Claude）同步到当前 HEAD。
@@ -58,12 +59,12 @@
 - 入口 / 发布：`install.sh` 只安装，诊断/同步用 `handoff.sh`（Windows `handoff.bat`），不要再给 install.sh 加运行时子命令；包文件（`SKILL.md`、`lib.sh`、`install.sh`、`handoff.sh`、`安装.bat`、`handoff.bat`、`assets/`、`LICENSE`、`.githooks/`）必须留根。
 - 工作区文档：`AGENTS.md` / `PROJECT_RULES.md` 缺失时 `--check` 报 🟡，`--fix` 确认后从模板播种；已存在的只报过期。
 - 文档：模板不会被 `--check` 校验；改协议或文档结构后手动扫 `assets/*.tpl`，避免模板与正文互相矛盾。
-- git：钩子不自动 push；只有 `--push` 会显式推送，`--commit` 只提交 `handoff/`；未确认推送成功不写「已推送」。
+- git：钩子不自动 push；只有 `--push` 会显式推送，`--commit` 只提交 `handoff/`；`--push` 由 `handoff.sh --push` 重试 3 次 / 3 秒，只重试网络错误；未确认推送成功不写「已推送」。
 - 不回到全自动：文件改动无法触发 git（边界禁止常驻服务），钩子失效时全自动=全不自动且无兜底；与「git 可选」「敏感信息不提交」冲突。`--commit` / `--push` 保留；嫌步骤多只能封成一条显式命令。
 
 ## 交接记录（只记关键动作，≤10 条）
 
-- 2026-11-05 WorkBuddy：v3.2 落地（推送状态以 git 为准）；全自动方案评估后不采纳（理由见坑）；本次 `--suspend --push` 走显式 push + `--syncall` 收工；Claude 修正推送状态表述、收工末尾总是 `--syncall`、`--resume` 核对 cwd 与项目目录；v3.3 拆分 install/handoff 入口。
+- 2026-11-05 WorkBuddy：v3.2 落地（推送状态以 git 为准）；全自动方案评估后不采纳（理由见坑）；本次 `--suspend --push` 走显式 push + `--syncall` 收工；Claude 修正推送状态表述、收工末尾总是 `--syncall`、`--resume` 核对 cwd 与项目目录；v3.3 拆分 install/handoff 入口；v3.3.1 加 `handoff.sh --push` 网络错误重试。
 - 2026-11-05 WorkBuddy：`--probe --live` 实测通过；压卡沉降一条旧记录；`--suspend --push` 收工并推送前面未推的提交。
 - 2026-11-04 Claude：v3.1——迁移语义与 `--syncall` 护栏；能力表路径固定；README 增换机迁移；DESIGN 版本/废弃表收敛。
 - 2026-11-04 Claude：文档重整——README 安装/使用分章、DESIGN 完整历程与图表、交接主体统一为 agent、`--printpath` 全量视图、5 份模板对齐；收窄自动提交记忆，`--suspend` 未给 `--push` 时抑制钩子推送；Claude `--probe --live` 通过，能力表补 `CreateSession` 的 worktree 落点。

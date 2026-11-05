@@ -13,6 +13,10 @@ mode=
 dry=0
 host_arg=
 target_arg=
+retries=3
+delay=3
+retries_set=0
+delay_set=0
 
 usage() {
   cat <<'EOF'
@@ -23,6 +27,8 @@ usage() {
   --syncall [--dry-run]
                    按 $AGENT_CONFIG/sync-paths 逐份对齐到当前 HEAD，只补落后的
                    （必须从源仓库运行；--dry-run 只打印）
+  --push [--retries N] [--delay S]
+                   显式推送当前分支；只重试网络类错误（默认 3 次，间隔 3 秒）
   -h, --help       显示本表
 
 安装用 install.sh；本脚本一次只做一件事。
@@ -36,7 +42,12 @@ while [ $# -gt 0 ]; do
   case "$1" in
     --printpath) [ -z "$mode" ] || usage_die "一次只用一个命令"; mode=printpath ;;
     --syncall) [ -z "$mode" ] || usage_die "一次只用一个命令"; mode=syncall ;;
+    --push) [ -z "$mode" ] || usage_die "一次只用一个命令"; mode=push ;;
     --dry-run) dry=1 ;;
+    --retries) [ $# -ge 2 ] || usage_die "--retries 需要一个值"; retries=$2; retries_set=1; shift ;;
+    --retries=*) retries=${1#*=}; retries_set=1 ;;
+    --delay) [ $# -ge 2 ] || usage_die "--delay 需要一个值"; delay=$2; delay_set=1; shift ;;
+    --delay=*) delay=${1#*=}; delay_set=1 ;;
     --host) [ $# -ge 2 ] || usage_die "--host 需要一个值"; host_arg=$2; shift ;;
     --host=*) host_arg=${1#*=} ;;
     --target) [ $# -ge 2 ] || usage_die "--target 需要一个值"; target_arg=$2; shift ;;
@@ -47,21 +58,51 @@ while [ $# -gt 0 ]; do
   shift
 done
 
-[ -n "$mode" ] || usage_die "需要 --printpath 或 --syncall"
+[ -n "$mode" ] || usage_die "需要 --printpath / --syncall / --push"
 if [ -n "$target_arg" ] && [ -n "$host_arg" ]; then
   usage_die "--host 与 --target 只能用一个"
 fi
-if [ "$mode" = syncall ] && { [ -n "$target_arg" ] || [ -n "$host_arg" ]; }; then
-  usage_die "--syncall 不能与 --host / --target 一起用"
+if [ "$mode" != printpath ] && { [ -n "$target_arg" ] || [ -n "$host_arg" ]; }; then
+  usage_die "--host / --target 只能跟 --printpath"
 fi
-if [ "$mode" = printpath ] && [ "$dry" = 1 ]; then
+if [ "$mode" != syncall ] && [ "$dry" = 1 ]; then
   usage_die "--dry-run 只能跟 --syncall"
 fi
+if [ "$mode" != push ] && { [ "$retries_set" = 1 ] || [ "$delay_set" = 1 ]; }; then
+  usage_die "--retries / --delay 只能跟 --push"
+fi
+case "$retries" in ''|*[!0-9]*) usage_die "--retries 必须是正整数" ;; esac
+[ "$retries" -ge 1 ] || usage_die "--retries 必须 ≥ 1"
+case "$delay" in ''|*[!0-9]*) usage_die "--delay 必须是非负整数" ;; esac
 if [ -n "$host_arg" ]; then
   case "$host_arg" in
     qoder|claude|codex|opencode|zcode|workbuddy) ;;
     *) usage_die "--host 只支持 qoder/claude/codex/opencode/zcode/workbuddy" ;;
   esac
+fi
+
+if [ "$mode" = push ]; then
+  git -C "$repo" rev-parse --git-dir >/dev/null 2>&1 || die "--push 必须在源仓库运行"
+  git -C "$repo" rev-parse --abbrev-ref --symbolic-full-name '@{u}' >/dev/null 2>&1 \
+    || die "当前分支没有上游；先 git push -u origin <branch>"
+  i=1
+  while [ "$i" -le "$retries" ]; do
+    out=$(git -C "$repo" push 2>&1); rc=$?
+    if [ "$rc" -eq 0 ]; then
+      printf '%s\n' "$out"
+      printf '已推送: %s\n' "$(git -C "$repo" rev-parse --short HEAD)"
+      exit 0
+    fi
+    case "$out" in
+      *"Authentication failed"*|*"Permission denied"*|*"non-fast-forward"*|*"rejected"*|*"protected branch"*|*"could not read Username"*|*"terminal prompts disabled"*)
+        printf '%s\n' "$out" >&2
+        die "推送失败（非网络错误，不重试）" ;;
+    esac
+    printf '推送失败（第 %s/%s 次）：\n%s\n' "$i" "$retries" "$out" >&2
+    [ "$i" -lt "$retries" ] && sleep "$delay"
+    i=$((i + 1))
+  done
+  die "推送连续失败 $retries 次；提交留在本地"
 fi
 
 resolve_paths_file

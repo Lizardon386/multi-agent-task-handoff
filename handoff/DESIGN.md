@@ -65,7 +65,7 @@ flowchart LR
 |---|---|---|---|---|
 | 开工 | `--doc` | 确保 CONTEXT；补 README/DESIGN；写 `模式：三档`；同意后把 PROMPT 加入 `.gitignore` | `handoff/` 三档 | 目标已存在且非本协议生成 → 停 |
 | 工作 | — | 改代码/文档；状态或坑变化时更新 CONTEXT | 可交接的当前状态 | 一个项目同一时间一个写者 |
-| 收工 | `--suspend` | 超限先压卡；写现在/下一步/坑/记录；覆盖 PROMPT；按需读 memory 提升事实；末尾总是对齐副本（提交/推送时在其后） | CONTEXT 更新 + PROMPT 覆盖 + 副本对齐 | 默认不动 git；`--commit` 只提交 `handoff/`；`--push` 隐含 commit 并显式 push；未确认推送成功写「待推送」 |
+| 收工 | `--suspend` | 超限先压卡；写现在/下一步/坑/记录；覆盖 PROMPT；按需读 memory 提升事实；末尾总是对齐副本（提交/推送时在其后） | CONTEXT 更新 + PROMPT 覆盖 + 副本对齐 | 默认不动 git；`--commit` 只提交 `handoff/`；`--push` 隐含 commit 并调 `handoff.sh --push`（3 次 / 3 秒，只重试网络错误）；未确认推送成功写「待推送」 |
 | 交给指定 agent | `--suspend <ID>` | 写卡后按会话 ID 只发指针；目标读不到文件才附全文 | 目标 agent 可接手 | 活会话不搬运 |
 | 接手 | `--resume` | PROMPT → CONTEXT → 三档 → 规则；核对 cwd 与项目目录；核锚点、跑验证；有 ID 可读回 | 恢复上下文 | 冲突以 CONTEXT 为准；cwd 不一致先回主项目或注明 worktree；旧布局提示 `--check` / `--fix` |
 | 维护 | `--check` / `--fix` / `--probe` / `--printpath` | 只读检查 / 自动修复 / 实测能力 / 路径诊断 | 报告或修复 | 默认不提交；冲突项询问 |
@@ -166,7 +166,7 @@ multi-agent-task-handoff/
 | 交接卡 | CONTEXT ≤100 行；交接记录 ≤10 条；坑类别 ≤10；只记关键动作 |
 | PROMPT | 每次覆盖；带生成时间；默认 gitignore；不写真实会话 ID |
 | 命令 | 一次一个；`--workspace`/`--nosave` 全局；子参数只跟所属命令 |
-| git | 默认不操作；`--commit` 只提交 `handoff/`；`--push` 隐含 commit 并显式 push；钩子不自动 push；未确认推送成功写「待推送」 |
+| git | 默认不操作；`--commit` 只提交 `handoff/`；`--push` 隐含 commit 并调 `handoff.sh --push`（3 次 / 3 秒，只重试网络错误）；钩子不自动 push；未确认推送成功写「待推送」 |
 | memory | 只读提升；不复制、不写回；项目内 memory 必须 gitignore |
 | GitHub | 有 remote 即生成 `.github/README.md`；无 remote 不生成；不用 symlink |
 | 一个写者 | 同一项目同一时间一个 agent 写；交接后旧 agent 停写 |
@@ -190,6 +190,7 @@ multi-agent-task-handoff/
 - `.github/README.md` 覆盖根 README 的首页展示是预期行为；要求项目 README 当首页的仓不适用。
 - 安装只装 HEAD；工作树未提交时只装上一个 commit。
 - 状态以 git 为准：未确认推送成功，不写「已推送」；卡与指针记「已提交，待推送」或实际结果。
+- `handoff.sh --push` 只重试网络类错误（TLS / reset / timeout 等）；认证失败、非快进、保护分支立即失败。
 - 换机迁移只带知识，不带本机状态：能力表本身可搬（覆盖模板），`sync-paths` 重建，宿主 memory 不搬，`PROMPT.md` 不带走。
 - 机器级状态只放 `$AGENT_CONFIG`，不放仓库；仓库里不留 `.skill-sync-paths`。
 - worktree 会话可能修改共享的 `core.hooksPath`，但同步与 push 已收归 `--suspend` 显式执行，钩子失效不影响正确性；`--printpath` 仅作提示。
@@ -218,6 +219,7 @@ multi-agent-task-handoff/
 | v3.1 | 2026-11-04 | 能力表是知识、不是本机状态；安装副本没有资格决定 HEAD | `--syncall` 护栏；迁移语义；能力表路径固定 |
 | v3.2 | 2026-11-05 | 机械动作不再押在可被外部改写的 `core.hooksPath` 上 | 同步与 push 收归 `--suspend` 显式执行；`post-commit` 降级为可选加速、不再自动 push |
 | v3.3 | 2026-11-05 | 入口按动作拆分：安装与运行时分离 | `install.sh` 只安装；`handoff.sh` / `handoff.bat` 负责诊断与同步；`lib.sh` 共享函数 |
+| v3.3.1 | 2026-11-05 | 推送失败可恢复：显式重试只针对网络错误 | `handoff.sh --push` 默认 3 次 / 3 秒；认证与冲突不重试 |
 
 ### 9.2 已废弃方案
 
