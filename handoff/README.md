@@ -5,6 +5,8 @@
 > 本文件是 `handoff/README.md`，任务/产品 README 的唯一源；GitHub 首页由它生成。
 > 最近更新：2026-11-05
 
+[这是什么](#1-这是什么) · [安装](#2-安装) · [最短路径](#24-最短路径3-步) · [使用说明](#3-使用说明) · [产物](#4-产物与目录) · [限制](#6-限制与注意事项) · [常见问题](#7-常见问题)
+
 ## 文档
 > 只列任务文档与阅读对象；项目根文档用 `../`；不复制正文。
 
@@ -45,11 +47,15 @@ flowchart LR
 ## 2. 安装
 > 只写安装；人装与由 agent 装分开；多宿主用 `--host`，副本用 `--syncall`。
 
-### 2.1 前置
+### 2.1 平台入口
 
-- 支持的宿主：Claude Code / Qoder / OpenCode(OpenChamber) / ZCode / Codex / WorkBuddy；
-- 能跑 shell 的环境（Windows Git Bash、Linux、macOS 均可）；
-- git 可选：有 git 用 commit 作锚点，没有就用时间戳。
+| 平台 | 入口 | 说明 |
+|---|---|---|
+| Windows | 双击 `安装.bat` | 自动找 git/bash 并调用 `install.sh`；识别不出宿主时提示选择 |
+| Windows（终端） | `bash install.sh` | 在 Git Bash 里执行；诊断/同步用 `scripts\运行时.bat` |
+| macOS / Linux | `bash install.sh` | 需要 bash；git 可选 |
+
+先跑 `bash install.sh --dryrun` 可确认安装目标，不写文件。
 
 ### 2.2 手动安装
 
@@ -60,11 +66,7 @@ bash install.sh --dryrun     # 确认安装目标
 bash install.sh               # 只装当前宿主
 ```
 
-Windows 可直接双击根目录的 `安装.bat`：它自动找 git/bash 并调用 `install.sh`，识别不出宿主时会提示选择。
-
 需要安装到多个宿主时，对每个宿主各执行一次 `--host` 安装；收工时 `--suspend` 会跑 `scripts/handoff.sh --syncall` 对齐各副本，幂等，可随时手动重跑。
-
-Windows 上诊断和同步用 `scripts\运行时.bat --printpath` / `scripts\运行时.bat --syncall`；安装仍用 `安装.bat`。
 
 ### 2.3 由 agent 安装
 
@@ -76,6 +78,14 @@ Windows 上诊断和同步用 `scripts\运行时.bat --printpath` / `scripts\运
 ```
 
 agent 会把 skill 安装到当前宿主的 `skills/multi-agent-task-handoff`，把目标登记到 `$AGENT_CONFIG/sync-paths`；首次安装还会创建 `config.toml` 和能力表模板。
+
+### 2.4 最短路径（3 步）
+
+1. **装**：按上表任选一种方式安装。
+2. **建档**：在项目里说「建档」或跑 `/multi-agent-task-handoff --doc`，生成 `handoff/CONTEXT.md`。
+3. **交接**：收工说「收工」；下次（或换 agent）说「接手」。
+
+之后不用记命令，自然语言即可；`--check` 用于体检，`--printpath` 用于排查路径。
 
 ## 3. 使用说明
 > 只写触发方式与常用场景；命令语义见 SKILL / HELP。
@@ -114,6 +124,19 @@ agent 会把 skill 安装到当前宿主的 `skills/multi-agent-task-handoff`，
 ├─ DESIGN.md       # 设计取舍（需要时）
 ├─ PROMPT.md       # 交接指针，自动生成，默认 gitignore
 └─ COMPACTION_BACKUP.md      # 压卡搬出的历史
+```
+
+交接卡长这样（节选）：
+
+```markdown
+## 3. 现在在哪
+- 已完成：登录接口与单测
+- 进行中：刷新 token 的并发处理
+- 在飞文件：src/auth/refresh.ts
+
+## 4. 下一步
+1. 补 refresh 并发测试
+2. 跑 `npm test` 后提交
 ```
 
 | 产物 | 位置 | 用途 |
@@ -161,6 +184,49 @@ agent 会把 skill 安装到当前宿主的 `skills/multi-agent-task-handoff`，
 - 活会话不搬运；换 agent 用“新会话 + PROMPT 指针”。
 - 旧项目迁移逐个 `--check` / `--fix`；不默认扫描全盘。
 - 没有 `handoff/` 也不会自动建：先跑 `--doc`。
+
+## 7. 常见问题
+> 只答使用者会问的；机制细节链接到 DESIGN / SKILL。
+
+<details>
+<summary>会自动记录 agent 干了什么吗？</summary>
+
+不会。协议禁止常驻捕获，必须显式“收工 / `--suspend`”才写卡；忘记收工就等于没交接。
+</details>
+
+<details>
+<summary>必须用 git 吗？</summary>
+
+不必须。有 git 用 commit 作锚点，没有就用时间戳；`.github/README.md` 只在有 GitHub remote 时生成。
+</details>
+
+<details>
+<summary>可以多个 agent 同时写吗？</summary>
+
+不可以。一个项目同一时间一个写者；交接后旧 agent 停写，冲突时停，不覆盖。
+</details>
+
+<details>
+<summary>换机要带走什么？</summary>
+
+能力表和工作区规则复制过去；任务状态随项目仓库 clone；`sync-paths` 和 `PROMPT.md` 不带。完整清单见[第 5 节](#5-换机迁移)。
+</details>
+
+<details>
+<summary>推送失败了怎么办？</summary>
+
+`--push` 只对网络错误重试 3 次 / 间隔 3 秒；认证失败、非快进立即失败，提交留在本地，卡与指针记“已提交，待推送”。
+</details>
+
+<details>
+<summary>命令太多记不住？</summary>
+
+只记四个：`--doc` 建档、`接手`、`收工`、`--check` 体检。其余按需查 `--help`。
+</details>
+
+## 参与
+
+问题、想法、宿主适配的实测结论都欢迎开 issue；改动协议或命令前先看 [DESIGN.md](DESIGN.md) 的工程约束。
 
 ## 许可
 
