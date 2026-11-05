@@ -9,8 +9,7 @@ argument-hint: "[--help | --resume | --suspend [ID] [--local | --commit | --push
 
 ## 术语
 
-- **项目**：宿主打开的那个目录/仓库（Claude 项目、Qoder 工作区、WorkBuddy 空间、OpenCode/ZCode/Codex 项目）。
-- **项目目录**：项目的绝对路径，**唯一写入根**；来自宿主已打开的目录，或无项目时新建的目录。
+- **项目 / 项目目录**：宿主打开的那个目录/仓库（Claude 项目、Qoder 工作区、WorkBuddy 空间、OpenCode/ZCode/Codex 项目）；项目目录指其绝对路径，**唯一写入根**，来自宿主已打开的目录，或无项目时新建的目录。
 - **工作区根**：`AGENT_WORKSPACE` 容器；只用来新建项目目录，**不是写入目标**。
 - **当前目录**：`pwd`；可 `cd`，不改变项目。
 - 任务文档只在 `<项目目录>/handoff/`；不写工作区根，不往子目录铺；宿主差异与项目目录来源查 `$AGENT_CONFIG/AGENT_CAPABILITIES.md`，SKILL 不写宿主分支。
@@ -54,10 +53,12 @@ argument-hint: "[--help | --resume | --suspend [ID] [--local | --commit | --push
 
 ## --resume
 
-1. 读 `handoff/PROMPT.md`；没有再读 `handoff/CONTEXT.md`；冲突以 CONTEXT 为准。
-2. 读跨任务规则；三档时读 `handoff/README.md` / `handoff/DESIGN.md`；读 `CONTEXT.md` 的「MEMORY 提炼」章。
-3. 核状态锚点，跑验证命令；核对 cwd 与 PROMPT 项目目录，不一致（fork/worktree）时先回主项目或注明只在当前工作树工作；有参考 ID 且信息不足时按能力表读回。
-4. 旧根 `CONTEXT.md` 或根 `README/DESIGN` 带协议标记 → 提示 `--check` / `--fix`，不静默迁移。
+1. 读：`handoff/PROMPT.md` → `handoff/CONTEXT.md`（冲突以 CONTEXT 为准）→ 跨任务规则；三档再读 `handoff/README.md` / `handoff/DESIGN.md`；读「MEMORY 提炼」。
+2. 核：cwd 与 PROMPT 项目目录一致；HEAD / 工作树 / 副本状态与锚点一致；不一致先报告并说明取舍，不静默按过期状态开工（fork/worktree 回主项目或注明）。
+3. 跑：PROMPT 的验证命令；失败先诊断，不静默继续。
+4. 接：读「下一步」「在飞文件」「勿动文件」；参考 ID 信息不足时按能力表读回。
+5. 报：向用户汇报当前状态、下一步、验证结果与阻塞。
+6. 旧根 `CONTEXT.md` 或根 `README/DESIGN` 带协议标记 → 提示 `--check` / `--fix`，不静默迁移。
 
 ## --suspend
 
@@ -107,9 +108,7 @@ argument-hint: "[--help | --resume | --suspend [ID] [--local | --commit | --push
 
 ## --printpath
 
-只读诊断，不写文件。优先运行 `<skill 目录>/scripts/handoff.sh --printpath`（宿主注入的 base directory；Windows 用 Git Bash 的 sh）；没有 shell 时按 `$AGENT_CONFIG`、`config.toml`、默认值自行解析。
-
-输出用表格，缺项标 ⚠️/❌：
+只读诊断，不写文件；输出表格，缺项标 ⚠️/❌。优先运行 `<skill 目录>/scripts/handoff.sh --printpath`（宿主注入的 base directory；Windows 用 Git Bash 的 sh）；没有 shell 时按 `$AGENT_CONFIG`、`config.toml`、默认值自行解析。
 
 | 项 | 值 | 状态 |
 |---|---|---|

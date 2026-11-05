@@ -31,7 +31,7 @@
 
 - 已完成：
   - V3 协议与 `handoff/` 布局；8 个命令；`config.toml`；能力差异表；memory 只读。
-  - 当前协议 v3.10：`--save` 与挡位、无钩子、`scripts/` 入口、`COMPACT_BACKUP.md` 归档名、README 落地页。
+  - 当前协议 v3.10：`--save` 与挡位、无钩子、`scripts/` 入口、`COMPACT_BACKUP.md` 归档名、README 落地页、`--suspend` 压卡清单、`--resume` 接手清单。
   - 5 份安装副本（Qoder / OpenCode / ZCode / WorkBuddy / Claude）同步到当前 HEAD。
   - Claude / WorkBuddy `--probe --live` 均通过：投递、同步读回，无残留。
   - 推送状态以 `git status -sb` 为准。
@@ -67,7 +67,7 @@
 ## 7. 交接记录（只记关键动作，≤10 条）
 > 超出先压卡到 `COMPACT_BACKUP.md`；不写日常细节。
 
-- 2026-11-05 WorkBuddy / Claude：v3.2–v3.10 迭代（入口拆分、`--save` 与挡位、删钩子、归档改名、README 落地页化、压卡清单）；全自动方案不采纳；两次 `--probe --live` 通过；5 份副本同步；推送恢复后完成。详细流水见 [COMPACT_BACKUP.md](COMPACT_BACKUP.md)。
+- 2026-11-05 WorkBuddy / Claude：v3.2–v3.10 迭代（入口拆分、`--save` 与挡位、删钩子、归档改名、README 落地页化、压卡/接手清单）；全自动方案不采纳；两次 `--probe --live` 通过；5 份副本同步；推送恢复后完成。详细流水见 [COMPACT_BACKUP.md](COMPACT_BACKUP.md)。
 - 2026-11-05 WorkBuddy：`--probe --live` 实测通过；压卡沉降一条旧记录；`--suspend --push` 收工并推送前面未推的提交。
 - 2026-11-04 Claude：v3.1——迁移语义与 `--syncall` 护栏；能力表路径固定；README 增换机迁移；DESIGN 版本/废弃表收敛。
 - 2026-11-04 Claude：文档重整——README 安装/使用分章、DESIGN 完整历程与图表、交接主体统一为 agent、`--printpath` 全量视图、5 份模板对齐；收窄自动提交记忆，`--suspend` 未给 `--push` 时抑制钩子推送；Claude `--probe --live` 通过，能力表补 `CreateSession` 的 worktree 落点。
