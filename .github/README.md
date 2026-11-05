@@ -8,6 +8,7 @@
 > 最近更新：2026-11-05
 > 项目目录：`D:\agent_workspace\multi-agent-task-handoff`
 > GitHub 首页由本文件生成，不要手改生成物。
+> 指项目根文件用 `../`，例如 `../SKILL.md`。
 
 ## 文档
 
