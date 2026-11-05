@@ -218,6 +218,37 @@ multi-agent-task-handoff/
 6. 同步：`bash scripts/handoff.sh --syncall`；5 份副本应到同一 commit。
 7. 核对：`git status -sb` 无 ahead；`scripts/handoff.sh --printpath` 副本全部「当前」。
 
+自动化边界：**流程编排全部由人触发；自动化只发生在命令内部。**
+
+| 步骤 | 谁触发 | 谁执行 | 性质 |
+|---|---|---|---|
+| 改文件 | 人 | 人 / agent | 手动 |
+| 自检 | 人 | 脚本 | 手动触发，自动检查 |
+| 诊断 | 人 | 脚本 | 手动触发，自动读取 |
+| 提交 | 人 | git | 手动选择文件与消息 |
+| 推送 | 人 | `scripts/handoff.sh --push` | 手动触发，自动重试网络错误 |
+| 同步 | 人 | `scripts/handoff.sh --syncall` | 手动触发，自动对齐；`post-commit` 可选被动同步 |
+| 核对 | 人 | 脚本 | 手动触发，自动检查 |
+
+```mermaid
+flowchart LR
+  A[改文件<br/>手动] --> B[自检<br/>手动触发 / 自动检查]
+  B --> C[诊断<br/>手动触发 / 自动读取]
+  C --> D[提交<br/>手动]
+  D --> E[推送<br/>手动触发 / 自动重试]
+  E --> F[同步副本<br/>手动触发 / 自动对齐]
+  F --> G[核对<br/>手动触发 / 自动检查]
+  H[post-commit<br/>可选被动同步] -.-> F
+  classDef manual fill:#fff3cd,stroke:#b8860b,color:#000
+  classDef hybrid fill:#d4edda,stroke:#28a745,color:#000
+  classDef optional fill:#e2e3e5,stroke:#6c757d,color:#000
+  class A,D manual
+  class B,C,E,F,G hybrid
+  class H optional
+```
+
+黄=人工判断；绿=人工触发、命令自动执行；灰=可选钩子。唯一的被动自动化是启用 `post-commit` 时的副本同步；它不参与正确性，钩子失效就退化为手动 `--syncall`。
+
 ### 9.2 两条提交路径
 
 | 场景 | 命令 | 提交范围 | 同步 |
