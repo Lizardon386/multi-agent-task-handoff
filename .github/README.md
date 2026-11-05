@@ -13,7 +13,7 @@
 |---|---|---|
 | [README.md](/handoff/README.md) | 使用者 | 这是什么、怎么跑、限制 |
 | [DESIGN.md](/handoff/DESIGN.md) | 评审 / 开发 | 目标、架构、流程、决策 |
-| [CONTEXT.md](/handoff/CONTEXT.md) | 接手 agent | 完整文档表、当前状态、下一步、坑 |
+| [CONTEXT.md](/handoff/CONTEXT.md) | 接手 agent | 完整文档表、当前状态、下一步、记忆提炼、坑 |
 
 完整文档表（含 PROMPT、SKILL、HELP、ARCHIVE）见 [CONTEXT.md](/handoff/CONTEXT.md)。
 
@@ -106,7 +106,7 @@ agent 会把 skill 安装到当前宿主的 `skills/multi-agent-task-handoff`，
 
 ```text
 <项目目录>/handoff/
-├─ CONTEXT.md      # 交接卡：状态、下一步、坑、记录
+├─ CONTEXT.md      # 交接卡：状态、下一步、记忆提炼、坑、记录
 ├─ README.md       # 任务说明（本文的源）
 ├─ DESIGN.md       # 设计取舍（需要时）
 ├─ PROMPT.md       # 交接指针，自动生成，默认 gitignore

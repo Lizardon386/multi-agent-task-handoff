@@ -13,7 +13,7 @@
 |---|---|---|
 | [README.md](README.md) | 使用者 | 这是什么、怎么跑、限制 |
 | [DESIGN.md](DESIGN.md) | 评审 / 开发 | 目标、架构、流程、决策 |
-| [CONTEXT.md](CONTEXT.md) | 接手 agent | 完整文档表、当前状态、下一步、坑 |
+| [CONTEXT.md](CONTEXT.md) | 接手 agent | 完整文档表、当前状态、下一步、记忆提炼、坑 |
 
 完整文档表（含 PROMPT 等）见 [CONTEXT.md](CONTEXT.md)。
 

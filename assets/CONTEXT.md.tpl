@@ -15,7 +15,7 @@
 |---|---|---|
 | [README.md](README.md) | 使用者 | 任务介绍、用法、限制 |
 | [DESIGN.md](DESIGN.md) | 评审 / 开发 | 目标、架构、流程、决策 |
-| [CONTEXT.md](CONTEXT.md) | 接手 agent | 当前状态、下一步、坑、验证（本文） |
+| [CONTEXT.md](CONTEXT.md) | 接手 agent | 当前状态、下一步、记忆提炼、坑、验证（本文） |
 | `PROMPT.md` | 接手 agent | 交接指针，自动生成，默认 gitignore（不链接） |
 | [ARCHIVE.md](ARCHIVE.md) | 追溯 | 压卡搬出的历史 |
 
@@ -30,6 +30,12 @@
 
 ## 下一步
 1.
+
+## MEMORY 提炼
+
+> 只放会影响下一家的规则/偏好；不复制记忆原文、不写本机路径/会话 ID；没有写「无」。
+
+- 无
 
 ## 坑与约束
 
