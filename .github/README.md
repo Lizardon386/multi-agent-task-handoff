@@ -100,7 +100,7 @@ agent 会把 skill 安装到当前宿主的 `skills/multi-agent-task-handoff`，
 
 项目第一次用先跑 `--doc` 建档（没有 `handoff/` 不会自动创建）；之后接手 / `--resume` 继续，收工 / `--suspend` 写卡并生成 `PROMPT.md`。
 
-一次只用一个命令。安装、配置、GitHub 首页、旧布局迁移的细节见 [DESIGN.md](/handoff/DESIGN.md) 和 [SKILL.md](/SKILL.md)。
+一次只用一个命令。`--suspend` / `--probe` 的默认挡位读 `$AGENT_CONFIG/config.toml` 的 `[defaults]`；显式参数覆盖。安装、配置、GitHub 首页、旧布局迁移的细节见 [DESIGN.md](/handoff/DESIGN.md) 和 [SKILL.md](/SKILL.md)。
 
 ## 4. 产物与目录
 
