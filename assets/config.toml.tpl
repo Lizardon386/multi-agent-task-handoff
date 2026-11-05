@@ -7,4 +7,9 @@ version = 1
 
 # 能力表固定为同目录 AGENT_CAPABILITIES.md（不支持自定义路径）
 
+[defaults]
+# 挡位：suspend = local | commit | push；probe = static | live
+suspend = "local"
+probe = "static"
+
 # 不设 github 开关：有 GitHub remote 即从 handoff/README.md 生成 .github/README.md

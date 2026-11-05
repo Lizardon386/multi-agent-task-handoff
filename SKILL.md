@@ -2,7 +2,7 @@
 name: multi-agent-task-handoff
 description: 多 agent 任务接力协议：接手/接盘/交接项目、写交接卡、收工/压卡、工程化/补全 handoff 文档、自检/修复/摸底宿主能力；交接文件固定在项目目录的 handoff/ 下。
 when_to_use: 开始或结束一个任务、接盘别人留下的项目、把工作交接给另一个 agent、或需要检查/修复交接文档与宿主能力时。
-argument-hint: "[--help | --resume | --suspend [ID] [--commit] [--push] | --doc | --check | --fix | --probe [--live] | --printpath]"
+argument-hint: "[--help | --resume | --suspend [ID] [--local | --commit | --push] | --doc | --check | --fix | --probe [--static | --live] | --printpath]"
 ---
 
 # 多 agent 任务交接
@@ -23,11 +23,11 @@ argument-hint: "[--help | --resume | --suspend [ID] [--commit] [--push] | --doc 
 | 参数 | 作用 |
 |---|---|
 | 无 / `--resume` | 接盘：读 PROMPT → CONTEXT，核锚点、跑验证 |
-| `--suspend [ID] [--commit] [--push]` | 压卡（按需）+ 收工 + 写 PROMPT + 对齐副本；有 ID 发指针 |
+| `--suspend [ID] [--local \| --commit \| --push]` | 压卡（按需）+ 收工 + 写 PROMPT + 对齐副本；有 ID 发指针 |
 | `--doc` | 补全 `handoff/` 三档 |
 | `--check` | 只读检查 |
 | `--fix` | 检查 + 修可自动修复项 |
-| `--probe [--live]` | 检查 + 实测能力；`--live` 实际建会话/发送/读回 |
+| `--probe [--static \| --live]` | 检查 + 实测能力；`--live` 实际建会话/发送/读回 |
 | `--printpath` | 只读路径诊断：config / workspace / 能力表 / 源仓库 / 宿主 / 副本清单 / 钩子 |
 | `--workspace <PATH> [--nosave]` | 指定工作区根；默认写回 `config.toml` |
 | `--help` | 输出完整帮助 |
@@ -67,7 +67,7 @@ argument-hint: "[--help | --resume | --suspend [ID] [--commit] [--push] | --doc 
 3. 覆盖写 `handoff/PROMPT.md`：项目目录、读卡顺序、文档表、锚点、验证命令、下一步 1–3 条、勿动文件、已决策、旧 ID、规则指针；文件头注明自动生成。
 4. 有 ID：发短指针“请读 `<项目目录>/handoff/PROMPT.md` 接盘”；目标读不到文件时才附全文。
 5. 无 ID：写完就停，报告路径。
-6. 默认不操作 git；`--commit` 只提交 `handoff/` 下的文件；`--push` 隐含 commit 并调 `scripts/handoff.sh --push`（3 次 / 3 秒，只重试网络错误），失败留本地并报告。收工末尾总是跑 `scripts/handoff.sh --syncall` 对齐副本（有提交/推送时放在其后；幂等，只补落后）。`post-commit` 不自动 push；写卡与指针按实际推送结果记「已推送 / 待推送」，未确认不写已推送。
+6. 默认挡位读 `scripts/handoff.sh --gear suspend`（local / commit / push），显式参数覆盖；local 不操作 git，`--commit` 只提交 `handoff/` 下的文件，`--push` 隐含 commit 并调 `scripts/handoff.sh --push`（3 次 / 3 秒，只重试网络错误），失败留本地并报告。收工末尾总是跑 `scripts/handoff.sh --syncall` 对齐副本（有提交/推送时放在其后；幂等，只补落后）。`post-commit` 不自动 push；写卡与指针按实际推送结果记「已推送 / 待推送」，未确认不写已推送。
 7. memory：按能力表「memory 读取」定位宿主 memory；读 `MEMORY.md` 指针 + 相关条目；只把“会影响下一家”的规则/偏好写入 `CONTEXT.md` 的 `## MEMORY 提炼`（无则写「无」）；不复制原文、不写回、不搬运；冲突以 CONTEXT/DESIGN/git 为准。
 8. 不强制结束会话；可当 checkpoint 用。
 
@@ -98,9 +98,9 @@ argument-hint: "[--help | --resume | --suspend [ID] [--commit] [--push] | --doc 
 - 默认不提交；由 `--suspend --commit` 一起提交。
 - 无 `handoff/` 且无旧文档 → 提示 `--doc`，不自动建。
 
-## --probe [--live]
+## --probe [--static | --live]
 
-- `--probe`：先检查，再做低成本实测（工作区根来源、会话列表、memory 路径、文件读写、git/CLI、config 解析）；更新能力表。
+- `--probe`：默认挡位读 `scripts/handoff.sh --gear probe`（static / live），显式参数覆盖；先检查，再做低成本实测（工作区根来源、会话列表、memory 路径、文件读写、git/CLI、config 解析）；更新能力表。
 - `--probe --live`：先检查，再实际建会话/发送/读回；需确认；可能留测试会话，报告并尝试删除。
 - 结果只记可用/不可用，不写会话 ID。
 

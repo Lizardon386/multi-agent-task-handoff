@@ -65,7 +65,7 @@ flowchart LR
 |---|---|---|---|---|
 | 开工 | `--doc` | 确保 CONTEXT；补 README/DESIGN；写 `模式：三档`；同意后把 PROMPT 加入 `.gitignore` | `handoff/` 三档 | 目标已存在且非本协议生成 → 停 |
 | 工作 | — | 改代码/文档；状态或坑变化时更新 CONTEXT | 可交接的当前状态 | 一个项目同一时间一个写者 |
-| 收工 | `--suspend` | 超限先压卡；写现在/下一步/MEMORY 提炼/坑/记录；覆盖 PROMPT；按需读 memory 提炼规则；末尾总是对齐副本（提交/推送时在其后） | CONTEXT 更新 + PROMPT 覆盖 + 副本对齐 | 默认不动 git；`--commit` 只提交 `handoff/`；`--push` 隐含 commit 并调 `scripts/handoff.sh --push`（3 次 / 3 秒，只重试网络错误）；未确认推送成功写「待推送」 |
+| 收工 | `--suspend` | 超限先压卡；写现在/下一步/MEMORY 提炼/坑/记录；覆盖 PROMPT；按需读 memory 提炼规则；默认挡位读 `config.toml`；末尾总是对齐副本（提交/推送时在其后） | CONTEXT 更新 + PROMPT 覆盖 + 副本对齐 | 默认不动 git；`--commit` 只提交 `handoff/`；`--push` 隐含 commit 并调 `scripts/handoff.sh --push`（3 次 / 3 秒，只重试网络错误）；未确认推送成功写「待推送」 |
 | 交给指定 agent | `--suspend <ID>` | 写卡后按会话 ID 只发指针；目标读不到文件才附全文 | 目标 agent 可接手 | 活会话不搬运 |
 | 接手 | `--resume` | PROMPT → CONTEXT → 三档 → 规则；核对 cwd 与项目目录；核锚点、跑验证；有 ID 可读回 | 恢复上下文 | 冲突以 CONTEXT 为准；cwd 不一致先回主项目或注明 worktree；旧布局提示 `--check` / `--fix` |
 | 维护 | `--check` / `--fix` / `--probe` / `--printpath` | 只读检查 / 自动修复 / 实测能力 / 路径诊断 | 报告或修复 | 默认不提交；冲突项询问 |
@@ -128,6 +128,7 @@ multi-agent-task-handoff/
 - 旧位置 `<repo>/.skill-sync-paths` 由 `install.sh` / `post-commit` 一次性迁到新位置后删除。
 - 三者不合并成一个文件：偏好（人工低频编辑）、能力缓存（Markdown 表）、注册表（工具追加、可重建）的写入者和失败域不同，合并会让 bash 解析变脆，并把“装到哪”和“同步哪些”绑在一起。
 - `config.toml` 只放用户选择；可推导的运行时状态（宿主、副本版本、`core.hooksPath`、各路径）不写入配置，由 `--printpath` 现算。
+- 挡位：`[defaults].suspend`（local / commit / push）与 `[defaults].probe`（static / live）；显式参数覆盖。
 
 ### 5.2 关键接缝
 
@@ -218,6 +219,8 @@ multi-agent-task-handoff/
 6. 同步：`bash scripts/handoff.sh --syncall`；5 份副本应到同一 commit。
 7. 核对：`git status -sb` 无 ahead；`scripts/handoff.sh --printpath` 副本全部「当前」。
 
+直接维护可一条命令完成 4–6 步：`scripts/handoff.sh --save`。默认提交已跟踪文件，新文件加 `--all`；提交后自动同步副本，再推送重试。
+
 自动化边界：**流程编排全部由人触发；自动化只发生在命令内部。**
 
 | 步骤 | 谁触发 | 谁执行 | 性质 |
@@ -253,7 +256,7 @@ flowchart LR
 
 | 场景 | 命令 | 提交范围 | 同步 |
 |---|---|---|---|
-| 直接维护仓库 | `git commit` + `scripts/handoff.sh --push` | 你改的文件 | 手动 `scripts/handoff.sh --syncall` |
+| 直接维护仓库 | `scripts/handoff.sh --save` | 已跟踪文件（`--all` 含新文件） | 命令内自动 |
 | 任务收工 | `--suspend --commit` / `--push` | 只提交 `handoff/` | 收工末尾自动 `--syncall` |
 
 - `post-commit` 只是可选加速，不参与正确性；不自动 push。

@@ -17,6 +17,9 @@ retries=3
 delay=3
 retries_set=0
 delay_set=0
+all=0
+message=
+gear_arg=
 
 usage() {
   cat <<'EOF'
@@ -29,6 +32,10 @@ usage() {
                    （必须从源仓库运行；--dryrun 只打印）
   --push [--retries N] [--delay S]
                    显式推送当前分支；只重试网络类错误（默认 3 次，间隔 3 秒）
+  --save [--all] [-m MSG] [--retries N] [--delay S]
+                   提交已跟踪修改（--all 含新文件），同步副本，再推送（重试）
+  --gear suspend|probe
+                   输出 config.toml 里的默认挡位
   -h, --help       显示本表
 
 安装用 install.sh；本脚本一次只做一件事。
@@ -43,6 +50,12 @@ while [ $# -gt 0 ]; do
     --printpath) [ -z "$mode" ] || usage_die "一次只用一个命令"; mode=printpath ;;
     --syncall) [ -z "$mode" ] || usage_die "一次只用一个命令"; mode=syncall ;;
     --push) [ -z "$mode" ] || usage_die "一次只用一个命令"; mode=push ;;
+    --save) [ -z "$mode" ] || usage_die "一次只用一个命令"; mode=save ;;
+    --gear) [ -z "$mode" ] || usage_die "一次只用一个命令"; [ $# -ge 2 ] || usage_die "--gear 需要一个值"; gear_arg=$2; mode=gear; shift ;;
+    --gear=*) [ -z "$mode" ] || usage_die "一次只用一个命令"; gear_arg=${1#*=}; mode=gear ;;
+    --all) all=1 ;;
+    -m|--message) [ $# -ge 2 ] || usage_die "-m/--message 需要一个值"; message=$2; shift ;;
+    --message=*) message=${1#*=} ;;
     --dryrun) dry=1 ;;
     --retries) [ $# -ge 2 ] || usage_die "--retries 需要一个值"; retries=$2; retries_set=1; shift ;;
     --retries=*) retries=${1#*=}; retries_set=1 ;;
@@ -58,7 +71,7 @@ while [ $# -gt 0 ]; do
   shift
 done
 
-[ -n "$mode" ] || usage_die "需要 --printpath / --syncall / --push"
+[ -n "$mode" ] || usage_die "需要 --printpath / --syncall / --push / --save / --gear"
 if [ -n "$target_arg" ] && [ -n "$host_arg" ]; then
   usage_die "--host 与 --target 只能用一个"
 fi
@@ -68,8 +81,17 @@ fi
 if [ "$mode" != syncall ] && [ "$dry" = 1 ]; then
   usage_die "--dryrun 只能跟 --syncall"
 fi
-if [ "$mode" != push ] && { [ "$retries_set" = 1 ] || [ "$delay_set" = 1 ]; }; then
-  usage_die "--retries / --delay 只能跟 --push"
+if [ "$mode" != push ] && [ "$mode" != save ] && { [ "$retries_set" = 1 ] || [ "$delay_set" = 1 ]; }; then
+  usage_die "--retries / --delay 只能跟 --push / --save"
+fi
+if [ "$mode" != save ] && { [ "$all" = 1 ] || [ -n "$message" ]; }; then
+  usage_die "--all / -m 只能跟 --save"
+fi
+if [ "$mode" = gear ]; then
+  case "$gear_arg" in
+    suspend|probe) ;;
+    *) usage_die "--gear 只支持 suspend / probe" ;;
+  esac
 fi
 case "$retries" in ''|*[!0-9]*) usage_die "--retries 必须是正整数" ;; esac
 [ "$retries" -ge 1 ] || usage_die "--retries 必须 ≥ 1"
@@ -79,6 +101,40 @@ if [ -n "$host_arg" ]; then
     qoder|claude|codex|opencode|zcode|workbuddy) ;;
     *) usage_die "--host 只支持 qoder/claude/codex/opencode/zcode/workbuddy" ;;
   esac
+fi
+
+if [ "$mode" = gear ]; then
+  config_dir=$(agent_config_dir)
+  cfg_file=$config_dir/config.toml
+  v=$(config_get "$gear_arg" "$cfg_file" 2>/dev/null || true)
+  case "$gear_arg" in
+    suspend) case "$v" in local|commit|push) ;; *) v=local ;; esac ;;
+    probe) case "$v" in static|live) ;; *) v=static ;; esac ;;
+  esac
+  printf '%s\n' "$v"
+  exit 0
+fi
+
+if [ "$mode" = save ]; then
+  git -C "$repo" rev-parse --git-dir >/dev/null 2>&1 || die "--save 必须在源仓库运行"
+  if [ "$all" = 1 ]; then
+    git -C "$repo" add -A || die "git add -A 失败"
+  else
+    git -C "$repo" add -u || die "git add -u 失败"
+  fi
+  if git -C "$repo" diff --cached --quiet; then
+    echo "无改动，跳过"
+    exit 0
+  fi
+  msg=${message:-"chore: autosave $(date '+%Y-%m-%d %H:%M')"}
+  git -C "$repo" commit -m "$msg" || die "提交失败"
+  printf '已提交: %s\n' "$(git -C "$repo" rev-parse --short HEAD)"
+  sync_rc=0
+  push_rc=0
+  sh "$script_dir/handoff.sh" --syncall || sync_rc=$?
+  sh "$script_dir/handoff.sh" --push --retries "$retries" --delay "$delay" || push_rc=$?
+  [ "$sync_rc" -eq 0 ] && [ "$push_rc" -eq 0 ] || die "保存完成，但同步或推送失败；提交留在本地"
+  exit 0
 fi
 
 if [ "$mode" = push ]; then

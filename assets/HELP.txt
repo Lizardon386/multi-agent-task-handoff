@@ -1,21 +1,25 @@
 multi-agent-task-handoff — 多 agent 任务交接
 
 用法:
-  multi-agent-task-handoff [--workspace <PATH>] [--nosave] [--help | --resume | --suspend [ID] [--commit] [--push] | --doc | --check | --fix | --probe [--live] | --printpath]
+  multi-agent-task-handoff [--workspace <PATH>] [--nosave] [--help | --resume | --suspend [ID] [--local | --commit | --push] | --doc | --check | --fix | --probe [--static | --live] | --printpath]
 
 命令:
   --resume                  接盘 / 接手：读 handoff/PROMPT.md → handoff/CONTEXT.md，
                             冲突以 CONTEXT 为准；核锚点、跑验证
-  --suspend [ID] [--commit] [--push]
+  --suspend [ID] [--local | --commit | --push]
                             压卡（按需）+ 收工 + 写 handoff/PROMPT.md
+                              --local   只写卡与 PROMPT，不操作 git
                               --commit  只提交 handoff/ 下的文件
                               --push    提交并推送（隐含 commit；网络错误重试 3 次，间隔 3 秒）
+                            默认挡位读 config.toml 的 [defaults].suspend；
                             有 ID 发送指针；无 ID 停手
   --doc                     工程化 / 建档：补全 handoff/ 三档文档
   --check                   自检 / 更新：只读检查，报告 ✅ / 🟡 / ⛔
   --fix                     修复：先检查，再修可自动修复项；冲突/不可逆项询问
-  --probe [--live]          摸底 / 探测：先检查，再实测当前 agent 并更新能力表
+  --probe [--static | --live]  摸底 / 探测：先检查，再实测当前 agent 并更新能力表
+                              --static 只做静态检查与低成本实测
                               --live  实际执行建会话 / 发送 / 读回（需确认）
+                            默认挡位读 config.toml 的 [defaults].probe
   --printpath               路径诊断：表格输出配置目录 / 配置文件 / 工作区根 / 项目目录 /
                             能力表（含更新日期）/ 安装注册表 / 源仓库 / Git 钩子 / 宿主 /
                             全部副本的路径与 commit
@@ -27,7 +31,7 @@ multi-agent-task-handoff — 多 agent 任务交接
 规则:
   一次只用一个命令；不支持命令叠加
   --workspace 可与一个命令同用；--nosave 只跟 --workspace
-  --commit / --push 只能跟 --suspend
+  --local / --commit / --push 只能跟 --suspend
   --live 只能跟 --probe
   --printpath 是独立命令
   --help 单独使用
