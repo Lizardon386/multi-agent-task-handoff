@@ -104,7 +104,7 @@ multi-agent-task-handoff/
    ├─ DESIGN.md             # 本文件
    ├─ CONTEXT.md            # 当前状态
    ├─ PROMPT.md             # 自动生成（gitignore）
-   └─ 压卡备份.md            # 历史
+   └─ COMPACTION_BACKUP.md            # 历史
 ```
 
 包文件（`SKILL.md`、`scripts/`、`install.sh`、`安装.bat`、`assets/`、`LICENSE`）必须在根；任务文档进 `handoff/`。
@@ -162,7 +162,7 @@ multi-agent-task-handoff/
 | 主题 | 约定 |
 |---|---|
 | 写入根 | 项目目录；工作区根永远不直接写 `handoff/` |
-| 文档路径 | `<项目目录>/handoff/{CONTEXT,README,DESIGN,PROMPT,压卡备份}.md` |
+| 文档路径 | `<项目目录>/handoff/{CONTEXT,README,DESIGN,PROMPT,COMPACTION_BACKUP}.md` |
 | 冲突 | 目标已存在且非本协议生成 → 停，不覆盖、不换路径 |
 | 交接卡 | CONTEXT ≤100 行；交接记录 ≤10 条；坑类别 ≤10；MEMORY 提炼只放影响下一家的规则；只记关键动作 |
 | PROMPT | 每次覆盖；带生成时间；默认 gitignore；不写真实会话 ID |
@@ -176,7 +176,7 @@ multi-agent-task-handoff/
 | 机器级状态 | `config.toml`、`AGENT_CAPABILITIES.md`、`sync-paths` 统一放 `$AGENT_CONFIG`；工作区根只放规则与入口 |
 | 触发分层 | 上下文注入（`AGENTS.md` 读序）+ 显式命令（接手/收工，含副本同步与 push）；无后台触发；`AGENTS.md` 只做指针 |
 | 换机迁移 | 能力表整表带走，只重填「本机环境」块；`AGENTS.md` / `PROJECT_RULES.md` 复制；`sync-paths` 与宿主 memory 不带；`config.toml` 只改 workspace |
-| 迁移范围 | 只迁符合模版的同名任务文档（`CONTEXT` / `README` / `DESIGN` / `压卡备份`）；客制化名文档（`实施方案`、`架构设计` 等）留根，由 `CONTEXT` 的文档表用 `../` 引用 |
+| 迁移范围 | 只迁符合模版的同名任务文档（`CONTEXT` / `README` / `DESIGN` / `COMPACTION_BACKUP`）；客制化名文档（`实施方案`、`架构设计` 等）留根，由 `CONTEXT` 的文档表用 `../` 引用 |
 | 迁移判定 | root `CONTEXT.md` 存在且 `模式：三档`，或文档带模版特征；产品 README/DESIGN 不动 |
 | 完成定义 | 文档与安装副本一致；`--help` 与命令表一致；`--check` 无 ⛔；卡 ≤100 行 |
 
@@ -202,7 +202,7 @@ multi-agent-task-handoff/
 - 别名与命令并列写作「别名 / 命令」（斜杠两侧空格，命令用反引号）；同义别名列举写作「接盘/接手」（不加空格）。
 - `--printpath` 是视图不是存储：现读环境变量、`.skill-version`、`git config`，不生成缓存文件。
 - 批量循环只用 POSIX sh 内建（`while read`、`printf '%.7s'`）：Git Bash 每个外部进程约 0.9 秒，副本多时会把同步拖慢。
-- 版本表只列主版本，小版本进 `CONTEXT.md` 记录与 `压卡备份.md`；废弃表按阶段追加；`CONTEXT.md` 的坑平时可追加，`--suspend` 时归并成 ≤10 类；`--check` 只报行数/记录数/类别超限，不自动改写。
+- 版本表只列主版本，小版本进 `CONTEXT.md` 记录与 `COMPACTION_BACKUP.md`；废弃表按阶段追加；`CONTEXT.md` 的坑平时可追加，`--suspend` 时归并成 ≤10 类；`--check` 只报行数/记录数/类别超限，不自动改写。
 
 ## 9. 开发者维护
 
@@ -269,7 +269,7 @@ flowchart LR
 
 旧版代码已从工作树删除；这里只留设计演进。2026-10-29 公开发布前用 git-filter-repo 脱敏重写历史，旧哈希失效。
 
-维护：版本表只列主版本，小版本与逐条变更只进 `CONTEXT.md` 的交接记录与 `压卡备份.md`；不写跨版本总结句（总结会过时），主线由各行「理念更替」与「理由与结果」自然连成。废弃方案表按阶段累计，被否决的方案保留理由和替代，避免重新讨论。
+维护：版本表只列主版本，小版本与逐条变更只进 `CONTEXT.md` 的交接记录与 `COMPACTION_BACKUP.md`；不写跨版本总结句（总结会过时），主线由各行「理念更替」与「理由与结果」自然连成。废弃方案表按阶段累计，被否决的方案保留理由和替代，避免重新讨论。
 
 ### 10.1 主版本表
 

@@ -18,7 +18,7 @@
 | [DESIGN.md](DESIGN.md) | 评审 / 开发 | 目标、架构、流程、决策 |
 | [CONTEXT.md](CONTEXT.md) | 接手 agent | 当前状态、下一步、记忆提炼、坑、验证（本文） |
 | `PROMPT.md` | 接手 agent | 交接指针，自动生成，默认 gitignore（不链接） |
-| [压卡备份.md](压卡备份.md) | 追溯 | 压卡搬出的历史 |
+| [COMPACTION_BACKUP.md](COMPACTION_BACKUP.md) | 追溯 | 压卡搬出的历史 |
 
 ## 目标与完成定义
 > 目标一句话；完成标准必须可验证，不写过程。
@@ -50,7 +50,7 @@
 
 -
 
-## 交接记录（只记关键动作，≤10 条，超出先压卡到 `压卡备份.md`）
+## 交接记录（只记关键动作，≤10 条，超出先压卡到 `COMPACTION_BACKUP.md`）
 > 不写日常细节。
 
 - YYYY-MM-DD <agent>：<关键动作 / 下一步 / 阻塞>
