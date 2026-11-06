@@ -18,7 +18,7 @@ multi-agent-task-handoff — 多 agent 任务交接
                               --new     新建会话后投递（必须绑定当前项目目录，落 worktree 视为失败）
                               --next <ID | 会话名> 投递到已有会话
                             默认读 config.toml 的 [defaults].post（new / next）
-  --doc                     文档整理：建档、分类、迁移、补标记；拿不准给选项
+  --doc                     文档整理：建档、分类、迁移、补标记；只动布局/标记/迁移链接；拿不准给选项
   --check                   自检 / 更新：只读检查，报告 ✅ / 🟡 / ⛔
   --fix                     修复：只修安装/配置等非文档整理项，不碰文档增删迁移
   --probe [--static | --live]  摸底 / 探测：先检查，再实测当前 agent 并更新能力表

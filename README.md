@@ -102,7 +102,7 @@ agent 会把 skill 安装到当前宿主的 `skills/multi-agent-task-handoff`，
 
 | 场景 | 说法 / 命令 | 会发生什么 |
 |---|---|---|
-| 新任务开工 | `--doc` | 整理文档布局：补 README/CONTEXT，把设计/方案/指导类迁入 `docs/`，补归属标记 |
+| 新任务开工 | `--doc` | 整理文档布局：补 README/CONTEXT，把设计/方案/指导类迁入 `docs/`，补归属标记；只修迁移造成的链接，不改文档原有内容 |
 | 接手别人的任务 | `接手` / `--resume` | 读 PROMPT → CONTEXT，核锚点、跑验证 |
 | 本轮收工 | `收工` / `--suspend` | 按需压卡、写 CONTEXT、覆盖 PROMPT、对齐安装副本（仅源仓库）；`--push` 网络错误重试 3 次，Windows 再走 TLS 回退 |
 | 热交接给另一个会话 | `--post "<内容>" [--new \| --next <ID \| 会话名>]` | 只投消息，不写卡、不动 git；默认目标读 `[defaults].post` |

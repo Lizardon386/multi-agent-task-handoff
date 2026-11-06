@@ -101,8 +101,8 @@ argument-hint: "[--workspace <PATH>] [--nosave] [--gear <key>[=<值>] | --gear l
 6. 角色映射：README → 根 `README.md`；方案设计类（DESIGN、架构设计、实施方案等）与指导类（INTEGRATION_GUIDE、接入/开发指南等）→ `docs/<原名>.md`；CONTEXT 与其他交接 → `handoff/`。
 7. 根目录其他 `.md`：判为方案设计类或指导类的一律列入迁移；判不准的列出候选让用户选，不自行决定；用户不选就跳过。非文档产物不动。
 8. 冲突停：目标已存在且不是同一份、根 README 与 `docs/README` 同时存在、某角色有多份候选 → 出选择题，未获选择前不覆盖、不改名、不合并。
-9. 迁移用 `git mv`（git 仓）或 `mv`（非 git），只移动不复制；同批修正相对链接、CONTEXT 文档表与跨目录引用（从根进 `docs/` 加 `../`，仓库内绝对 GitHub URL 同步改）。
-10. 补标记、更新日期与 CONTEXT 文档表；git 仓且未忽略时确认后把 `handoff/PROMPT.md` 加入 `.gitignore`；先输出动作清单（源 → 目标、新建、删除、改链、待选项），确认后执行，结束输出 before/after 与未处理项。
+9. 迁移用 `git mv`（git 仓）或 `mv`（非 git），只移动不复制；同批修正相对链接、CONTEXT 文档表与跨目录引用（从根进 `docs/` 加 `../`，仓库内绝对 GitHub URL 同步改）；只修迁移造成的链接问题，原有死链、旧路径与历史内容不改，另列报告。
+10. 只补标记、日期与文档表，不改正文；git 仓且未忽略时确认后把 `handoff/PROMPT.md` 加入 `.gitignore`；先输出动作清单（源 → 目标、新建、删除、改链、待选项），确认后执行，结束输出 before/after 与未处理项。
 
 ## --check / --fix
 
