@@ -35,8 +35,10 @@ usage() {
                    Windows 再加 HTTP/1.1 + OpenSSL 回退 3 次
   --save [--all] [-m MSG] [--retries N] [--delay S]
                    提交已跟踪修改（--all 含新文件），同步副本，再推送（重试）
-  --gear suspend|probe
-                   输出 config.toml 里的默认挡位
+  --gear suspend|probe[=VALUE]
+                   读/写 config.toml 的默认挡位；省略 VALUE 只读取
+                   suspend=VALUE 支持 local|commit|push；probe=VALUE 支持 static|live
+                   VALUE 非法时不修改文件
   -h, --help       显示本表
 
 安装用 install.sh；本脚本一次只做一件事。
@@ -90,8 +92,8 @@ if [ "$mode" != save ] && { [ "$all" = 1 ] || [ -n "$message" ]; }; then
 fi
 if [ "$mode" = gear ]; then
   case "$gear_arg" in
-    suspend|probe) ;;
-    *) usage_die "--gear 只支持 suspend / probe" ;;
+    suspend|probe|suspend=*|probe=*) ;;
+    *) usage_die "--gear 只支持 suspend / probe（写入用 suspend=local|commit|push、probe=static|live）" ;;
   esac
 fi
 case "$retries" in ''|*[!0-9]*) usage_die "--retries 必须是正整数" ;; esac
@@ -107,12 +109,29 @@ fi
 if [ "$mode" = gear ]; then
   config_dir=$(agent_config_dir)
   cfg_file=$config_dir/config.toml
-  v=$(config_get "$gear_arg" "$cfg_file" 2>/dev/null || true)
   case "$gear_arg" in
-    suspend) case "$v" in local|commit|push) ;; *) v=local ;; esac ;;
-    probe) case "$v" in static|live) ;; *) v=static ;; esac ;;
+    *=*)
+      key=${gear_arg%%=*}
+      value=${gear_arg#*=}
+      case "$key" in
+        suspend) case "$value" in local|commit|push) ;; *) die "--gear suspend 只支持 local / commit / push；未修改" ;; esac ;;
+        probe) case "$value" in static|live) ;; *) die "--gear probe 只支持 static / live；未修改" ;; esac ;;
+        *) die "--gear 只支持 suspend / probe；未修改" ;;
+      esac
+      [ -f "$cfg_file" ] || die "配置文件不存在: $cfg_file；先运行 install.sh"
+      config_set "$key" "$value" "$cfg_file" || die "写入失败: $cfg_file"
+      printf '%s=%s\n' "$key" "$value"
+      ;;
+    *)
+      v=$(config_get "$gear_arg" "$cfg_file" 2>/dev/null || true)
+      case "$gear_arg" in
+        suspend) case "$v" in local|commit|push) ;; *) v=local ;; esac ;;
+        probe) case "$v" in static|live) ;; *) v=static ;; esac ;;
+        *) die "--gear 只支持 suspend / probe" ;;
+      esac
+      printf '%s\n' "$v"
+      ;;
   esac
-  printf '%s\n' "$v"
   exit 0
 fi
 

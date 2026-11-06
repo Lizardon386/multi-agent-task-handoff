@@ -32,6 +32,42 @@ config_get() {
   sed -n "s/^[[:space:]]*$key[[:space:]]*=[[:space:]]*\"\\(.*\\)\"[[:space:]]*$/\1/p" "$file" | head -1
 }
 
+# 只改 [defaults] 下的 key；key 不存在时插在 [defaults] 后；失败不留下临时文件。
+config_set() {
+  key=$1
+  value=$2
+  file=$3
+  [ -f "$file" ] || return 1
+  has=$(awk -v key="$key" '
+    /^[[:space:]]*\[defaults\][[:space:]]*$/ { in_defaults=1; next }
+    /^[[:space:]]*\[/ { in_defaults=0 }
+    in_defaults && $0 ~ "^[[:space:]]*" key "[[:space:]]*=" { found=1; exit }
+    END { print found+0 }
+  ' "$file")
+  tmp=$file.tmp.$$
+  if [ "$has" = 1 ]; then
+    awk -v key="$key" -v value="$value" '
+      /^[[:space:]]*\[defaults\][[:space:]]*$/ { in_defaults=1; print; next }
+      /^[[:space:]]*\[/ { in_defaults=0 }
+      {
+        if (in_defaults && $0 ~ "^[[:space:]]*" key "[[:space:]]*=") {
+          print key " = \"" value "\""; next
+        }
+        print
+      }
+    ' "$file" > "$tmp" || { rm -f "$tmp"; return 1; }
+  else
+    awk -v key="$key" -v value="$value" '
+      { print }
+      /^[[:space:]]*\[defaults\][[:space:]]*$/ && !done {
+        print key " = \"" value "\""; done=1
+      }
+      END { exit done ? 0 : 3 }
+    ' "$file" > "$tmp" || { rm -f "$tmp"; return 1; }
+  fi
+  mv "$tmp" "$file" || { rm -f "$tmp"; return 1; }
+}
+
 resolve_workspace() {
   if [ -n "${AGENT_WORKSPACE:-}" ]; then
     workspace=$(expand_path "$AGENT_WORKSPACE"); workspace_src=AGENT_WORKSPACE; return

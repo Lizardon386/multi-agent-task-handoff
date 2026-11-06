@@ -23,7 +23,7 @@
 > 目标一句话；完成标准必须可验证，不写过程。
 
 - 目标：V4 协议落地；所有项目统一布局（根 README、`docs/` 设计/方案/指导类、`handoff/` 交接文档）；文档增删迁移只由 `--doc` 执行；`--post` 承担同 agent 热交接；宿主差异由能力表驱动；机械动作由显式命令执行。
-- 完成标准（可验证）：`SKILL.md` / `README.md` / `docs/DESIGN.md` 与安装副本一致；9 个命令与 `--help` 一致；`--check` 无 ⛔；`CONTEXT.md` ≤100 行；根目录项目文档 `.md` 只有 `README.md`（包文件 `SKILL.md` 除外）；`install.sh --dryrun`、`scripts/handoff.sh --printpath` / `--syncall` 正常。
+- 完成标准（可验证）：`SKILL.md` / `README.md` / `docs/DESIGN.md` 与安装副本一致；10 个命令与 `--help` 一致；`--check` 无 ⛔；`CONTEXT.md` ≤100 行；根目录项目文档 `.md` 只有 `README.md`（包文件 `SKILL.md` 除外）；`install.sh --dryrun`、`scripts/handoff.sh --printpath` / `--syncall` 正常。
 
 ## 3. 现在在哪
 > 只写当前状态与在飞文件；已完成项压缩为结果，逐版本流水搬入 `COMPACT_BACKUP.md`。
@@ -34,6 +34,7 @@
   - 2026-11-06：临时 git / 非 git 项目往返测试通过（分类、迁移、标记、改链、PROMPT 读序）。
   - 2026-11-06：`--post` 实测——`--next` 投递到主目录手动会话通过（读卡、HEAD、工作树均正常）；`--new` 仍落 worktree，且新 worktree 无 `PROMPT.md`，判定失败；能力表已更新。
   - 2026-11-06：完备体检通过（布局/标记/链接/上限/忽略/副本/安装守卫/命令面）；`--post --next` 名称解析实测发现 `ListSessions` 会命中正文，SKILL 已要求按 `title` 过滤；`--suspend --local` 写路径本次自测。
+  - 2026-11-06：`--gear suspend=push` / `probe=live` 支持写 `config.toml`；值不在挡位列表时不修改；SKILL/HELP 增加该命令。
   - 推送状态以 `git status -sb` 为准。
 - 进行中：无。
 - 在飞文件（勿动）：无。
@@ -68,7 +69,7 @@
 ## 7. 交接记录（只记关键动作，≤10 条）
 > 超出先压卡到 `COMPACT_BACKUP.md`；不写日常细节。
 
-- 2026-11-06 Claude：V4 完备测试——`--next` 主目录会话通过；`--new` 落 worktree 判失败（新 worktree 无 PROMPT.md）；`ListSessions` 查询命中正文，SKILL 增按 `title` 过滤；`--suspend --local` 写路径验证。
+- 2026-11-06 Claude：V4 完备测试——`--next` 主目录会话通过；`--new` 落 worktree 判失败（新 worktree 无 PROMPT.md）；`ListSessions` 查询命中正文，SKILL 增按 `title` 过滤；`--suspend --local` 写路径验证；`--gear key=value` 写挡位（非法值不改），SKILL/HELP 增命令。
 - 2026-11-06 Claude：V4 布局落地——README 在根、设计/方案/指导类入 `docs/`、`--doc` 独占增删迁移、`--post` 热交接、`--suspend` 去 ID；本仓库迁移并同步 5 份副本；`--post --new` 加项目目录校验；HELP 的 post 默认值改 `new / next`，坑合并至 10 类，清理 3 个已合并的 worktree 分支；`--post` 实测：`--next` 主目录会话通过，`--new` 落 worktree 判失败（新 worktree 无 PROMPT.md），能力表更新。
 - 2026-11-05 Qoder：`--check` / `--fix` / `--probe --live` 通过；能力表 Qoder 行补 `--dryrun` 与实测方法；CONTEXT 清掉本机副本/探测状态；压卡一条旧记录。
 - 2026-11-05 WorkBuddy / Claude：v3.2–v3.10 迭代（入口拆分、`--save` 与挡位、删钩子、归档改名、README 落地页化、压卡/接手清单）；全自动方案不采纳；SKILL 正文审计（`--syncall` 条件、`--printpath` 输出、模板路径、边界措辞）；`--check` 增源仓库正文一致性审计（只报告，不自动改）；按 WorkBuddy 审计修正 `--printpath` 用法串，并写明 `--save` 属脚本层、不在 SKILL/HELP 命令表；`--push` 内置 Windows HTTP/1.1 + OpenSSL 回退；DESIGN/README 与 SKILL 口径对齐；`.gitignore` 自动评估/维护入 `--check` / `--fix` / `--suspend`。详细流水见 [COMPACT_BACKUP.md](COMPACT_BACKUP.md)。

@@ -2,7 +2,7 @@
 name: multi-agent-task-handoff
 description: 多 agent 任务接力协议：接手/接盘/交接项目、写交接卡、收工/压卡、工程化/补全 handoff 文档、自检/修复/摸底宿主能力；README 固定在项目根，交接文件在 handoff/，设计/方案类在 docs/。
 when_to_use: 开始或结束一个任务、接盘别人留下的项目、把工作交接给另一个 agent、或需要检查/修复交接文档与宿主能力时。
-argument-hint: "[--workspace <PATH>] [--nosave] [--help | --resume | --suspend [--local | --commit | --push] | --post <message> [--new | --next <ID | 会话名>] | --doc | --check | --fix | --probe [--static | --live] | --printpath [--host NAME | --target DIR]]"
+argument-hint: "[--workspace <PATH>] [--nosave] [--gear <suspend|probe>[=<值>] | --help | --resume | --suspend [--local | --commit | --push] | --post <message> [--new | --next <ID | 会话名>] | --doc | --check | --fix | --probe [--static | --live] | --printpath [--host NAME | --target DIR]]"
 ---
 
 # 多 agent 任务交接
@@ -36,6 +36,7 @@ argument-hint: "[--workspace <PATH>] [--nosave] [--help | --resume | --suspend [
 | `--fix` | 检查 + 修非文档整理项；不碰增删迁移 |
 | `--probe [--static \| --live]` | 检查 + 实测能力；`--live` 实际建会话/发送/读回 |
 | `--printpath [--host NAME \| --target DIR]` | 只读路径诊断：config / workspace / 能力表 / 源仓库 / 宿主 / 副本清单 |
+| `--gear <suspend\|probe>[=<值>]` | 读/写 `config.toml` 默认挡位；写入只接受 `suspend=local\|commit\|push`、`probe=static\|live`，非法值不修改 |
 | `--workspace <PATH> [--nosave]` | 指定工作区根；默认写回 `config.toml` |
 | `--help` | 输出完整帮助 |
 
@@ -47,7 +48,7 @@ argument-hint: "[--workspace <PATH>] [--nosave] [--help | --resume | --suspend [
 2. 工作区根：本次 `--workspace` > `AGENT_WORKSPACE` > `config.toml` 的 `[paths].workspace` > `$HOME/agent_workspace`。
 3. `--workspace <PATH>` 默认写回 `[paths].workspace`；`--nosave` 只本次。路径含空格加引号。
 4. 能力表：`$AGENT_CONFIG/AGENT_CAPABILITIES.md`；跨任务规则：项目目录 → 父目录 → `$AGENT_CONFIG/PROJECT_RULES.md`。
-5. 配置只解析简单 `key = "value"`；不 `source`，不依赖 Python。`[defaults].post`（new / next）只由 `--post` 读取。
+5. 配置只解析简单 `key = "value"`；不 `source`，不依赖 Python。`[defaults].post`（new / next）只由 `--post` 读取；`--gear` 读写 `[defaults].suspend` / `.probe`，省略值只读，非法值不修改。
 
 ## 确定项目目录
 
