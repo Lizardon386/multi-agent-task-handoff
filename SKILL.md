@@ -101,24 +101,19 @@ argument-hint: "[--workspace <PATH>] [--nosave] [--gear <suspend|probe>[=<值>] 
 6. 角色映射：README → 根 `README.md`；方案设计类（DESIGN、架构设计、实施方案等）与指导类（INTEGRATION_GUIDE、接入/开发指南等）→ `docs/<原名>.md`；CONTEXT 与其他交接 → `handoff/`。
 7. 根目录其他 `.md`：判为方案设计类或指导类的一律列入迁移；判不准的列出候选让用户选，不自行决定；用户不选就跳过。非文档产物不动。
 8. 冲突停：目标已存在且不是同一份、根 README 与 `docs/README` 同时存在、某角色有多份候选 → 出选择题，未获选择前不覆盖、不改名、不合并。
-9. 迁移用 `git mv`（git 仓）或 `mv`（非 git）；只移动，不复制。
-10. 同批修正相对链接、CONTEXT 文档表、跨目录引用；文档从根进 `docs/` 后内部相对链接加 `../`；指向被移动文件的仓库内绝对 GitHub URL 同步改。
-11. 补标记、更新日期与 CONTEXT 文档表；git 仓且未忽略时确认后把 `handoff/PROMPT.md` 加入 `.gitignore`。
-12. 先输出动作清单（源 → 目标、新建、删除、改链、待选项），确认后执行；结束输出 before/after 与未处理项。
+9. 迁移用 `git mv`（git 仓）或 `mv`（非 git），只移动不复制；同批修正相对链接、CONTEXT 文档表与跨目录引用（从根进 `docs/` 加 `../`，仓库内绝对 GitHub URL 同步改）。
+10. 补标记、更新日期与 CONTEXT 文档表；git 仓且未忽略时确认后把 `handoff/PROMPT.md` 加入 `.gitignore`；先输出动作清单（源 → 目标、新建、删除、改链、待选项），确认后执行，结束输出 before/after 与未处理项。
 
 ## --check / --fix
 
 - `--check` 只读：安装副本 commit（`.skill-version`）与源仓库 HEAD、文档布局（scope 与目录、角色缺失/重复、V3 残留、CONTEXT 文档表断链）、config/workspace、能力表日期、`sync-paths`、`handoff/PROMPT.md` 是否未忽略或已跟踪、项目内 memory 是否 gitignore、PROMPT 是否过期、工作区文档（AGENTS/PROJECT_RULES 是否存在、是否指向 `$AGENT_CONFIG` 与 `handoff/`、是否残留旧路径）、CONTEXT 行数/记录数/坑类别是否超限；源仓库（根有 `SKILL.md` + `scripts/`）额外核对 SKILL 正文与 scripts/HELP/模板的命令、参数、路径、输出是否一致（只报告）；`--save` 是脚本层维护命令，不进 SKILL/HELP 命令表，缺失不报；不改文件。缺 README/DESIGN 不算错误，只提示可跑 `--doc`。
-- `--fix`：先跑同一套检查，再修非文档整理项：安装副本对齐（从源仓库跑 `--syncall`）、`git rm --cached` 取消 PROMPT 跟踪、补 `.gitignore` 规则、配置/能力表缺失项；文档布局、分类、标记、链接、文档表一律只报告「需跑 `--doc`」，不创建、不删除、不移动、不改链。
-- 安装副本对齐只从源仓库跑 `scripts/handoff.sh --syncall`：安装副本没有 HEAD，会被拒绝；按 commit 只补落后，已最新跳过；整体重装，副本内改动会被覆盖。
-- 默认不提交；由 `--suspend --commit` 一起提交。
-- 无 `handoff/` 且无旧文档 → 提示 `--doc`，不自动建。
+- `--fix`：先跑同一套检查，再修非文档整理项：安装副本对齐（只从源仓库跑 `scripts/handoff.sh --syncall`；副本没有 HEAD 会被拒绝；按 commit 只补落后，整体重装会覆盖副本内改动）、`git rm --cached` 取消 PROMPT 跟踪、补 `.gitignore` 规则、配置/能力表缺失项；文档布局、分类、标记、链接、文档表一律只报告「需跑 `--doc`」，不创建、不删除、不移动、不改链。
+- 默认不提交，由 `--suspend --commit` 一起提交；无 `handoff/` 且无旧文档 → 提示 `--doc`，不自动建。
 
 ## --probe [--static | --live]
 
 - `--probe`：默认挡位读 `scripts/handoff.sh --gear probe`（static / live），显式参数覆盖；先检查，再做低成本实测（工作区根来源、会话列表、memory 路径、文件读写、git/CLI、config 解析）；更新能力表。
-- `--probe --live`：先检查，再实际建会话/发送/读回；需确认；可能留测试会话，报告并尝试删除。实测 `--post --new` 时必须记录新会话是否落 worktree；落 worktree 记 🟡/⛔，不能只记「建会话成功」。
-- 结果记可用/不可用与验证方法，不写会话 ID。
+- `--probe --live`：先检查，再实际建会话/发送/读回；需确认；可能留测试会话，报告并尝试删除。实测 `--post --new` 时必须记录新会话是否落 worktree；落 worktree 记 🟡/⛔，不能只记「建会话成功」。结果记可用/不可用与验证方法，不写会话 ID。
 
 ## --printpath [--host NAME | --target DIR]
 
@@ -135,6 +130,11 @@ argument-hint: "[--workspace <PATH>] [--nosave] [--gear <suspend|probe>[=<值>] 
 | 源仓库 |  | — |
 | 宿主 |  | 识别来源: env / --host / --target |
 | 副本清单 | 逐行 路径 + commit | ✅ 当前 / ⚠️ 落后 / ❌ 缺失 |
+
+## --gear
+
+- `--gear suspend` / `--gear probe`：读默认挡位，缺省按 `local` / `static` 兜底；`--gear suspend=push` / `--gear probe=live`：校验后写 `[defaults]`，只接受 `local|commit|push` / `static|live`。
+- 非法键或值报错且不改文件；配置不存在报错；`--gear` 是独立命令。
 
 ## 边界
 
