@@ -1,7 +1,7 @@
 multi-agent-task-handoff — 多 agent 任务交接
 
 用法:
-  multi-agent-task-handoff [--workspace <PATH>] [--nosave] [--gear <suspend|probe>[=<值>] | --help | --resume | --suspend [--local | --commit | --push] | --post <message> [--new | --next <ID | 会话名>] | --doc | --check | --fix | --probe [--static | --live] | --printpath [--host NAME | --target DIR]]
+  multi-agent-task-handoff [--workspace <PATH>] [--nosave] [--gear <key>[=<值>] | --gear list | --help | --resume | --suspend [--local | --commit | --push] | --post <message> [--new | --next <ID | 会话名>] | --doc | --check | --fix | --probe [--static | --live] | --printpath [--host NAME | --target DIR]]
 
 命令:
   --resume                  接盘 / 接手：读 handoff/PROMPT.md → handoff/CONTEXT.md，
@@ -29,11 +29,10 @@ multi-agent-task-handoff — 多 agent 任务交接
                             路径诊断：表格输出配置目录 / 配置文件 / 工作区根 / 能力表
                             （含更新日期）/ 安装注册表 / 源仓库 / 宿主 / 当前安装副本 /
                             全部副本的路径与 commit；--host / --target 显式指定
-  --gear <suspend|probe>[=<值>]
-                            读取或写入 config.toml 的默认挡位
-                              suspend=local|commit|push
-                              probe=static|live
-                            省略值只读取；值非法时不修改文件
+  --gear <key>[=<值>] | --gear list
+                            读/写 config.toml 的 [defaults] 挡位
+                            <key> 与 [defaults] 键同名；list 列出键、默认值与允许值
+                            省略值只读取；值不在白名单时不修改文件
   --workspace <PATH> [--nosave]
                             全局：指定工作区根；默认写回 config.toml；
                             --nosave 只本次生效，不写回
@@ -46,7 +45,7 @@ multi-agent-task-handoff — 多 agent 任务交接
   --new / --next 只能跟 --post；两者不能同时用；message 必填
   --live 只能跟 --probe
   --printpath 是独立命令；--host / --target 只能跟 --printpath
-  --gear 是独立命令；只接受 suspend / probe，写入值非法时不修改
+  --gear 是独立命令；键与允许值由脚本映射决定，写入值非法时不修改
   --help 单独使用
   无参数等同 --resume
 
@@ -63,6 +62,7 @@ multi-agent-task-handoff — 多 agent 任务交接
   --fix
   --probe --live
   --doc
+  --gear list
   --gear suspend=push
   --printpath
 

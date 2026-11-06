@@ -35,10 +35,10 @@ usage() {
                    Windows 再加 HTTP/1.1 + OpenSSL 回退 3 次
   --save [--all] [-m MSG] [--retries N] [--delay S]
                    提交已跟踪修改（--all 含新文件），同步副本，再推送（重试）
-  --gear suspend|probe[=VALUE]
-                   读/写 config.toml 的默认挡位；省略 VALUE 只读取
-                   suspend=VALUE 支持 local|commit|push；probe=VALUE 支持 static|live
-                   VALUE 非法时不修改文件
+  --gear <key>[=<值>] | --gear list
+                   读/写 config.toml 的 [defaults] 挡位；省略值只读取
+                   键与允许值由脚本映射决定；list 列出当前键、默认值与允许值
+                   值不在白名单时不修改文件
   -h, --help       显示本表
 
 安装用 install.sh；本脚本一次只做一件事。
@@ -90,11 +90,8 @@ fi
 if [ "$mode" != save ] && { [ "$all" = 1 ] || [ -n "$message" ]; }; then
   usage_die "--all / -m 只能跟 --save"
 fi
-if [ "$mode" = gear ]; then
-  case "$gear_arg" in
-    suspend|probe|suspend=*|probe=*) ;;
-    *) usage_die "--gear 只支持 suspend / probe（写入用 suspend=local|commit|push、probe=static|live）" ;;
-  esac
+if [ "$mode" = gear ] && [ -z "$gear_arg" ]; then
+  usage_die "--gear 需要 <key>、<key>=<value> 或 list"
 fi
 case "$retries" in ''|*[!0-9]*) usage_die "--retries 必须是正整数" ;; esac
 [ "$retries" -ge 1 ] || usage_die "--retries 必须 ≥ 1"
@@ -109,26 +106,32 @@ fi
 if [ "$mode" = gear ]; then
   config_dir=$(agent_config_dir)
   cfg_file=$config_dir/config.toml
+  if [ "$gear_arg" = list ]; then
+    for key in $(gear_keys); do
+      meta=$(gear_meta "$key") || continue
+      default=$(printf '%s\n' "$meta" | sed -n '1p')
+      allowed=$(printf '%s\n' "$meta" | sed -n '2p')
+      printf '%-8s default=%-8s allowed=%s\n' "$key" "$default" "$allowed"
+    done
+    exit 0
+  fi
   case "$gear_arg" in
     *=*)
       key=${gear_arg%%=*}
       value=${gear_arg#*=}
-      case "$key" in
-        suspend) case "$value" in local|commit|push) ;; *) die "--gear suspend 只支持 local / commit / push；未修改" ;; esac ;;
-        probe) case "$value" in static|live) ;; *) die "--gear probe 只支持 static / live；未修改" ;; esac ;;
-        *) die "--gear 只支持 suspend / probe；未修改" ;;
-      esac
+      meta=$(gear_meta "$key") || die "--gear 不支持键 $key；用 --gear list 查看；未修改"
+      allowed=$(printf '%s\n' "$meta" | sed -n '2p')
+      case " $allowed " in *" $value "*) ;; *) die "--gear $key 只支持 $allowed；未修改" ;; esac
       [ -f "$cfg_file" ] || die "配置文件不存在: $cfg_file；先运行 install.sh"
       config_set "$key" "$value" "$cfg_file" || die "写入失败: $cfg_file"
       printf '%s=%s\n' "$key" "$value"
       ;;
     *)
+      meta=$(gear_meta "$gear_arg") || die "--gear 不支持键 $gear_arg；用 --gear list 查看"
+      default=$(printf '%s\n' "$meta" | sed -n '1p')
+      allowed=$(printf '%s\n' "$meta" | sed -n '2p')
       v=$(config_get "$gear_arg" "$cfg_file" 2>/dev/null || true)
-      case "$gear_arg" in
-        suspend) case "$v" in local|commit|push) ;; *) v=local ;; esac ;;
-        probe) case "$v" in static|live) ;; *) v=static ;; esac ;;
-        *) die "--gear 只支持 suspend / probe" ;;
-      esac
+      case " $allowed " in *" $v "*) ;; *) v=$default ;; esac
       printf '%s\n' "$v"
       ;;
   esac

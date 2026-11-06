@@ -134,7 +134,7 @@ multi-agent-task-handoff/
 - 旧位置 `<repo>/.skill-sync-paths` 由 `install.sh` 一次性迁到新位置后删除。
 - 三者不合并成一个文件：偏好（人工低频编辑）、能力缓存（Markdown 表）、注册表（工具追加、可重建）的写入者和失败域不同，合并会让 bash 解析变脆，并把“装到哪”和“同步哪些”绑在一起。
 - `config.toml` 只放用户选择；可推导的运行时状态（宿主、副本版本、各路径）不写入配置，由 `--printpath` 现算。
-- 挡位：`[defaults].suspend`（local / commit / push）与 `[defaults].probe`（static / live）；显式参数覆盖；`--gear` 可读写，非法值不修改。
+- 挡位：`[defaults]` 下的键；显式参数覆盖；`--gear` 可读写，键/默认值/允许值由 `scripts/lib.sh` 映射驱动，`--gear list` 查看，非法值不修改。
 
 ### 5.2 关键接缝
 

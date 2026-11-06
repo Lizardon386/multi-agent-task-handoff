@@ -109,11 +109,11 @@ agent 会把 skill 安装到当前宿主的 `skills/multi-agent-task-handoff`，
 | 体检/修复 | `--check` / `--fix` | 检查安装、布局、配置、链接；`--fix` 只修非文档整理项，文档整理交给 `--doc` |
 | 摸底宿主能力 | `--probe` | 实测当前 agent 并更新能力表；`--live` 会实际建会话 |
 | 路径诊断 | `--printpath` | 表格输出配置目录、工作区根、能力表（含日期）、源仓库、宿主识别来源、当前安装副本与全部副本的路径和 commit；`--host` / `--target` 可显式指定 |
-| 改默认挡位 | `--gear suspend=push` | 写入 `config.toml` 的 `[defaults]`；只接受 suspend=local\|commit\|push、probe=static\|live，非法值不改文件 |
+| 改默认挡位 | `--gear <key>=<值>` / `--gear list` | 写入 `config.toml` 的 `[defaults]`；用 `--gear list` 查看键与允许值，非法值不改文件 |
 
 项目第一次用先跑 `--doc` 建档（没有 `handoff/` 不会自动创建）；之后接手 / `--resume` 继续，收工 / `--suspend` 写卡并生成 `PROMPT.md`。
 
-一次只用一个命令。`--suspend` / `--probe` / `--post` 的默认值读 `$AGENT_CONFIG/config.toml` 的 `[defaults]`；`--gear` 可读写 suspend/probe 挡位，非法值不修改；显式参数覆盖。安装、配置、旧布局迁移的细节见 [docs/DESIGN.md](docs/DESIGN.md) 和 [SKILL.md](SKILL.md)。
+一次只用一个命令。`--suspend` / `--probe` / `--post` 的默认值读 `$AGENT_CONFIG/config.toml` 的 `[defaults]`；`--gear` 可读写 `[defaults]` 挡位（键名与 `[defaults]` 一致，`--gear list` 查看），非法值不修改；显式参数覆盖。安装、配置、旧布局迁移的细节见 [docs/DESIGN.md](docs/DESIGN.md) 和 [SKILL.md](SKILL.md)。
 
 ## 4. 产物与目录
 > 只列产物位置与用途；项目自有文档不动。

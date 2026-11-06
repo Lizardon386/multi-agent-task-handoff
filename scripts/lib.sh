@@ -68,6 +68,21 @@ config_set() {
   mv "$tmp" "$file" || { rm -f "$tmp"; return 1; }
 }
 
+# --gear 的唯一映射：键名与 config.toml 的 [defaults] 一致。
+# 每项输出两行：默认值、允许值（空格分隔）；新增挡位只改这里。
+gear_meta() {
+  case "$1" in
+    suspend) printf '%s\n' local "local commit push" ;;
+    probe) printf '%s\n' static "static live" ;;
+    post) printf '%s\n' new "new next" ;;
+    *) return 1 ;;
+  esac
+}
+
+gear_keys() {
+  printf '%s\n' suspend probe post
+}
+
 resolve_workspace() {
   if [ -n "${AGENT_WORKSPACE:-}" ]; then
     workspace=$(expand_path "$AGENT_WORKSPACE"); workspace_src=AGENT_WORKSPACE; return
