@@ -68,7 +68,7 @@ flowchart LR
 
 | 阶段 | 触发 | 动作 | 产出 / 结果 | 边界 |
 |---|---|---|---|---|
-| 开工 | `--doc` / `--doc-init` | `--doc` 先跑 `--doc-guard`，只做布局/标记/迁移链接；`--doc-init` 显式创建缺失 CONTEXT（README 仅 GitHub/确认）；设计/方案/指导类迁 `docs/`；交接类迁 `handoff/`；补标记；同意后把 PROMPT 加入 `.gitignore` | README（GitHub 项目）+ `docs/` + `handoff/` | 冲突或判不准 → 出选择题，未选不动；缺失角色只 WARN，不创建/不还原 |
+| 开工 | `--doc [--guard \| --init]` | 默认挡位 `[defaults].doc=guard`；`--guard` 只读扫描，`--init` 显式创建缺失 CONTEXT（README 仅 GitHub/确认）；设计/方案/指导类迁 `docs/`；交接类迁 `handoff/`；补标记；同意后把 PROMPT 加入 `.gitignore` | README（GitHub 项目）+ `docs/` + `handoff/` | 冲突或判不准 → 出选择题，未选不动；缺失角色只 WARN，不创建/不还原 |
 | 工作 | — | 改代码/文档；状态或坑变化时更新 CONTEXT | 可交接的当前状态 | 一个项目同一时间一个写者 |
 | 收工 | `--suspend` | 超限先压卡；写现在/下一步/MEMORY 提炼/坑/记录；覆盖 PROMPT；按需读 memory 提炼规则；默认挡位读 `config.toml`；源仓库时末尾对齐副本（安装副本跳过；提交/推送时在其后） | CONTEXT 更新 + PROMPT 覆盖 + 副本对齐 | 默认不动 git；`--commit` 提交协议管理文档（`handoff/` 与带标记文档及其移动/删除）；`--push` 隐含 commit 并调 `scripts/handoff.sh --push`（网络错误 3 次 / 3 秒；Windows 再加 HTTP/1.1 + OpenSSL 回退 3 次）；未确认推送成功写「待推送」 |
 | 热交接 | `--post <message> [--new \| --next <ID \| 会话名>]` | 把 message 投给另一个会话；可追加项目目录/HEAD/指针，必须可见标注 | 目标会话收到消息 | 不写卡、不动 git；`--new` 必须绑定项目目录，落 worktree 视为失败 |
@@ -99,7 +99,7 @@ multi-agent-task-handoff/
 ├─ install.sh               # 只安装：宿主识别、target、注册表
 ├─ 安装.bat                  # Windows 安装入口
 ├─ scripts/
-│  ├─ handoff.sh            # 运行时：--printpath / --doc-guard / --syncall / --push / --save / --gear（读写挡位）
+│  ├─ handoff.sh            # 运行时：--printpath / --doc [--guard|--init] / --syncall / --push / --save / --gear（读写挡位）
 │  ├─ lib.sh                # 共享：配置 / 宿主 / 路径函数
 │  └─ 运行时.bat             # Windows 运行时入口
 ├─ LICENSE
@@ -156,7 +156,7 @@ multi-agent-task-handoff/
 | 项目目录是唯一写入根 | 多仓/AOSP 场景下不会把卡写到工作区根 | 无项目时要先建目录 |
 | 工作区根只做容器 | 与“产物根”区分，避免把 `handoff/` 写到容器 | 用户要理解两个概念的区别 |
 | 命令一次只用一个 | 组合过长、顺序和冲突难维护 | 需要多步时分开跑 |
-| `--doc` 独占文档增删迁移 | 结构操作集中，其他命令不会意外搬文件；只修迁移造成的链接，不改文档原有内容；内容创建拆到 `--doc-init` | 迁移必须显式跑 `--doc`；判不准时要问用户；缺失被引用文档由 `--doc-guard` 只报告，不阻断、不创建 |
+| `--doc` 独占文档增删迁移 | 结构操作集中，其他命令不会意外搬文件；只修迁移造成的链接，不改文档原有内容；内容创建拆到 `--doc --init`，默认挡位 `[defaults].doc=guard` | 迁移必须显式跑 `--doc`；判不准时要问用户；缺失被引用文档由 `--doc --guard` 只报告，不阻断、不创建 |
 | `--post` 与 `--suspend` 分离 | 热交接只传消息，冷交接才落盘；两者可单独使用 | 需要用户提供 message 与目标会话 |
 | 交接只发指针 | 跨 agent 不复制聊天历史；PROMPT 可复用 | 目标读不到文件时要附全文 |
 | `PROMPT.md` 自动生成并 gitignore | 含会话 ID/本机路径，默认不提交 | 跨机交接要另发内容 |
@@ -202,10 +202,11 @@ multi-agent-task-handoff/
 - `SKILL.md` 单文件，硬上限 150 行、目标 120；超出才拆 `references/`。
 - 协议护栏（冲突停、不搬活会话、单写者、memory 只读）必须留在 `SKILL.md`，不能只放 `PROJECT_RULES.md` 或 README。
 - 修 bug 优先结构性根治：脚本守卫、收敛动作/权限面、状态隔离；不要用记忆或追加散文规则修补；跨 agent 的问题必须落在安装副本可执行的机制上。
+- 衍生挡位统一写成 `--命令 [--模式 ...]`，默认值放 `[defaults].<命令>`，用 `--gear <命令>=<模式>` 修改；SKILL 标题与 `--help` 写全签名，不用 `--命令-模式` 形式。
 - 宿主差异只进 `$AGENT_CONFIG/AGENT_CAPABILITIES.md`；`SKILL.md` 只举例，不写宿主专属规则。
 - 旧仓迁移是逐项目人工动作，不默认扫描全盘；先 `--check` 出清单，再由 `--doc` 迁移。
 - 迁移按角色处理所有项目级文档：README（若存在）留根，设计/方案/指导类进 `docs/`，交接类进 `handoff/`；客制化名同样迁移，不留在根。判不准时给选项，不自行决定。
-- 文档增删迁移只在 `--doc`；先跑 `scripts/handoff.sh --doc-guard`，WARN 只报告、不创建/不还原、不询问；只修迁移造成的链接/标记问题，不改文档原有死链、旧路径或历史内容；内容创建只走 `--doc-init`，不重建/还原缺失文档；`--fix` 不搬、不建、不删文档。
+- 文档增删迁移只在 `--doc`；先跑 `scripts/handoff.sh --doc --guard`，WARN 只报告、不创建/不还原、不询问；只修迁移造成的链接/标记问题，不改文档原有死链、旧路径或历史内容；内容创建只走 `--doc --init`，不重建/还原缺失文档；`--fix` 不搬、不建、不删文档。
 - README 若存在必须在根目录；不生成 `.github/README.md` 或 `docs/README.md`。
 - 安装只装 HEAD；工作树未提交时只装上一个 commit。
 - 状态以 git 为准：未确认推送成功，不写「已推送」；卡与指针记「已提交，待推送」或实际结果。
@@ -274,7 +275,7 @@ flowchart LR
 | 任务收工 | `--suspend`（挡位读 `[defaults].suspend`；显式 `--local` / `--commit` / `--push`） | 协议管理文档：`handoff/` 与带标记文档及其移动/删除 | 收工末尾自动 `--syncall`（仅源仓库；安装副本跳过） |
 
 - `scripts/handoff.sh --push` 只重试网络错误；认证失败、非快进、保护分支立即失败。
-- `--suspend` / `--probe` / `--post` 的默认值分别读 `[defaults].suspend` / `.probe` / `.post`；`--gear` 可读写这些键。
+- `--suspend` / `--probe` / `--post` 的默认值分别读 `[defaults].suspend` / `.probe` / `.post`；`--doc` 默认挡位读 `[defaults].doc`（guard / init，默认 guard）；`--gear` 可读写这些键。
 - 推送失败时，卡与指针写「待推送」；不 force push，分叉先停下报告。
 
 ### 9.3 发布边界

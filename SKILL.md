@@ -24,14 +24,14 @@ argument-hint: "[--workspace <PATH>] [--nosave] [--gear <key>[=<值>] | --gear l
 
 ## 用法
 
-一次只用一个命令；`--workspace` 可与一个命令同用，`--nosave` 只跟 `--workspace`。
+一次只用一个命令；`--workspace` 可与一个命令同用，`--nosave` 只跟 `--workspace`。衍生挡位统一写 `--命令 [--模式 ...]`，默认值放 `[defaults].<命令>`，用 `--gear <命令>=<模式>` 修改；标题与 `--help` 写全签名。
 
 | 参数 | 作用 |
 |---|---|
 | 无 / `--resume` | 接盘：读 PROMPT → CONTEXT，核锚点、跑验证 |
 | `--suspend [--local \| --commit \| --push]` | 压卡（按需）+ 收工 + 写 PROMPT + 对齐副本（仅源仓库） |
 | `--post <message> [--new \| --next <ID \| 会话名>]` | 同 agent 热交接：把 message 投给另一个会话；不写卡、不动 git |
-| `--doc` / `--doc-init` | `--doc` 先跑 `scripts/handoff.sh --doc-guard`，只做布局/标记/迁移链接；`--doc-init` 显式创建缺失 CONTEXT，README 仅 GitHub/确认，不还原内容 |
+| `--doc [--guard \| --init]` | 默认挡位读 `[defaults].doc`（guard）；`--guard` 只读扫描，`--init` 显式创建缺失 CONTEXT（README 仅 GitHub/确认，不还原）；布局/标记/迁移链接由 `--doc` 本身处理 |
 | `--check` | 只读检查 |
 | `--fix` | 检查 + 修非文档整理项；不碰增删迁移 |
 | `--probe [--static \| --live]` | 检查 + 实测能力；`--live` 实际建会话/发送/读回 |
@@ -48,7 +48,7 @@ argument-hint: "[--workspace <PATH>] [--nosave] [--gear <key>[=<值>] | --gear l
 2. 工作区根：本次 `--workspace` > `AGENT_WORKSPACE` > `config.toml` 的 `[paths].workspace` > `$HOME/agent_workspace`。
 3. `--workspace <PATH>` 默认写回 `[paths].workspace`；`--nosave` 只本次。路径含空格加引号。
 4. 能力表：`$AGENT_CONFIG/AGENT_CAPABILITIES.md`；跨任务规则：项目目录 → 父目录 → `$AGENT_CONFIG/PROJECT_RULES.md`。
-5. 配置只解析简单 `key = "value"`；不 `source`，不依赖 Python。`[defaults].post`（new / next）只由 `--post` 读取；`--gear` 读写 `[defaults]` 的键，键/默认值/允许值由 `scripts/lib.sh` 映射驱动，非法值不修改。
+5. 配置只解析简单 `key = "value"`；不 `source`，不依赖 Python。`[defaults].post`（new / next）只由 `--post` 读取；`[defaults].doc`（guard / init）由 `--doc` 读取，默认 guard；`--gear` 读写 `[defaults]` 的键，键/默认值/允许值由 `scripts/lib.sh` 映射驱动，非法值不修改。
 
 ## 确定项目目录
 
@@ -91,13 +91,13 @@ argument-hint: "[--workspace <PATH>] [--nosave] [--gear <key>[=<值>] | --gear l
 5. 投递按能力表「投递与读回手段」；不支持跨会话的宿主报 ⛔ 并给替代，不伪造成功。
 6. 可酌情追加项目目录、HEAD、PROMPT 路径，必须可见标注，不混进用户原文；不写 `handoff/`、不改文档、不动 git；报告实际结果（成功 / 失败原因 / 目标会话标识），不写进仓库文件。
 
-## --doc / --doc-init
+## --doc [--guard | --init]
 
-1. 确定项目目录；先跑 `scripts/handoff.sh --doc-guard [--target <项目目录>]`，WARN 只报告、不创建/不还原、不询问用户；再扫描根 `*.md`、`docs/**`、`handoff/**`、`.github/*.md`，记录标记与角色候选。
+1. 确定项目目录；不带挡位时读 `[defaults].doc`（默认 guard）；先跑 `scripts/handoff.sh --doc --guard [--target <项目目录>]`，WARN 只报告、不创建/不还原、不询问用户；再扫描根 `*.md`、`docs/**`、`handoff/**`、`.github/*.md`，记录标记与角色候选。
 2. 已有标记 → 校验 scope 与目录，不符则移动。
 3. 无标记但已在角色固定位置（根 `README.md`、`handoff/CONTEXT.md`）或已在 `docs/` → 确认归属后补对应 scope。
 4. 无标记但有 V1/V2/V3 三档特征 → 补标记并迁移。特征两条同时满足：①文件名符合模板（CONTEXT / README / DESIGN / COMPACT_BACKUP，含旧名 压卡备份.md、COMPACTION_BACKUP.md）；②标题含项目目录名，含义一致即可（如 color-duel 的「变色对决」）。
-5. `--doc` 不生成缺失角色；报告后由用户决定是否 `--doc-init`（先出清单并确认）：CONTEXT 必生成，README 仅在判定为 GitHub 项目（`git remote -v` 指向 GitHub）或用户明确要发布到 GitHub 时生成，DESIGN 仅在有设计取舍且用户确认时生成；一律从模板创建，不从会话记录、历史副本或备份还原。
+5. `--doc` 不生成缺失角色；报告后由用户决定是否 `--doc --init`（先出清单并确认）：CONTEXT 必生成，README 仅在判定为 GitHub 项目（`git remote -v` 指向 GitHub）或用户明确要发布到 GitHub 时生成，DESIGN 仅在有设计取舍且用户确认时生成；一律从模板创建，不从会话记录、历史副本或备份还原。
 6. 角色映射：README → 根 `README.md`；方案设计类（DESIGN、架构设计、实施方案等）与指导类（INTEGRATION_GUIDE、接入/开发指南等）→ `docs/<原名>.md`；CONTEXT 与其他交接 → `handoff/`。
 7. 根目录其他 `.md`：判为方案设计类或指导类的一律列入迁移；判不准的列出候选让用户选，不自行决定；用户不选就跳过。非文档产物不动。
 8. 冲突停：目标已存在且不是同一份、根 README 与 `docs/README` 同时存在、某角色有多份候选 → 出选择题，未获选择前不覆盖、不改名、不合并。

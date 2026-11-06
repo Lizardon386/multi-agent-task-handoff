@@ -20,6 +20,7 @@ delay_set=0
 all=0
 message=
 gear_arg=
+doc_arg=
 
 usage() {
   cat <<'EOF'
@@ -39,8 +40,9 @@ usage() {
                    读/写 config.toml 的 [defaults] 挡位；省略值只读取
                    键与允许值由脚本映射决定；list 列出当前键、默认值与允许值
                    值不在白名单时不修改文件
-  --doc-guard [--target DIR]
-                   只读扫描缺失角色/被引用文档；WARN 只报告，不写入
+  --doc [--guard | --init] [--target DIR]
+                   默认挡位读 config.toml 的 [defaults].doc（guard）
+                   --guard 只读扫描；--init 由 agent 显式创建，脚本不写内容
   -h, --help       显示本表
 
 安装用 install.sh；本脚本一次只做一件事。
@@ -53,7 +55,9 @@ usage_die() { printf '%s\n' "错误: $*" >&2; usage >&2; exit 1; }
 while [ $# -gt 0 ]; do
   case "$1" in
     --printpath) [ -z "$mode" ] || usage_die "一次只用一个命令"; mode=printpath ;;
-    --doc-guard) [ -z "$mode" ] || usage_die "一次只用一个命令"; mode=docguard ;;
+    --doc) [ -z "$mode" ] || usage_die "一次只用一个命令"; mode=doc ;;
+    --guard) [ -z "$doc_arg" ] || usage_die "--guard / --init 只能用一个"; doc_arg=guard ;;
+    --init) [ -z "$doc_arg" ] || usage_die "--guard / --init 只能用一个"; doc_arg=init ;;
     --syncall) [ -z "$mode" ] || usage_die "一次只用一个命令"; mode=syncall ;;
     --push) [ -z "$mode" ] || usage_die "一次只用一个命令"; mode=push ;;
     --save) [ -z "$mode" ] || usage_die "一次只用一个命令"; mode=save ;;
@@ -77,14 +81,17 @@ while [ $# -gt 0 ]; do
   shift
 done
 
-[ -n "$mode" ] || usage_die "需要 --printpath / --doc-guard / --syncall / --push / --save / --gear"
+if [ -n "$doc_arg" ] && [ "$mode" != doc ]; then
+  usage_die "--guard / --init 只能跟 --doc"
+fi
+[ -n "$mode" ] || usage_die "需要 --printpath / --doc / --syncall / --push / --save / --gear"
 if [ -n "$target_arg" ] && [ -n "$host_arg" ]; then
   usage_die "--host 与 --target 只能用一个"
 fi
-if [ "$mode" != printpath ] && [ "$mode" != docguard ] && { [ -n "$target_arg" ] || [ -n "$host_arg" ]; }; then
-  usage_die "--host / --target 只能跟 --printpath / --doc-guard"
+if [ "$mode" != printpath ] && [ "$mode" != doc ] && { [ -n "$target_arg" ] || [ -n "$host_arg" ]; }; then
+  usage_die "--host / --target 只能跟 --printpath / --doc"
 fi
-if [ "$mode" = docguard ] && [ -n "$host_arg" ]; then
+if [ "$mode" = doc ] && [ -n "$host_arg" ]; then
   usage_die "--host 只能跟 --printpath"
 fi
 if [ "$mode" != syncall ] && [ "$dry" = 1 ]; then
@@ -109,11 +116,19 @@ if [ -n "$host_arg" ]; then
   esac
 fi
 
-if [ "$mode" = docguard ]; then
+if [ "$mode" = doc ]; then
+  config_dir=$(agent_config_dir)
+  cfg_file=$config_dir/config.toml
+  selected=${doc_arg:-$(config_get doc "$cfg_file" 2>/dev/null || true)}
+  case "$selected" in guard|init) ;; *) selected=guard ;; esac
+  if [ "$selected" = init ]; then
+    printf 'doc: init 由 agent 按 SKILL 的 --doc --init 执行（显式确认，脚本不写内容）\n'
+    exit 0
+  fi
   project=$(to_unix "${target_arg:-$PWD}")
   project=$(CDPATH= cd -- "$project" 2>/dev/null && pwd -P) || die "项目目录不存在: ${target_arg:-$PWD}"
   warn=0
-  printf 'doc-guard: %s\n' "$project"
+  printf 'doc(guard): %s\n' "$project"
 
   if [ -f "$project/handoff/CONTEXT.md" ]; then
     printf 'OK       handoff/CONTEXT.md\n'
@@ -141,7 +156,7 @@ if [ "$mode" = docguard ]; then
       printf '         只报告，不创建/不还原，不询问用户\n'
       warn=1
     elif git -C "$project" remote -v 2>/dev/null | grep -qi github; then
-      printf 'WARN     README.md 缺失（GitHub 项目；可显式 --doc-init）\n'
+      printf 'WARN     README.md 缺失（GitHub 项目；可显式 --doc --init）\n'
       warn=1
     else
       printf 'OK       README.md 缺失（非 GitHub 项目，按需；不创建）\n'

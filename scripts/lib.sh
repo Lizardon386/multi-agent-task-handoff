@@ -75,12 +75,13 @@ gear_meta() {
     suspend) printf '%s\n' local "local commit push" ;;
     probe) printf '%s\n' static "static live" ;;
     post) printf '%s\n' new "new next" ;;
+    doc) printf '%s\n' guard "guard init" ;;
     *) return 1 ;;
   esac
 }
 
 gear_keys() {
-  printf '%s\n' suspend probe post
+  printf '%s\n' suspend probe post doc
 }
 
 resolve_workspace() {

@@ -82,7 +82,7 @@ agent 会把 skill 安装到当前宿主的 `skills/multi-agent-task-handoff`，
 ### 2.4 最短路径（3 步）
 
 1. **装**：按上表任选一种方式安装。
-2. **建档**：在项目里说「建档」或跑 `/multi-agent-task-handoff --doc-init`，生成 `handoff/CONTEXT.md`。
+2. **建档**：在项目里说「建档」或跑 `/multi-agent-task-handoff --doc --init`，生成 `handoff/CONTEXT.md`。
 3. **交接**：收工说「收工」；下次（或换 agent）说「接手」。
 
 之后不用记命令，自然语言即可；`--check` 用于体检，`--printpath` 用于排查路径。
@@ -102,7 +102,7 @@ agent 会把 skill 安装到当前宿主的 `skills/multi-agent-task-handoff`，
 
 | 场景 | 说法 / 命令 | 会发生什么 |
 |---|---|---|
-| 新任务开工 | `--doc` / `--doc-init` | `--doc` 先跑 `--doc-guard`，只整理布局/标记/迁移链接；`--doc-init` 显式创建缺失 CONTEXT（README 仅 GitHub/确认，不还原内容） |
+| 新任务开工 | `--doc [--guard \| --init]` | 默认挡位 `[defaults].doc=guard`；`--guard` 只读扫描，`--init` 显式创建缺失 CONTEXT（README 仅 GitHub/确认，不还原）；布局/标记/迁移链接由 `--doc` 处理 |
 | 接手别人的任务 | `接手` / `--resume` | 读 PROMPT → CONTEXT，核锚点、跑验证 |
 | 本轮收工 | `收工` / `--suspend` | 按需压卡、写 CONTEXT、覆盖 PROMPT、对齐安装副本（仅源仓库）；`--push` 网络错误重试 3 次，Windows 再走 TLS 回退 |
 | 热交接给另一个会话 | `--post "<内容>" [--new \| --next <ID \| 会话名>]` | 只投消息，不写卡、不动 git；默认目标读 `[defaults].post` |
@@ -111,9 +111,9 @@ agent 会把 skill 安装到当前宿主的 `skills/multi-agent-task-handoff`，
 | 路径诊断 | `--printpath` | 表格输出配置目录、工作区根、能力表（含日期）、源仓库、宿主识别来源、当前安装副本与全部副本的路径和 commit；`--host` / `--target` 可显式指定 |
 | 改默认挡位 | `--gear <key>=<值>` / `--gear list` | 写入 `config.toml` 的 `[defaults]`；用 `--gear list` 查看键与允许值，非法值不改文件 |
 
-项目第一次用先跑 `--doc-init` 建档（没有 `handoff/` 不会自动创建）；之后 `--doc` 只整理布局，接手 / `--resume` 继续，收工 / `--suspend` 写卡并生成 `PROMPT.md`。
+项目第一次用先跑 `--doc --init` 建档（没有 `handoff/` 不会自动创建）；之后 `--doc` 只整理布局，接手 / `--resume` 继续，收工 / `--suspend` 写卡并生成 `PROMPT.md`。
 
-一次只用一个命令。`--suspend` / `--probe` / `--post` 的默认值读 `$AGENT_CONFIG/config.toml` 的 `[defaults]`；`--gear` 可读写 `[defaults]` 挡位（键名与 `[defaults]` 一致，`--gear list` 查看），非法值不修改；显式参数覆盖。安装、配置、旧布局迁移的细节见 [docs/DESIGN.md](docs/DESIGN.md) 和 [SKILL.md](SKILL.md)。
+一次只用一个命令。`--suspend` / `--probe` / `--post` / `--doc` 的默认值读 `$AGENT_CONFIG/config.toml` 的 `[defaults]`；`--gear` 可读写 `[defaults]` 挡位（键名与 `[defaults]` 一致，`--gear list` 查看），非法值不修改；显式参数覆盖。安装、配置、旧布局迁移的细节见 [docs/DESIGN.md](docs/DESIGN.md) 和 [SKILL.md](SKILL.md)。
 
 ## 4. 产物与目录
 > 只列产物位置与用途；项目自有文档不动。
@@ -231,7 +231,7 @@ agent 会把 skill 安装到当前宿主的 `skills/multi-agent-task-handoff`，
 <details>
 <summary>命令太多记不住？</summary>
 
-只记四个：`--doc` / `--doc-init` 建档、`接手`、`收工`、`--check` 体检。其余按需查 `--help`。
+只记四个：`--doc [--guard | --init]` 建档、`接手`、`收工`、`--check` 体检。其余按需查 `--help`。
 </details>
 
 ## 参与
