@@ -1,10 +1,10 @@
 # <项目名>（<别名>）· 使用说明
 
-<!-- 本文件是 handoff/README.md，任务 README 的唯一源；根 README 是项目 README，不是本文件。 -->
-<!-- 只答“是什么 / 怎么用”；协议见 SKILL.md，取舍见 DESIGN.md，当前状态见 CONTEXT.md。 -->
+<!-- 本文件是项目根 README.md；项目已有 README 时不要用本模板覆盖。 -->
+<!-- 只答“是什么 / 怎么用”；协议见 SKILL.md，取舍见 docs/DESIGN.md，当前状态见 handoff/CONTEXT.md。 -->
 
-> 有 GitHub remote 时，`.github/README.md` 由本文件生成；不要手改生成物。
-> 指项目根文件用 `../`，例如 `../INTEGRATION_GUIDE.md`。
+> GitHub 首页直接显示根 README.md；不生成 `.github/README.md` 副本。
+> 指 `docs/` 文件用 `docs/…`，指 `handoff/` 文件用 `handoff/…`。
 > 最近更新：YYYY-MM-DD
 
 [这是什么](#1-这是什么) · [快速开始](#2-快速开始) · [使用说明](#3-使用说明) · [产物](#4-产物与目录) · [限制](#5-限制与注意事项)
@@ -14,11 +14,11 @@
 
 | 文档 | 阅读对象 | 内容 |
 |---|---|---|
-| [README.md](README.md) | 使用者 | 这是什么、怎么跑、限制 |
-| [DESIGN.md](DESIGN.md) | 评审 / 开发 | 目标、架构、流程、决策 |
-| [CONTEXT.md](CONTEXT.md) | 接手 agent | 完整文档表、当前状态、下一步、记忆提炼、坑 |
+| [README.md](README.md) | 使用者 | 这是什么、怎么跑、限制（本文） |
+| [docs/DESIGN.md](docs/DESIGN.md) | 评审 / 开发 | 目标、架构、流程、决策（可选） |
+| [handoff/CONTEXT.md](handoff/CONTEXT.md) | 接手 agent | 完整文档表、当前状态、下一步、记忆提炼、坑 |
 
-完整文档表（含 PROMPT 等）见 [CONTEXT.md](CONTEXT.md)。
+完整文档表见 [handoff/CONTEXT.md](handoff/CONTEXT.md)。
 
 <!-- 有其他交付文档时，在 CONTEXT 的文档表里加行，不在这里重复。 -->
 
@@ -77,3 +77,5 @@
 
 <答案>
 </details>
+
+<!-- multi-agent-task-handoff: scope=root -->

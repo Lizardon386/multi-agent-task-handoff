@@ -8,22 +8,19 @@
 <绝对路径>
 
 ## 读卡顺序
-> 按顺序读；冲突以 `CONTEXT.md` 为准。
+> 按顺序读；冲突以 `CONTEXT.md` 为准。产品文档不在读序，任务需要时按 CONTEXT 文档表打开。
 
 1. 本文件
 2. `handoff/CONTEXT.md`
-3. 三档时 `handoff/README.md`、`handoff/DESIGN.md`
-4. 跨任务规则：<路径>
-5. 能力表：<路径>
+3. 跨任务规则：<路径>
+4. 能力表：<路径>
 
 ## 文档
-> 只列任务文档；本文件自身不在此表。
+> 只列交接文档；本文件自身不在此表。
 
 | 文档 | 路径 |
 |---|---|
 | CONTEXT | handoff/CONTEXT.md |
-| README | handoff/README.md |
-| DESIGN | handoff/DESIGN.md |
 | 压卡备份 | handoff/COMPACT_BACKUP.md |
 
 ## 状态锚点
@@ -61,3 +58,5 @@
 > 只给路径；不复制规则正文。
 
 -
+
+<!-- multi-agent-task-handoff: scope=handoff -->

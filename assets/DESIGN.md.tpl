@@ -1,9 +1,9 @@
 # <项目名>（<别名>）· 方案设计
 
-<!-- 本文件是 handoff/DESIGN.md；指项目根文件用 ../。不适用节可删。只写取舍与结构；进度与待办进 CONTEXT.md。 -->
+<!-- 本文件是 docs/DESIGN.md；指项目根文件用 ../。不适用节可删。只写取舍与结构；进度与待办进 handoff/CONTEXT.md。 -->
 
 > <一句话：设计目标 / 范围>
-> 文档表见 [CONTEXT.md](CONTEXT.md)。
+> 文档表见 [CONTEXT.md](../handoff/CONTEXT.md)。
 > 最近更新：YYYY-MM-DD
 
 ## 1. 目标与约束
@@ -96,3 +96,5 @@ flowchart LR
 | 版本 | 时间 | 理念更替 | 理由与结果 |
 |---|---|---|---|
 |  |  |  |  |
+
+<!-- multi-agent-task-handoff: scope=docs -->
