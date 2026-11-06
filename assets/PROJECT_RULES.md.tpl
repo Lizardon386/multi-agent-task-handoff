@@ -17,7 +17,8 @@
 - 改通用文档前问：**这条换个宿主还成立吗？** 不成立就写进能力表。
 - 不改协议适配本机环境；缺能力就在能力表标 🟡/⛔，不改 `SKILL.md` 流程去绕。
 - `--doc` 只处理布局/标记/迁移造成的链接；文档原有死链、旧路径与历史内容不改，另列报告。
-- `--doc` 不默认生成 README：仅 GitHub remote 或用户确认要发布时生成；CONTEXT 仍必生成。
+- `--doc` 不默认生成 README：仅 GitHub remote 或用户确认要发布时生成；CONTEXT 仍必生成；不重建/还原缺失文档。
+- `--doc` 先跑 `scripts/handoff.sh --doc-guard`；BLOCKED 零写入；内容创建只走 `--doc-init`（显式确认）。
 
 ## 工作方式
 

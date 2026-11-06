@@ -1,7 +1,7 @@
 multi-agent-task-handoff — 多 agent 任务交接
 
 用法:
-  multi-agent-task-handoff [--workspace <PATH>] [--nosave] [--gear <key>[=<值>] | --gear list | --help | --resume | --suspend [--local | --commit | --push] | --post <message> [--new | --next <ID | 会话名>] | --doc | --check | --fix | --probe [--static | --live] | --printpath [--host NAME | --target DIR]]
+  multi-agent-task-handoff [--workspace <PATH>] [--nosave] [--gear <key>[=<值>] | --gear list | --help | --resume | --suspend [--local | --commit | --push] | --post <message> [--new | --next <ID | 会话名>] | --doc | --doc-init | --check | --fix | --probe [--static | --live] | --printpath [--host NAME | --target DIR]]
 
 命令:
   --resume                  接盘 / 接手：读 handoff/PROMPT.md → handoff/CONTEXT.md，
@@ -18,7 +18,8 @@ multi-agent-task-handoff — 多 agent 任务交接
                               --new     新建会话后投递（必须绑定当前项目目录，落 worktree 视为失败）
                               --next <ID | 会话名> 投递到已有会话
                             默认读 config.toml 的 [defaults].post（new / next）
-  --doc                     文档整理：建档、分类、迁移、补标记；README 仅 GitHub 项目生成；只动布局/标记/迁移链接；拿不准给选项
+  --doc                     文档整理：先跑 scripts/handoff.sh --doc-guard；只动布局/标记/迁移链接，不还原缺失内容；拿不准给选项
+  --doc-init                显式创建缺失文档：CONTEXT 必生成；README 仅 GitHub/确认；从模板创建，不还原
   --check                   自检 / 更新：只读检查，报告 ✅ / 🟡 / ⛔
   --fix                     修复：只修安装/配置等非文档整理项，不碰文档增删迁移
   --probe [--static | --live]  摸底 / 探测：先检查，再实测当前 agent 并更新能力表
@@ -62,6 +63,7 @@ multi-agent-task-handoff — 多 agent 任务交接
   --fix
   --probe --live
   --doc
+  --doc-init
   --gear list
   --gear suspend=push
   --printpath

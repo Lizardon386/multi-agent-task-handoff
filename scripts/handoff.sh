@@ -39,6 +39,8 @@ usage() {
                    读/写 config.toml 的 [defaults] 挡位；省略值只读取
                    键与允许值由脚本映射决定；list 列出当前键、默认值与允许值
                    值不在白名单时不修改文件
+  --doc-guard [--target DIR]
+                   只读检查缺失角色/被引用文档；BLOCKED 退出 1，零写入
   -h, --help       显示本表
 
 安装用 install.sh；本脚本一次只做一件事。
@@ -51,6 +53,7 @@ usage_die() { printf '%s\n' "错误: $*" >&2; usage >&2; exit 1; }
 while [ $# -gt 0 ]; do
   case "$1" in
     --printpath) [ -z "$mode" ] || usage_die "一次只用一个命令"; mode=printpath ;;
+    --doc-guard) [ -z "$mode" ] || usage_die "一次只用一个命令"; mode=docguard ;;
     --syncall) [ -z "$mode" ] || usage_die "一次只用一个命令"; mode=syncall ;;
     --push) [ -z "$mode" ] || usage_die "一次只用一个命令"; mode=push ;;
     --save) [ -z "$mode" ] || usage_die "一次只用一个命令"; mode=save ;;
@@ -74,12 +77,15 @@ while [ $# -gt 0 ]; do
   shift
 done
 
-[ -n "$mode" ] || usage_die "需要 --printpath / --syncall / --push / --save / --gear"
+[ -n "$mode" ] || usage_die "需要 --printpath / --doc-guard / --syncall / --push / --save / --gear"
 if [ -n "$target_arg" ] && [ -n "$host_arg" ]; then
   usage_die "--host 与 --target 只能用一个"
 fi
-if [ "$mode" != printpath ] && { [ -n "$target_arg" ] || [ -n "$host_arg" ]; }; then
-  usage_die "--host / --target 只能跟 --printpath"
+if [ "$mode" != printpath ] && [ "$mode" != docguard ] && { [ -n "$target_arg" ] || [ -n "$host_arg" ]; }; then
+  usage_die "--host / --target 只能跟 --printpath / --doc-guard"
+fi
+if [ "$mode" = docguard ] && [ -n "$host_arg" ]; then
+  usage_die "--host 只能跟 --printpath"
 fi
 if [ "$mode" != syncall ] && [ "$dry" = 1 ]; then
   usage_die "--dryrun 只能跟 --syncall"
@@ -101,6 +107,69 @@ if [ -n "$host_arg" ]; then
     qoder|claude|codex|opencode|zcode|workbuddy) ;;
     *) usage_die "--host 只支持 qoder/claude/codex/opencode/zcode/workbuddy" ;;
   esac
+fi
+
+if [ "$mode" = docguard ]; then
+  project=$(to_unix "${target_arg:-$PWD}")
+  project=$(CDPATH= cd -- "$project" 2>/dev/null && pwd -P) || die "项目目录不存在: ${target_arg:-$PWD}"
+  blocked=0
+  printf 'doc-guard: %s\n' "$project"
+
+  if [ -f "$project/handoff/CONTEXT.md" ]; then
+    printf 'OK       handoff/CONTEXT.md\n'
+    case "$(tail -n 1 "$project/handoff/CONTEXT.md")" in
+      *'scope=handoff'*) ;;
+      *) printf 'WARN     handoff/CONTEXT.md 末行缺少 scope=handoff\n' ;;
+    esac
+  else
+    printf 'BLOCKED  handoff/CONTEXT.md 缺失（唯一必需角色）\n'
+    blocked=1
+  fi
+
+  readme_refs=$(grep -nE '\]\([^)]*README\.md[^)]*\)' \
+    "$project/handoff/CONTEXT.md" "$project/handoff/PROMPT.md" "$project"/docs/*.md 2>/dev/null || true)
+  if [ -f "$project/README.md" ]; then
+    printf 'OK       README.md\n'
+    case "$(tail -n 1 "$project/README.md")" in
+      *'scope=root'*) ;;
+      *) printf 'WARN     README.md 末行缺少 scope=root\n' ;;
+    esac
+  else
+    if [ -n "$readme_refs" ]; then
+      printf 'BLOCKED  README.md 缺失，但被以下位置引用：\n'
+      printf '%s\n' "$readme_refs" | sed 's/^/         /'
+      printf '         不得生成/还原；需用户决定恢复或移除引用\n'
+      blocked=1
+    elif git -C "$project" remote -v 2>/dev/null | grep -qi github; then
+      printf 'BLOCKED  README.md 缺失（GitHub 项目必需；先跑 --doc-init）\n'
+      blocked=1
+    else
+      printf 'OK       README.md 缺失（非 GitHub 项目，按需；不创建）\n'
+    fi
+  fi
+
+  for f in "$project/handoff/CONTEXT.md" "$project/handoff/PROMPT.md" "$project/README.md" "$project"/docs/*.md; do
+    [ -f "$f" ] || continue
+    dir=$(dirname "$f")
+    grep -oE '\]\([^)]*\.md[^)]*\)' "$f" 2>/dev/null | sed 's/^](//; s/)$//' | while IFS= read -r link; do
+      case "$link" in http*|mailto:*|\#*) continue;; esac
+      target=${link%%#*}; [ -n "$target" ] || continue
+      [ -e "$dir/$target" ] || printf 'WARN     %s -> %s（原有死链，只报告）\n' "$f" "$target"
+    done
+  done
+
+  for f in "$project"/*.md; do
+    [ -f "$f" ] || continue
+    base=${f##*/}
+    case "$base" in README.md|SKILL.md) ;; *) printf 'WARN     根目录项目文档: %s（--doc 可迁移）\n' "$base" ;; esac
+  done
+
+  if [ "$blocked" = 1 ]; then
+    printf 'result: BLOCKED（--doc 必须停止，零写入）\n'
+    exit 1
+  fi
+  printf 'result: OK\n'
+  exit 0
 fi
 
 if [ "$mode" = gear ]; then
