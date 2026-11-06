@@ -71,7 +71,7 @@ flowchart LR
 | 开工 | `--doc` | 确定项目目录；扫描角色；补 README/CONTEXT；设计/方案/指导类迁 `docs/`；交接类迁 `handoff/`；补标记；同意后把 PROMPT 加入 `.gitignore` | 根 README + `docs/` + `handoff/` | 冲突或判不准 → 出选择题，未选不动 |
 | 工作 | — | 改代码/文档；状态或坑变化时更新 CONTEXT | 可交接的当前状态 | 一个项目同一时间一个写者 |
 | 收工 | `--suspend` | 超限先压卡；写现在/下一步/MEMORY 提炼/坑/记录；覆盖 PROMPT；按需读 memory 提炼规则；默认挡位读 `config.toml`；源仓库时末尾对齐副本（安装副本跳过；提交/推送时在其后） | CONTEXT 更新 + PROMPT 覆盖 + 副本对齐 | 默认不动 git；`--commit` 提交协议管理文档（`handoff/` 与带标记文档及其移动/删除）；`--push` 隐含 commit 并调 `scripts/handoff.sh --push`（网络错误 3 次 / 3 秒；Windows 再加 HTTP/1.1 + OpenSSL 回退 3 次）；未确认推送成功写「待推送」 |
-| 热交接 | `--post <message> [--new \| --id <ID>]` | 把 message 投给另一个会话；可追加项目目录/HEAD/指针，必须可见标注 | 目标会话收到消息 | 不写卡、不动 git；`--new` 必须绑定项目目录，落 worktree 视为失败 |
+| 热交接 | `--post <message> [--new \| --id <ID \| 会话名>]` | 把 message 投给另一个会话；可追加项目目录/HEAD/指针，必须可见标注 | 目标会话收到消息 | 不写卡、不动 git；`--new` 必须绑定项目目录，落 worktree 视为失败 |
 | 接手 | `--resume` | PROMPT → CONTEXT → 规则；核对 cwd 与项目目录；核锚点、跑验证；产品文档按需打开 | 恢复上下文 | 冲突以 CONTEXT 为准；cwd 不一致先回主项目或注明 worktree；旧布局提示 `--check` / `--doc` |
 | 维护 | `--check` / `--fix` / `--probe` / `--printpath` | 只读检查 / 非文档修复 / 实测能力 / 路径诊断 | 报告或修复 | 默认不提交；文档整理项只报告「需跑 `--doc`」 |
 | 迁移 | `--doc` | 先出清单；按 scope 与角色移动；同批改链；git 仓用 `git mv` | 旧布局并入根 / `docs/` / `handoff/` | 判不准问用户；只移动不复制；不扫描全盘 |
@@ -180,7 +180,7 @@ multi-agent-task-handoff/
 | 交接卡 | CONTEXT ≤100 行；交接记录 ≤10 条；坑类别 ≤10；MEMORY 提炼只放影响下一家的规则；只记关键动作 |
 | PROMPT | 每次覆盖；带生成时间；默认 gitignore（`--check` 查未忽略/已跟踪，`--fix` 补规则或取消跟踪）；不写真实会话 ID |
 | 命令 | 一次一个；`--workspace` 可搭配一个命令，`--nosave` 只跟 `--workspace`；子参数只跟所属命令 |
-| 投递 | `--post <message> [--new \| --id <ID>]`；不写卡、不动 git；`--new` 必须绑定当前项目目录，落 worktree 视为失败 |
+| 投递 | `--post <message> [--new \| --id <ID \| 会话名>]`；不写卡、不动 git；`--new` 必须绑定当前项目目录，落 worktree 视为失败；`--id` 支持会话名，唯一命中才用 |
 | git | 默认不操作；`--commit` 提交协议管理文档（`handoff/` 与带标记文档及其移动/删除）；`--push` 隐含 commit 并调 `scripts/handoff.sh --push`（网络错误 3 次 / 3 秒；Windows 再加 HTTP/1.1 + OpenSSL 回退 3 次）；不装钩子；未确认推送成功写「待推送」 |
 | memory | 只读提升；不复制、不写回；项目内 memory 必须 gitignore |
 | GitHub | README 固定在根，首页直接显示；不生成 `.github/README.md`；不用 symlink |

@@ -2,7 +2,7 @@
 name: multi-agent-task-handoff
 description: 多 agent 任务接力协议：接手/接盘/交接项目、写交接卡、收工/压卡、工程化/补全 handoff 文档、自检/修复/摸底宿主能力；README 固定在项目根，交接文件在 handoff/，设计/方案类在 docs/。
 when_to_use: 开始或结束一个任务、接盘别人留下的项目、把工作交接给另一个 agent、或需要检查/修复交接文档与宿主能力时。
-argument-hint: "[--workspace <PATH>] [--nosave] [--help | --resume | --suspend [--local | --commit | --push] | --post <message> [--new | --id <ID>] | --doc | --check | --fix | --probe [--static | --live] | --printpath [--host NAME | --target DIR]]"
+argument-hint: "[--workspace <PATH>] [--nosave] [--help | --resume | --suspend [--local | --commit | --push] | --post <message> [--new | --id <ID | 会话名>] | --doc | --check | --fix | --probe [--static | --live] | --printpath [--host NAME | --target DIR]]"
 ---
 
 # 多 agent 任务交接
@@ -30,7 +30,7 @@ argument-hint: "[--workspace <PATH>] [--nosave] [--help | --resume | --suspend [
 |---|---|
 | 无 / `--resume` | 接盘：读 PROMPT → CONTEXT，核锚点、跑验证 |
 | `--suspend [--local \| --commit \| --push]` | 压卡（按需）+ 收工 + 写 PROMPT + 对齐副本（仅源仓库） |
-| `--post <message> [--new \| --id <ID>]` | 同 agent 热交接：把 message 投给另一个会话；不写卡、不动 git |
+| `--post <message> [--new \| --id <ID \| 会话名>]` | 同 agent 热交接：把 message 投给另一个会话；不写卡、不动 git |
 | `--doc` | 文档整理：建档、分类、迁移、补标记；拿不准给选项 |
 | `--check` | 只读检查 |
 | `--fix` | 检查 + 修非文档整理项；不碰增删迁移 |
@@ -84,10 +84,11 @@ argument-hint: "[--workspace <PATH>] [--nosave] [--help | --resume | --suspend [
 ## --post
 
 1. `<message>` 必填；缺了报错，不猜、不代写。
-2. 目标：`--new` 或 `--id <ID>` 二选一；都不给时读 `config.toml` 的 `[defaults].post`。配成 `id` 却没有 ID 时停下问。
-3. `--new` 必须绑定当前项目目录：目录取自 `handoff/PROMPT.md` / `CONTEXT.md`，**不用 `pwd` 推导**（当前会话可能在 worktree）。建会话前查能力表「新建会话并绑定目录 / 落 worktree」；已知落 worktree 的宿主不走 `--new`，改给手动卡（主项目 UI 新建 → 用户提供 ID → `--id`）。建后核对目录，不合格就停：不投递、报告残留。
-4. 投递按能力表「投递与读回手段」；不支持跨会话的宿主报 ⛔ 并给替代，不伪造成功。
-5. 可酌情追加项目目录、HEAD、PROMPT 路径，必须可见标注，不混进用户原文；不写 `handoff/`、不改文档、不动 git；报告实际结果（成功 / 失败原因 / 目标会话标识），不写进仓库文件。
+2. 目标：`--new` 或 `--id <ID | 会话名>` 二选一；都不给时读 `config.toml` 的 `[defaults].post`。配成 `id` 却没有目标时停下问。
+3. 解析 `--id`：先按 ID 精确匹配；不中再按会话标题匹配（唯一命中才用，多个命中列出让用户选）。宿主提供会话列表工具（如 `ListSessions`）就直接查，不要让用户手抄 ID；查到的 `workDir` 必须等于项目目录，不一致就停。
+4. `--new` 必须绑定当前项目目录：目录取自 `handoff/PROMPT.md` / `CONTEXT.md`，**不用 `pwd` 推导**（当前会话可能在 worktree）。建会话前查能力表「新建会话并绑定目录 / 落 worktree」；已知落 worktree 的宿主不走 `--new`，改给手动卡（主项目 UI 新建 → agent 用会话列表工具找到它 → `--id`）。建后核对目录，不合格就停：不投递、报告残留。
+5. 投递按能力表「投递与读回手段」；不支持跨会话的宿主报 ⛔ 并给替代，不伪造成功。
+6. 可酌情追加项目目录、HEAD、PROMPT 路径，必须可见标注，不混进用户原文；不写 `handoff/`、不改文档、不动 git；报告实际结果（成功 / 失败原因 / 目标会话标识），不写进仓库文件。
 
 ## --doc
 

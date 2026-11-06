@@ -1,7 +1,7 @@
 multi-agent-task-handoff — 多 agent 任务交接
 
 用法:
-  multi-agent-task-handoff [--workspace <PATH>] [--nosave] [--help | --resume | --suspend [--local | --commit | --push] | --post <message> [--new | --id <ID>] | --doc | --check | --fix | --probe [--static | --live] | --printpath [--host NAME | --target DIR]]
+  multi-agent-task-handoff [--workspace <PATH>] [--nosave] [--help | --resume | --suspend [--local | --commit | --push] | --post <message> [--new | --id <ID | 会话名>] | --doc | --check | --fix | --probe [--static | --live] | --printpath [--host NAME | --target DIR]]
 
 命令:
   --resume                  接盘 / 接手：读 handoff/PROMPT.md → handoff/CONTEXT.md，
@@ -13,10 +13,10 @@ multi-agent-task-handoff — 多 agent 任务交接
                               --push    提交并推送（隐含 commit；网络错误重试 3 次，间隔 3 秒；
                                         Windows 再加 HTTP/1.1 + OpenSSL 回退 3 次）
                             默认挡位读 config.toml 的 [defaults].suspend
-  --post <message> [--new | --id <ID>]
+  --post <message> [--new | --id <ID | 会话名>]
                             投递 / 热交接：把 message 投给另一个会话；不写卡、不动 git
                               --new     新建会话后投递（必须绑定当前项目目录，落 worktree 视为失败）
-                              --id <ID> 投递到已有会话
+                              --id <ID | 会话名> 投递到已有会话
                             默认读 config.toml 的 [defaults].post（new / id）
   --doc                     文档整理：建档、分类、迁移、补标记；拿不准给选项
   --check                   自检 / 更新：只读检查，报告 ✅ / 🟡 / ⛔
@@ -52,7 +52,7 @@ multi-agent-task-handoff — 多 agent 任务交接
   --workspace D:/agent_workspace --resume
   --workspace "C:/My Workspace" --resume
   --suspend --commit
-  --post "接手 V4 文档布局，先读 handoff/PROMPT.md" --id <ID>
+  --post "接手 V4 文档布局，先读 handoff/PROMPT.md" --id <ID | 会话名>
   --post "接手 V4 文档布局" --new
   --fix
   --probe --live
