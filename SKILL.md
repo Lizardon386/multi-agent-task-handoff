@@ -1,6 +1,6 @@
 ---
 name: multi-agent-task-handoff
-description: 多 agent 任务接力协议：接手/接盘/交接项目、写交接卡、收工/压卡、工程化/补全 handoff 文档、自检/修复/摸底宿主能力；README 固定在项目根，交接文件在 handoff/，设计/方案类在 docs/。
+description: 多 agent 任务接力协议：接手/接盘/交接项目、写交接卡、收工/压卡、工程化/补全 handoff 文档、自检/修复/摸底宿主能力；GitHub 项目 README 固定在项目根，交接文件在 handoff/，设计/方案类在 docs/。
 when_to_use: 开始或结束一个任务、接盘别人留下的项目、把工作交接给另一个 agent、或需要检查/修复交接文档与宿主能力时。
 argument-hint: "[--workspace <PATH>] [--nosave] [--gear <key>[=<值>] | --gear list | --help | --resume | --suspend [--local | --commit | --push] | --post <message> [--new | --next <ID | 会话名>] | --doc | --check | --fix | --probe [--static | --live] | --printpath [--host NAME | --target DIR]]"
 ---
@@ -12,14 +12,14 @@ argument-hint: "[--workspace <PATH>] [--nosave] [--gear <key>[=<值>] | --gear l
 - **项目 / 项目目录**：宿主打开的那个目录/仓库（Claude 项目、Qoder 工作区、WorkBuddy 空间、OpenCode/ZCode/Codex 项目）；项目目录指其绝对路径，**唯一写入根**，来自宿主已打开的目录，或无项目时新建的目录。
 - **工作区根**：`AGENT_WORKSPACE` 容器；只用来新建项目目录，**不是写入目标**。
 - **当前目录**：`pwd`；可 `cd`，不改变项目。
-- 交接文档只在 `<项目目录>/handoff/`；README 固定在项目根，设计/方案/指导类在 `docs/`。宿主差异与项目目录来源查 `$AGENT_CONFIG/AGENT_CAPABILITIES.md`，SKILL 只举例，不写宿主专属规则。
+- 交接文档只在 `<项目目录>/handoff/`；GitHub 项目 README 固定在项目根，非 GitHub 项目按需，设计/方案/指导类在 `docs/`。宿主差异与项目目录来源查 `$AGENT_CONFIG/AGENT_CAPABILITIES.md`，SKILL 只举例，不写宿主专属规则。
 
 ## 文档布局与标记
 
-统一布局：根 `README.md`（必需，`scope=root`，GitHub 首页直接显示）；`docs/`（设计/方案/指导类，以及任何 `scope=docs` 的自定义文档）；`handoff/`（`CONTEXT.md` 必需，`PROMPT.md`、`COMPACT_BACKUP.md` 及交接附件）。
+统一布局：根 `README.md`（GitHub 项目必需；非 GitHub 项目按需，`scope=root`，GitHub 首页直接显示）；`docs/`（设计/方案/指导类，以及任何 `scope=docs` 的自定义文档）；`handoff/`（`CONTEXT.md` 必需，`PROMPT.md`、`COMPACT_BACKUP.md` 及交接附件）。
 
 - 标记写在文件末行：`<!-- multi-agent-task-handoff: scope=root|docs|handoff -->`；无标记 = 项目自有，协议只读；`--check` 校验 scope 与所在目录一致。
-- 不生成 `.github/README.md` 或 `docs/README.md`；根 README 就是 GitHub 首页。
+- 不生成 `.github/README.md` 或 `docs/README.md`；GitHub 项目根 README 就是首页。
 - 包文件（`SKILL.md`、`scripts/`、`install.sh`、`安装.bat`、`assets/`、`LICENSE`）必须在根，不受布局影响。
 
 ## 用法
@@ -97,7 +97,7 @@ argument-hint: "[--workspace <PATH>] [--nosave] [--gear <key>[=<值>] | --gear l
 2. 已有标记 → 校验 scope 与目录，不符则移动。
 3. 无标记但已在角色固定位置（根 `README.md`、`handoff/CONTEXT.md`）或已在 `docs/` → 确认归属后补对应 scope。
 4. 无标记但有 V1/V2/V3 三档特征 → 补标记并迁移。特征两条同时满足：①文件名符合模板（CONTEXT / README / DESIGN / COMPACT_BACKUP，含旧名 压卡备份.md、COMPACTION_BACKUP.md）；②标题含项目目录名，含义一致即可（如 color-duel 的「变色对决」）。
-5. 无标记也无三档 → 按模板生成缺失角色：README、CONTEXT 必生成；DESIGN 仅在有设计取舍且用户确认时生成。
+5. 无标记也无三档 → 按模板生成缺失角色：CONTEXT 必生成；README 仅在判定为 GitHub 项目（`git remote -v` 指向 GitHub）或用户明确要发布到 GitHub 时生成，否则只报告缺失；DESIGN 仅在有设计取舍且用户确认时生成。
 6. 角色映射：README → 根 `README.md`；方案设计类（DESIGN、架构设计、实施方案等）与指导类（INTEGRATION_GUIDE、接入/开发指南等）→ `docs/<原名>.md`；CONTEXT 与其他交接 → `handoff/`。
 7. 根目录其他 `.md`：判为方案设计类或指导类的一律列入迁移；判不准的列出候选让用户选，不自行决定；用户不选就跳过。非文档产物不动。
 8. 冲突停：目标已存在且不是同一份、根 README 与 `docs/README` 同时存在、某角色有多份候选 → 出选择题，未获选择前不覆盖、不改名、不合并。
@@ -106,7 +106,7 @@ argument-hint: "[--workspace <PATH>] [--nosave] [--gear <key>[=<值>] | --gear l
 
 ## --check / --fix
 
-- `--check` 只读：安装副本 commit（`.skill-version`）与源仓库 HEAD、文档布局（scope 与目录、角色缺失/重复、V3 残留、CONTEXT 文档表断链）、config/workspace、能力表日期、`sync-paths`、`handoff/PROMPT.md` 是否未忽略或已跟踪、项目内 memory 是否 gitignore、PROMPT 是否过期、工作区文档（AGENTS/PROJECT_RULES 是否存在、是否指向 `$AGENT_CONFIG` 与 `handoff/`、是否残留旧路径）、CONTEXT 行数/记录数/坑类别是否超限；源仓库（根有 `SKILL.md` + `scripts/`）额外核对 SKILL 正文与 scripts/HELP/模板的命令、参数、路径、输出是否一致（只报告）；`--save` 是脚本层维护命令，不进 SKILL/HELP 命令表，缺失不报；不改文件。缺 README/DESIGN 不算错误，只提示可跑 `--doc`。
+- `--check` 只读：安装副本 commit（`.skill-version`）与源仓库 HEAD、文档布局（scope 与目录、角色缺失/重复、V3 残留、CONTEXT 文档表断链）、config/workspace、能力表日期、`sync-paths`、`handoff/PROMPT.md` 是否未忽略或已跟踪、项目内 memory 是否 gitignore、PROMPT 是否过期、工作区文档（AGENTS/PROJECT_RULES 是否存在、是否指向 `$AGENT_CONFIG` 与 `handoff/`、是否残留旧路径）、CONTEXT 行数/记录数/坑类别是否超限；源仓库（根有 `SKILL.md` + `scripts/`）额外核对 SKILL 正文与 scripts/HELP/模板的命令、参数、路径、输出是否一致（只报告）；`--save` 是脚本层维护命令，不进 SKILL/HELP 命令表，缺失不报；不改文件。缺 README/DESIGN 不算错误，只提示可跑 `--doc`；README 仅 GitHub 项目建议生成。
 - `--fix`：先跑同一套检查，再修非文档整理项：安装副本对齐（只从源仓库跑 `scripts/handoff.sh --syncall`；副本没有 HEAD 会被拒绝；按 commit 只补落后，整体重装会覆盖副本内改动）、`git rm --cached` 取消 PROMPT 跟踪、补 `.gitignore` 规则、配置/能力表缺失项；文档布局、分类、标记、链接、文档表一律只报告「需跑 `--doc`」，不创建、不删除、不移动、不改链。
 - 默认不提交，由 `--suspend --commit` 一起提交；无 `handoff/` 且无旧文档 → 提示 `--doc`，不自动建。
 

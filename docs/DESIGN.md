@@ -1,6 +1,6 @@
 # multi-agent-task-handoff（任务交接）· 方案设计
 
-> 面向改这套协议的人：为什么交接文档固定在 `handoff/`、README 固定在根、设计/方案类在 `docs/`，以及项目与工作区根怎么分、命令如何收敛、宿主差异如何驱动自动化。
+> 面向改这套协议的人：为什么交接文档固定在 `handoff/`、GitHub 项目 README 固定在根（非 GitHub 按需）、设计/方案类在 `docs/`，以及项目与工作区根怎么分、命令如何收敛、宿主差异如何驱动自动化。
 > 文档表见 [CONTEXT.md](../handoff/CONTEXT.md)；使用者说明见 [README.md](../README.md)，协议正文见 [SKILL.md](../SKILL.md)。
 > 最近更新：2026-11-06
 
@@ -9,7 +9,7 @@
 
 agent 的上下文是易失的：换 agent、换宿主、换机器，接盘的人只能从目录和上一任留下的只言片语猜。靠人记会漏，靠常驻强制会拖慢每轮，靠文档自身又会写成日志；所以需要一个目录内、任何 agent 都能读的最小协议。
 
-目标：所有项目同一套文档布局——README 固定在项目根，设计/方案/指导类在 `docs/`，交接文档在 `handoff/`；交接只发状态和指针；能自动的自动做，做不到的明确列给用户；宿主差异不写进协议正文。
+目标：所有项目同一套文档布局——GitHub 项目 README 固定在项目根（非 GitHub 按需），设计/方案/指导类在 `docs/`，交接文档在 `handoff/`；交接只发状态和指针；能自动的自动做，做不到的明确列给用户；宿主差异不写进协议正文。
 
 约束：不装常驻服务、不装钩子、不写宿主全局规则、不内嵌模型调用；git 可选；任何 agent 读文件即可介入。
 
@@ -33,7 +33,7 @@ agent 的上下文是易失的：换 agent、换宿主、换机器，接盘的�
 ```mermaid
 flowchart LR
   H[宿主打开的项目] --> P[项目目录]
-  P --> R[README.md 项目说明]
+  P --> R[README.md（GitHub 项目）]
   P --> DOCS[docs/ 设计 / 方案 / 指导]
   P --> D[handoff/ 交接文档]
   D --> C[CONTEXT.md 状态]
@@ -68,7 +68,7 @@ flowchart LR
 
 | 阶段 | 触发 | 动作 | 产出 / 结果 | 边界 |
 |---|---|---|---|---|
-| 开工 | `--doc` | 确定项目目录；扫描角色；补 README/CONTEXT；设计/方案/指导类迁 `docs/`；交接类迁 `handoff/`；补标记；同意后把 PROMPT 加入 `.gitignore` | 根 README + `docs/` + `handoff/` | 冲突或判不准 → 出选择题，未选不动 |
+| 开工 | `--doc` | 确定项目目录；扫描角色；补 CONTEXT，GitHub 项目补 README；设计/方案/指导类迁 `docs/`；交接类迁 `handoff/`；补标记；同意后把 PROMPT 加入 `.gitignore` | README（GitHub 项目）+ `docs/` + `handoff/` | 冲突或判不准 → 出选择题，未选不动 |
 | 工作 | — | 改代码/文档；状态或坑变化时更新 CONTEXT | 可交接的当前状态 | 一个项目同一时间一个写者 |
 | 收工 | `--suspend` | 超限先压卡；写现在/下一步/MEMORY 提炼/坑/记录；覆盖 PROMPT；按需读 memory 提炼规则；默认挡位读 `config.toml`；源仓库时末尾对齐副本（安装副本跳过；提交/推送时在其后） | CONTEXT 更新 + PROMPT 覆盖 + 副本对齐 | 默认不动 git；`--commit` 提交协议管理文档（`handoff/` 与带标记文档及其移动/删除）；`--push` 隐含 commit 并调 `scripts/handoff.sh --push`（网络错误 3 次 / 3 秒；Windows 再加 HTTP/1.1 + OpenSSL 回退 3 次）；未确认推送成功写「待推送」 |
 | 热交接 | `--post <message> [--new \| --next <ID \| 会话名>]` | 把 message 投给另一个会话；可追加项目目录/HEAD/指针，必须可见标注 | 目标会话收到消息 | 不写卡、不动 git；`--new` 必须绑定项目目录，落 worktree 视为失败 |
@@ -114,7 +114,7 @@ multi-agent-task-handoff/
    └─ COMPACT_BACKUP.md     # 历史
 ```
 
-包文件（`SKILL.md`、`scripts/`、`install.sh`、`安装.bat`、`assets/`、`LICENSE`）必须在根；README 在根，设计/方案/指导类进 `docs/`，交接文档进 `handoff/`。
+包文件（`SKILL.md`、`scripts/`、`install.sh`、`安装.bat`、`assets/`、`LICENSE`）必须在根；GitHub 项目 README 在根（非 GitHub 按需），设计/方案/指导类进 `docs/`，交接文档进 `handoff/`。
 
 #### 5.1.1 机器级状态统一放 `$AGENT_CONFIG`
 
@@ -150,9 +150,9 @@ multi-agent-task-handoff/
 
 | 决策 | 理由 | 代价 |
 |---|---|---|
-| 所有项目统一布局：根 README + `docs/` + `handoff/` | 不按项目类型猜路径；接手只读 PROMPT/CONTEXT，设计文档不再进 `handoff/` | 旧项目要迁一次并改链 |
+| 统一布局：GitHub 项目根 README + `docs/` + `handoff/`；非 GitHub 项目 README 按需 | 不按项目类型猜路径；GitHub 原生显示根 README；非 GitHub 项目不必为首页造文档 | 旧项目要迁一次并改链；README 生成需判断 remote/用户意图 |
 | 交接文档固定在 `handoff/` | 路径唯一，避免与项目自有文档混放 | 不在项目根直接可见，依赖 skill 入口或指针 |
-| README 固定在根，不生成副本 | GitHub 原生显示根 README；无副本漂移，也不需要判断 remote | GitLab/Gitee/npm 同样读根，无额外收益 |
+| GitHub 项目 README 固定在根，不生成副本 | GitHub 原生显示根 README；无副本漂移，也不需要判断 remote | GitLab/Gitee/npm 同样读根，无额外收益 |
 | 项目目录是唯一写入根 | 多仓/AOSP 场景下不会把卡写到工作区根 | 无项目时要先建目录 |
 | 工作区根只做容器 | 与“产物根”区分，避免把 `handoff/` 写到容器 | 用户要理解两个概念的区别 |
 | 命令一次只用一个 | 组合过长、顺序和冲突难维护 | 需要多步时分开跑 |
@@ -174,7 +174,7 @@ multi-agent-task-handoff/
 | 主题 | 约定 |
 |---|---|
 | 写入根 | 项目目录；工作区根永远不直接写 `handoff/` |
-| 文档路径 | 根 `README.md`；`docs/<设计/方案/指导>.md`；`handoff/{CONTEXT,PROMPT,COMPACT_BACKUP}.md` |
+| 文档路径 | 根 `README.md`（GitHub 项目；其他按需）；`docs/<设计/方案/指导>.md`；`handoff/{CONTEXT,PROMPT,COMPACT_BACKUP}.md` |
 | 归属标记 | 末行隐藏注释 `scope=root\|docs\|handoff`；目录必须与 scope 一致；无标记文档协议只读 |
 | 冲突 | 目标已存在且非本协议生成 → 停，不覆盖、不换路径 |
 | 交接卡 | CONTEXT ≤100 行；交接记录 ≤10 条；坑类别 ≤10；MEMORY 提炼只放影响下一家的规则；只记关键动作 |
@@ -190,9 +190,9 @@ multi-agent-task-handoff/
 | 机器级状态 | `config.toml`、`AGENT_CAPABILITIES.md`、`sync-paths` 统一放 `$AGENT_CONFIG`；工作区根只放规则与入口 |
 | 触发分层 | 上下文注入（`AGENTS.md` 读序）+ 显式命令（接手/收工，含副本同步与 push）；无后台触发；`AGENTS.md` 只做指针 |
 | 换机迁移 | 能力表整表带走，只重填「本机环境」块；`AGENTS.md` / `PROJECT_RULES.md` 复制；`sync-paths` 与宿主 memory 不带；`config.toml` 只改 workspace |
-| 迁移范围 | 所有项目级文档按角色迁移：README 留根；设计/方案/指导类进 `docs/`；交接类进 `handoff/`；客制化名同样按类迁移，不留在根 |
+| 迁移范围 | 所有项目级文档按角色迁移：README（若存在）留根；设计/方案/指导类进 `docs/`；交接类进 `handoff/`；客制化名同样按类迁移，不留在根 |
 | 迁移判定 | V1/V2/V3 三档特征两条同时满足：文件名符合模板（含旧名 压卡备份.md、COMPACTION_BACKUP.md），标题含项目目录名（含义一致即可，如 color-duel 的「变色对决」）；不命中的设计/方案类按角色判定，判不准问用户 |
-| 完成定义 | 文档与安装副本一致；`--help` 与命令表一致；`--check` 无 ⛔；卡 ≤100 行；根目录项目文档 `.md` 只有 `README.md`（包文件 `SKILL.md` 除外） |
+| 完成定义 | 文档与安装副本一致；`--help` 与命令表一致；`--check` 无 ⛔；卡 ≤100 行；根目录若存在项目文档 `.md`，只能是 `README.md`（包文件 `SKILL.md` 除外） |
 
 ## 8. 工程约束
 > 只写维护时必须遵守的规则；不写项目状态。
@@ -203,9 +203,9 @@ multi-agent-task-handoff/
 - 协议护栏（冲突停、不搬活会话、单写者、memory 只读）必须留在 `SKILL.md`，不能只放 `PROJECT_RULES.md` 或 README。
 - 宿主差异只进 `$AGENT_CONFIG/AGENT_CAPABILITIES.md`；`SKILL.md` 只举例，不写宿主专属规则。
 - 旧仓迁移是逐项目人工动作，不默认扫描全盘；先 `--check` 出清单，再由 `--doc` 迁移。
-- 迁移按角色处理所有项目级文档：README 留根，设计/方案/指导类进 `docs/`，交接类进 `handoff/`；客制化名同样迁移，不留在根。判不准时给选项，不自行决定。
+- 迁移按角色处理所有项目级文档：README（若存在）留根，设计/方案/指导类进 `docs/`，交接类进 `handoff/`；客制化名同样迁移，不留在根。判不准时给选项，不自行决定。
 - 文档增删迁移只在 `--doc`；只修迁移造成的链接/标记问题，不改文档原有死链、旧路径或历史内容；`--fix` 不搬、不建、不删文档。
-- README 固定在根目录，不生成 `.github/README.md` 或 `docs/README.md`。
+- README 若存在必须在根目录；不生成 `.github/README.md` 或 `docs/README.md`。
 - 安装只装 HEAD；工作树未提交时只装上一个 commit。
 - 状态以 git 为准：未确认推送成功，不写「已推送」；卡与指针记「已提交，待推送」或实际结果。
 - `.gitignore` 只增 `handoff/PROMPT.md`，不改项目其他忽略规则；已跟踪的文件先 `git rm --cached` 取消跟踪，再提交。
@@ -297,7 +297,7 @@ flowchart LR
 | v1 | 2026-10-08–16 | 用强制层保证交接：闸门、安装器、看门狗 | 闸门和看门狗确实保证了文档存在，但每轮变慢、卡长成日志；强制层的成本高于收益，整体卸载。 |
 | v2 | 2026-10-23–29 | 从「强制规范」转向「最小协议」，并对外可用 | 强制层卸载后交接仍然需要，但多数任务不需要三档：改为默认一卡、三档按需。对外发布要求路径不绑作者机器，因此有 `AGENT_WORKSPACE`、MIT 和历史脱敏。 |
 | v3 | 2026-11-03–05 | 从「cwd 即任务根」转向「项目目录」；机械动作从钩子收归显式命令；知识与本机状态分离 | cwd 在多仓 / 散落仓 / Ubuntu 下不成立，改项目目录；钩子会被外部宿主改写，同步与 push 收归显式命令；机器状态散落，能力表与知识分离；入口按动作拆入 `scripts/`。 |
-| v4 | 2026-11-06 | 从「任务文档三档」转向「统一布局 + 归属标记」；文档整理收归 `--doc`；新增 `--post` 热交接 | 接手 agent 实际只读 PROMPT 与 CONTEXT，三档导致 README/DESIGN 在 `handoff/` 与产品文档重复；改为 README 在根、设计/方案/指导类进 `docs/`、交接文档留 `handoff/`，模板末行标记自我声明；不再生成 `.github/README.md`；`--suspend` 去掉 `<ID>`，投递改由 `--post` 承担。 |
+| v4 | 2026-11-06 | 从「任务文档三档」转向「统一布局 + 归属标记」；文档整理收归 `--doc`；新增 `--post` 热交接 | 接手 agent 实际只读 PROMPT 与 CONTEXT，三档导致 README/DESIGN 在 `handoff/` 与产品文档重复；改为 GitHub 项目 README 在根（非 GitHub 按需）、设计/方案/指导类进 `docs/`、交接文档留 `handoff/`，模板末行标记自我声明；不再生成 `.github/README.md`；`--suspend` 去掉 `<ID>`，投递改由 `--post` 承担。 |
 
 ### 10.2 已废弃方案
 

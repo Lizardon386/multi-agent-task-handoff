@@ -102,7 +102,7 @@ agent 会把 skill 安装到当前宿主的 `skills/multi-agent-task-handoff`，
 
 | 场景 | 说法 / 命令 | 会发生什么 |
 |---|---|---|
-| 新任务开工 | `--doc` | 整理文档布局：补 README/CONTEXT，把设计/方案/指导类迁入 `docs/`，补归属标记；只修迁移造成的链接，不改文档原有内容 |
+| 新任务开工 | `--doc` | 整理文档布局：补 CONTEXT，GitHub 项目补 README，把设计/方案/指导类迁入 `docs/`，补归属标记；只修迁移造成的链接，不改文档原有内容 |
 | 接手别人的任务 | `接手` / `--resume` | 读 PROMPT → CONTEXT，核锚点、跑验证 |
 | 本轮收工 | `收工` / `--suspend` | 按需压卡、写 CONTEXT、覆盖 PROMPT、对齐安装副本（仅源仓库）；`--push` 网络错误重试 3 次，Windows 再走 TLS 回退 |
 | 热交接给另一个会话 | `--post "<内容>" [--new \| --next <ID \| 会话名>]` | 只投消息，不写卡、不动 git；默认目标读 `[defaults].post` |
@@ -151,7 +151,7 @@ agent 会把 skill 安装到当前宿主的 `skills/multi-agent-task-handoff`，
 | 机器配置 | `$AGENT_CONFIG/config.toml` | 工作区根等偏好 |
 | 安装注册表 | `$AGENT_CONFIG/sync-paths` | 本机已安装的宿主副本；从源仓库收工时同步，安装副本跳过 |
 
-统一布局：README 固定在根，设计/方案/指导类在 `docs/`，交接文档在 `handoff/`。旧布局由 `--doc` 迁移，只移动、不复制。
+统一布局：GitHub 项目 README 固定在根（非 GitHub 项目按需），设计/方案/指导类在 `docs/`，交接文档在 `handoff/`。旧布局由 `--doc` 迁移，只移动、不复制。
 
 ## 5. 换机迁移
 > 只写带什么 / 不带什么；细节见 PROJECT_RULES。
@@ -201,13 +201,13 @@ agent 会把 skill 安装到当前宿主的 `skills/multi-agent-task-handoff`，
 <details>
 <summary>必须用 git 吗？</summary>
 
-不必须。有 git 用 commit 作锚点，没有就用时间戳；README 固定在根目录，GitHub 首页直接显示。
+不必须。有 git 用 commit 作锚点，没有就用时间戳；GitHub 项目 README 固定在根目录，首页直接显示。
 </details>
 
 <details>
 <summary>接手会读 README / DESIGN 吗？</summary>
 
-不会。接手只读 `handoff/PROMPT.md` 和 `handoff/CONTEXT.md`；产品文档在根 README 与 `docs/`，任务需要时按 CONTEXT 的文档表打开。
+不会。接手只读 `handoff/PROMPT.md` 和 `handoff/CONTEXT.md`；产品文档在根 README（若有）与 `docs/`，任务需要时按 CONTEXT 的文档表打开。
 </details>
 
 <details>
