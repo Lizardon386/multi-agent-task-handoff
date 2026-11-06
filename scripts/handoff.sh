@@ -40,7 +40,7 @@ usage() {
                    键与允许值由脚本映射决定；list 列出当前键、默认值与允许值
                    值不在白名单时不修改文件
   --doc-guard [--target DIR]
-                   只读检查缺失角色/被引用文档；BLOCKED 退出 1，零写入
+                   只读扫描缺失角色/被引用文档；WARN 只报告，不写入
   -h, --help       显示本表
 
 安装用 install.sh；本脚本一次只做一件事。
@@ -112,18 +112,18 @@ fi
 if [ "$mode" = docguard ]; then
   project=$(to_unix "${target_arg:-$PWD}")
   project=$(CDPATH= cd -- "$project" 2>/dev/null && pwd -P) || die "项目目录不存在: ${target_arg:-$PWD}"
-  blocked=0
+  warn=0
   printf 'doc-guard: %s\n' "$project"
 
   if [ -f "$project/handoff/CONTEXT.md" ]; then
     printf 'OK       handoff/CONTEXT.md\n'
     case "$(tail -n 1 "$project/handoff/CONTEXT.md")" in
       *'scope=handoff'*) ;;
-      *) printf 'WARN     handoff/CONTEXT.md 末行缺少 scope=handoff\n' ;;
+      *) printf 'WARN     handoff/CONTEXT.md 末行缺少 scope=handoff\n'; warn=1 ;;
     esac
   else
-    printf 'BLOCKED  handoff/CONTEXT.md 缺失（唯一必需角色）\n'
-    blocked=1
+    printf 'WARN     handoff/CONTEXT.md 缺失（唯一必需角色；--doc 不创建）\n'
+    warn=1
   fi
 
   readme_refs=$(grep -nE '\]\([^)]*README\.md[^)]*\)' \
@@ -132,17 +132,17 @@ if [ "$mode" = docguard ]; then
     printf 'OK       README.md\n'
     case "$(tail -n 1 "$project/README.md")" in
       *'scope=root'*) ;;
-      *) printf 'WARN     README.md 末行缺少 scope=root\n' ;;
+      *) printf 'WARN     README.md 末行缺少 scope=root\n'; warn=1 ;;
     esac
   else
     if [ -n "$readme_refs" ]; then
-      printf 'BLOCKED  README.md 缺失，但被以下位置引用：\n'
+      printf 'WARN     README.md 缺失，但被以下位置引用：\n'
       printf '%s\n' "$readme_refs" | sed 's/^/         /'
-      printf '         不得生成/还原；需用户决定恢复或移除引用\n'
-      blocked=1
+      printf '         只报告，不创建/不还原，不询问用户\n'
+      warn=1
     elif git -C "$project" remote -v 2>/dev/null | grep -qi github; then
-      printf 'BLOCKED  README.md 缺失（GitHub 项目必需；先跑 --doc-init）\n'
-      blocked=1
+      printf 'WARN     README.md 缺失（GitHub 项目；可显式 --doc-init）\n'
+      warn=1
     else
       printf 'OK       README.md 缺失（非 GitHub 项目，按需；不创建）\n'
     fi
@@ -164,11 +164,11 @@ if [ "$mode" = docguard ]; then
     case "$base" in README.md|SKILL.md) ;; *) printf 'WARN     根目录项目文档: %s（--doc 可迁移）\n' "$base" ;; esac
   done
 
-  if [ "$blocked" = 1 ]; then
-    printf 'result: BLOCKED（--doc 必须停止，零写入）\n'
-    exit 1
+  if [ "$warn" = 1 ]; then
+    printf 'result: WARN（只报告，不写入；--doc 可继续布局）\n'
+  else
+    printf 'result: OK\n'
   fi
-  printf 'result: OK\n'
   exit 0
 fi
 

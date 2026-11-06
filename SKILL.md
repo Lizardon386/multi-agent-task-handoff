@@ -93,7 +93,7 @@ argument-hint: "[--workspace <PATH>] [--nosave] [--gear <key>[=<值>] | --gear l
 
 ## --doc / --doc-init
 
-1. 确定项目目录；先跑 `scripts/handoff.sh --doc-guard [--target <项目目录>]`，BLOCKED 即停、零写入；再扫描根 `*.md`、`docs/**`、`handoff/**`、`.github/*.md`，记录标记与角色候选。
+1. 确定项目目录；先跑 `scripts/handoff.sh --doc-guard [--target <项目目录>]`，WARN 只报告、不创建/不还原、不询问用户；再扫描根 `*.md`、`docs/**`、`handoff/**`、`.github/*.md`，记录标记与角色候选。
 2. 已有标记 → 校验 scope 与目录，不符则移动。
 3. 无标记但已在角色固定位置（根 `README.md`、`handoff/CONTEXT.md`）或已在 `docs/` → 确认归属后补对应 scope。
 4. 无标记但有 V1/V2/V3 三档特征 → 补标记并迁移。特征两条同时满足：①文件名符合模板（CONTEXT / README / DESIGN / COMPACT_BACKUP，含旧名 压卡备份.md、COMPACTION_BACKUP.md）；②标题含项目目录名，含义一致即可（如 color-duel 的「变色对决」）。
