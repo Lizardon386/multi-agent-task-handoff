@@ -273,7 +273,7 @@ flowchart LR
 | 任务收工 | `--suspend`（挡位读 `[defaults].suspend`；显式 `--local` / `--commit` / `--push`） | 协议管理文档：`handoff/` 与带标记文档及其移动/删除 | 收工末尾自动 `--syncall`（仅源仓库；安装副本跳过） |
 
 - `scripts/handoff.sh --push` 只重试网络错误；认证失败、非快进、保护分支立即失败。
-- `--suspend` 默认挡位由 `[defaults].suspend` 决定；`--probe` 默认由 `[defaults].probe` 决定。本机分别为 `push` / `live`。
+- `--suspend` / `--probe` / `--post` 的默认值分别读 `[defaults].suspend` / `.probe` / `.post`；`--gear` 可读写这些键。
 - 推送失败时，卡与指针写「待推送」；不 force push，分叉先停下报告。
 
 ### 9.3 发布边界

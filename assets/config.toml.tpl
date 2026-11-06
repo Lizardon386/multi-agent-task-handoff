@@ -9,6 +9,7 @@ version = 1
 
 [defaults]
 # 挡位：suspend = local | commit | push；probe = static | live；post = new | next
+# --gear <key>[=<值>] 写入挡位；--gear list 查看可写键（值非法不修改）
 suspend = "local"
 probe = "static"
 # --post 目标：new = 新建会话后投递；next = 投递到已有会话（必须给 --next，可填会话 ID 或会话名）

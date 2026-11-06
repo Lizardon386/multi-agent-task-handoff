@@ -36,7 +36,7 @@ argument-hint: "[--workspace <PATH>] [--nosave] [--gear <key>[=<值>] | --gear l
 | `--fix` | 检查 + 修非文档整理项；不碰增删迁移 |
 | `--probe [--static \| --live]` | 检查 + 实测能力；`--live` 实际建会话/发送/读回 |
 | `--printpath [--host NAME \| --target DIR]` | 只读路径诊断：config / workspace / 能力表 / 源仓库 / 宿主 / 副本清单 |
-| `--gear <key>[=<值>] / --gear list` | 读/写 `config.toml` 的 `[defaults]`；`list` 列出键、默认值与允许值，值不在白名单时不修改 |
+| `--gear <key>[=<值>] \| --gear list` | 读/写 `config.toml` 的 `[defaults]`；`list` 列出键、默认值与允许值，值不在白名单时不修改 |
 | `--workspace <PATH> [--nosave]` | 指定工作区根；默认写回 `config.toml` |
 | `--help` | 输出完整帮助 |
 
@@ -133,8 +133,8 @@ argument-hint: "[--workspace <PATH>] [--nosave] [--gear <key>[=<值>] | --gear l
 
 ## --gear <key>[=<值>] | --gear list
 
-- `--gear <key>`：读 `[defaults].<key>`，缺省/非法值按默认值；`--gear <key>=<值>`：校验后写入，值非法报错且不改文件；`--gear list` 列出键、默认值与允许值。
-- 键名与 `config.toml` 的 `[defaults]` 一致；新增挡位只改 `scripts/lib.sh` 映射，SKILL/HELP 无需跟随。
+- `--gear <key>`：读 `[defaults].<key>`，缺省/非法值按默认值；`--gear <key>=<值>`：校验后写入，值非法报错且不改文件；`--gear list` 列出键、默认值与允许值；读写时配置不存在报错，键不存在时插入 `[defaults]`。
+- 键名与 `config.toml` 的 `[defaults]` 一致；新增挡位只改 `scripts/lib.sh` 的 `gear_meta` / `gear_keys`，SKILL/HELP 无需跟随。
 
 ## 边界
 
