@@ -1,7 +1,7 @@
 # multi-agent-task-handoff · 压卡备份
 
 > 状态历史、已完成归档与逐条变更，2026-10-28 从 CONTEXT.md 原样搬出；当前状态以 [CONTEXT.md](CONTEXT.md) 为准。
-> 最近更新：2026-11-05
+> 最近更新：2026-11-06
 > V3 起文档迁入 `handoff/`；本文件是历史归档，不复制当前状态。
 
 ## 状态历史
@@ -84,5 +84,6 @@
 - 2026-10-30 WorkBuddy：收尾写实——三条坑（自动 push、副本同步、验证方法）改成实测表述；验证钩子勿用管道。
 - 2026-11-03 Claude：V3 落地——术语统一、文档迁入 `handoff/`、7 个命令、`config.toml`、能力差异表；删除作者快照与同步脚本；`SKILL.md` 118 行。
 - 2026-11-05 Qoder：切换 GitHub 推送为 SSH 443，远端与本地对齐；无代码改动。
+- 2026-11-03 Claude：V3 文档重整——README 按落地页模板重写；DESIGN 删除进度/待办、已废弃方案移入版本节；CONTEXT 承接待办。
 
 <!-- multi-agent-task-handoff: scope=handoff -->
