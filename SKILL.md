@@ -70,7 +70,7 @@ argument-hint: "[--workspace <PATH>] [--nosave] [--gear <key>[=<值>] | --gear l
 5. 报：向用户汇报当前状态、下一步、验证结果与阻塞。
 6. 布局不符（根有 `CONTEXT.md`、`handoff/README.md` 等）→ 提示 `--check` / `--doc`，不静默迁移。
 
-## --suspend
+## --suspend [--local | --commit | --push]
 
 1. 确保 `handoff/CONTEXT.md`；≤100 行、记录 ≤10 条且坑 ≤10 类时报“无需压卡”，否则按第 2 条压卡。
 2. 压卡顺序：
@@ -82,7 +82,7 @@ argument-hint: "[--workspace <PATH>] [--nosave] [--gear <key>[=<值>] | --gear l
 6. memory：按能力表「memory 读取」定位宿主 memory；读 `MEMORY.md` 指针 + 相关条目；只把“会影响下一家”的规则/偏好写入 `CONTEXT.md` 的「MEMORY 提炼」章（无则写「无」）；不复制原文、不写回、不搬运；冲突以 CONTEXT/DESIGN/git 为准。
 7. 不强制结束会话；可当 checkpoint 用。
 
-## --post
+## --post <message> [--new | --next <ID | 会话名>]
 
 1. `<message>` 必填；缺了报错，不猜、不代写。
 2. 目标：`--new` 或 `--next <ID | 会话名>` 二选一；都不给时读 `config.toml` 的 `[defaults].post`。配成 `next` 却没有目标时停下问。
@@ -131,7 +131,7 @@ argument-hint: "[--workspace <PATH>] [--nosave] [--gear <key>[=<值>] | --gear l
 | 宿主 |  | 识别来源: env / --host / --target |
 | 副本清单 | 逐行 路径 + commit | ✅ 当前 / ⚠️ 落后 / ❌ 缺失 |
 
-## --gear
+## --gear <key>[=<值>] | --gear list
 
 - `--gear <key>`：读 `[defaults].<key>`，缺省/非法值按默认值；`--gear <key>=<值>`：校验后写入，值非法报错且不改文件；`--gear list` 列出键、默认值与允许值。
 - 键名与 `config.toml` 的 `[defaults]` 一致；新增挡位只改 `scripts/lib.sh` 映射，SKILL/HELP 无需跟随。
