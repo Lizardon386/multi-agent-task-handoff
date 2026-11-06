@@ -105,7 +105,7 @@ agent 会把 skill 安装到当前宿主的 `skills/multi-agent-task-handoff`，
 | 新任务开工 | `--doc` | 整理文档布局：补 README/CONTEXT，把设计/方案/指导类迁入 `docs/`，补归属标记 |
 | 接手别人的任务 | `接手` / `--resume` | 读 PROMPT → CONTEXT，核锚点、跑验证 |
 | 本轮收工 | `收工` / `--suspend` | 按需压卡、写 CONTEXT、覆盖 PROMPT、对齐安装副本（仅源仓库）；`--push` 网络错误重试 3 次，Windows 再走 TLS 回退 |
-| 热交接给另一个会话 | `--post "<内容>" [--new \| --id <ID \| 会话名>]` | 只投消息，不写卡、不动 git；默认目标读 `[defaults].post` |
+| 热交接给另一个会话 | `--post "<内容>" [--new \| --next <ID \| 会话名>]` | 只投消息，不写卡、不动 git；默认目标读 `[defaults].post` |
 | 体检/修复 | `--check` / `--fix` | 检查安装、布局、配置、链接；`--fix` 只修非文档整理项，文档整理交给 `--doc` |
 | 摸底宿主能力 | `--probe` | 实测当前 agent 并更新能力表；`--live` 会实际建会话 |
 | 路径诊断 | `--printpath` | 表格输出配置目录、工作区根、能力表（含日期）、源仓库、宿主识别来源、当前安装副本与全部副本的路径和 commit；`--host` / `--target` 可显式指定 |
@@ -186,7 +186,7 @@ agent 会把 skill 安装到当前宿主的 `skills/multi-agent-task-handoff`，
 - 活会话不搬运；换 agent 用“新会话 + PROMPT 指针”，同 agent 热交接用 `--post`。
 - 旧项目迁移逐个 `--doc`；不默认扫描全盘。
 - 没有 `handoff/` 也不会自动建：先跑 `--doc`。
-- `--post --new` 建出的会话必须绑定当前项目目录；落 worktree 视为失败，改用主项目 UI 新建 + `--id`。
+- `--post --new` 建出的会话必须绑定当前项目目录；落 worktree 视为失败，改用主项目 UI 新建 + `--next`。
 
 ## 7. 常见问题
 > 只答使用者会问的；机制细节链接到 DESIGN / SKILL。

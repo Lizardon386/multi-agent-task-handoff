@@ -60,8 +60,8 @@
 - 工作区文档：`AGENTS.md` / `PROJECT_RULES.md` 缺失时 `--check` 报 🟡，`--fix` 确认后从模板播种；已存在的只报过期。
 - 文档：模板不会被 `--check` 校验；改协议或文档结构后手动扫 `assets/*.tpl`，避免模板与正文互相矛盾；模板末行标记必须是合法 scope。
 - git：不装钩子；只有 `--push` 会显式推送，`--commit` 提交协议管理文档（`handoff/` 与带标记文档及其移动/删除）；`--push` 由 `scripts/handoff.sh --push` 重试 3 次 / 3 秒，只重试网络错误；Windows 再加 HTTP/1.1 + OpenSSL 回退 3 次；未确认推送成功不写「已推送」。
-- `--post --new`：新会话必须绑定当前项目目录；Claude Code `CreateSession` 会落 worktree，按能力表应拒绝 `--new`，改走主项目 UI 新建 + `--id`。
-- `--post --id`：接受会话 ID 或会话名；宿主有会话列表工具（如 `ListSessions`）就直接查，不要让用户手抄 ID；查到的 `workDir` 必须等于项目目录。
+- `--post --new`：新会话必须绑定当前项目目录；Claude Code `CreateSession` 会落 worktree，按能力表应拒绝 `--new`，改走主项目 UI 新建 + `--next`。
+- `--post --next`：接受会话 ID 或会话名；宿主有会话列表工具（如 `ListSessions`）就直接查，不要让用户手抄 ID；查到的 `workDir` 必须等于项目目录。
 - 不回到全自动：文件改动无法触发 git（边界禁止常驻服务），没有可靠触发器时全自动=全不自动；与「git 可选」「敏感信息不提交」冲突。`--commit` / `--push` 保留；嫌步骤多只能封成一条显式命令。
 - 能力表：验证方法里的参数名必须与脚本实际一致（`--dryrun`、`--syncall`，无中间连字符）；`--check` 只报不修。
 
