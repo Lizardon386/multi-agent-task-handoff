@@ -23,7 +23,7 @@
 > 目标一句话；完成标准必须可验证，不写过程。
 
 - 目标：V4 协议落地；所有项目统一布局（根 README、`docs/` 设计/方案/指导类、`handoff/` 交接文档）；文档增删迁移只由 `--doc` 执行；`--post` 承担同 agent 热交接；宿主差异由能力表驱动；机械动作由显式命令执行。
-- 完成标准（可验证）：`SKILL.md` / `README.md` / `docs/DESIGN.md` 与安装副本一致；9 个命令与 `--help` 一致；`--check` 无 ⛔；`CONTEXT.md` ≤100 行；根目录 `.md` 只有 `README.md`；`install.sh --dryrun`、`scripts/handoff.sh --printpath` / `--syncall` 正常。
+- 完成标准（可验证）：`SKILL.md` / `README.md` / `docs/DESIGN.md` 与安装副本一致；9 个命令与 `--help` 一致；`--check` 无 ⛔；`CONTEXT.md` ≤100 行；根目录项目文档 `.md` 只有 `README.md`（包文件 `SKILL.md` 除外）；`install.sh --dryrun`、`scripts/handoff.sh --printpath` / `--syncall` 正常。
 
 ## 3. 现在在哪
 > 只写当前状态与在飞文件；已完成项压缩为结果，逐版本流水搬入 `COMPACT_BACKUP.md`。
