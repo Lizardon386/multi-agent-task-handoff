@@ -201,6 +201,7 @@ multi-agent-task-handoff/
 - 参数名不带中间连字符：`--dryrun`、`--syncall`、`--noregister`；多词直接连写。
 - `SKILL.md` 单文件，硬上限 150 行、目标 120；超出才拆 `references/`。
 - 协议护栏（冲突停、不搬活会话、单写者、memory 只读）必须留在 `SKILL.md`，不能只放 `PROJECT_RULES.md` 或 README。
+- 修 bug 优先结构性根治：脚本守卫、收敛动作/权限面、状态隔离；不要用记忆或追加散文规则修补；跨 agent 的问题必须落在安装副本可执行的机制上。
 - 宿主差异只进 `$AGENT_CONFIG/AGENT_CAPABILITIES.md`；`SKILL.md` 只举例，不写宿主专属规则。
 - 旧仓迁移是逐项目人工动作，不默认扫描全盘；先 `--check` 出清单，再由 `--doc` 迁移。
 - 迁移按角色处理所有项目级文档：README（若存在）留根，设计/方案/指导类进 `docs/`，交接类进 `handoff/`；客制化名同样迁移，不留在根。判不准时给选项，不自行决定。

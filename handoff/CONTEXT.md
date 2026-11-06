@@ -55,6 +55,7 @@
 
 - 直接维护：改完跑 `scripts/handoff.sh --save`（提交 + 同步 + 推送重试），不等用户说「提交」；任务收工仍按 `--suspend` 挡位（默认读 `config.toml`）。
 - 功能改动：改完必须实跑测试（正常/非法/边界/安装副本），汇报实际命令与结果；不把静态检查当验证。
+- 修 skill bug：优先结构性根治（脚本守卫、收敛动作/权限面），不靠记忆或追加规则修补。
 - `--doc` 边界：只处理布局/标记/迁移造成的链接；文档原有死链/旧路径/历史内容不改，另列报告；不重建/还原缺失文档（包括从会话记录恢复）；先跑 `--doc-guard`，BLOCKED 零写入；内容创建只走 `--doc-init`。
 - `--doc` 不默认生成 README：仅 GitHub remote 或用户确认要发布时生成；CONTEXT 仍必生成。
 
@@ -75,7 +76,7 @@
 ## 7. 交接记录（只记关键动作，≤10 条）
 > 超出先压卡到 `COMPACT_BACKUP.md`；不写日常细节。
 
-- 2026-11-06 Claude：`--doc` 不再默认生成 README（仅 GitHub remote/用户确认）；dsp-hal-eval 实测非 git 项目零写入，旧 README 引用冲突只报告；发现另一会话从会话日志恢复其 README（5 条旧路径死链），补规则：`--doc` 不重建/还原缺失文档；README/HELP/DESIGN/模板/规则同步；`--doc` 拆分 `--doc-guard` / `--doc-init`。
+- 2026-11-06 Claude：`--doc` 不再默认生成 README（仅 GitHub remote/用户确认）；dsp-hal-eval 实测非 git 项目零写入，旧 README 引用冲突只报告；发现另一会话从会话日志恢复其 README（5 条旧路径死链），补规则：`--doc` 不重建/还原缺失文档；README/HELP/DESIGN/模板/规则同步；`--doc` 拆分 `--doc-guard` / `--doc-init`；修 bug 优先结构性根治写入工程约束。
 - 2026-11-06 Claude：`--gear` 改为 `[defaults]` 映射驱动（含 post）+ `--gear list`，非法值不改；SKILL/HELP/README/DESIGN/模板/工作区规则同步；文档复核去命令计数、修 PROMPT 锚点与本机挡位值；功能改完必须自测；`--doc` 边界明确（只修迁移链接，不改原有内容；不默认生成 README，仅 GitHub 项目）。
 - 2026-11-06 Claude：V4 完备测试——`--next` 主目录会话通过；`--new` 落 worktree 判失败（新 worktree 无 PROMPT.md）；`ListSessions` 查询命中正文，SKILL 增按 `title` 过滤；`--suspend --local` 写路径验证；`--gear key=value` 写挡位（非法值不改），改为 `[defaults]` 映射驱动（含 post），SKILL/HELP 增命令与独立小节。
 - 2026-11-06 Claude：V4 布局落地——README 在根、设计/方案/指导类入 `docs/`、`--doc` 独占增删迁移、`--post` 热交接、`--suspend` 去 ID；本仓库迁移并同步 5 份副本；`--post --new` 加项目目录校验；HELP 的 post 默认值改 `new / next`，坑合并至 10 类，清理 3 个已合并的 worktree 分支；`--post` 实测：`--next` 主目录会话通过，`--new` 落 worktree 判失败（新 worktree 无 PROMPT.md），能力表更新。
