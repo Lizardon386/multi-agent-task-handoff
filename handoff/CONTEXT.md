@@ -36,7 +36,7 @@
   - 2026-11-06：完备体检通过（布局/标记/链接/上限/忽略/副本/安装守卫/命令面）；`--post --next` 名称解析实测发现 `ListSessions` 会命中正文，SKILL 已要求按 `title` 过滤；`--suspend --local` 写路径本次自测。
   - 2026-11-06：`--gear <key>[=<值>]` / `--gear list` 支持读写 `[defaults]`（含 `post`）；键/默认值/允许值由 `scripts/lib.sh` 映射驱动，非法值不修改；SKILL/HELP 增命令与独立小节（保持 150 行）。
   - 2026-11-06：`--gear` 改为映射驱动收尾；文档复核修正 PROMPT 锚点、硬编码命令计数与 DESIGN 本机挡位值，模板补自测规则与 gear 注释。
-  - 2026-11-06：`--doc` 不再默认生成 README，仅 GitHub remote 或用户确认发布时生成；CONTEXT 仍必生成；SKILL/README/HELP/DESIGN/模板同步。
+  - 2026-11-06：`--doc` 不再默认生成 README，仅 GitHub remote 或用户确认发布时生成；CONTEXT 仍必生成；SKILL/README/HELP/DESIGN/模板同步；dsp-hal-eval 实测：非 git 项目跳过 README，旧 README 引用只报告不改。
   - 推送状态以 `git status -sb` 为准。
 - 进行中：无。
 - 在飞文件（勿动）：无。
