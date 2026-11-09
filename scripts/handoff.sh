@@ -133,9 +133,13 @@ repair_doc_tables() {
       esac
       if [ "$in_doc" = 1 ]; then
         case "$line" in
-          '|'*']('*)
+          '|'*)
             link=$(printf '%s' "$line" | grep -oE '\]\([^)]*\)' | head -1 | sed 's/^](//; s/)$//')
             target=${link%%#*}
+            if [ -z "$target" ]; then
+              target=$(printf '%s' "$line" | awk -F'|' '{print $3}' | sed 's/^[[:space:]`]*//; s/[[:space:]`]*$//')
+              case "$target" in *' '*) target= ;; esac
+            fi
             if [ -n "$target" ] && [ ! -e "$base/$target" ]; then
               case "${target##*/}" in
                 README.md|DESIGN.md|CONTEXT.md|COMPACT_BACKUP.md|COMMANDS.md|PROMPT.md)
