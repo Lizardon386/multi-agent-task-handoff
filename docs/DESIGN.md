@@ -46,8 +46,8 @@ flowchart LR
   P --> D[handoff/ 交接文档]
   D --> C[CONTEXT.md 状态]
   D --> M[PROMPT.md 指针]
-  W[工作区根 AGENT_WORKSPACE] -. 只在无项目时.-> P
-  G[$AGENT_CONFIG] --> K[能力差异表 / config.toml / sync-paths / 可选 PROJECT_RULES]
+  W[工作区根 AGENT_WORKSPACE] -. 只在无项目时 .-> P
+  G[$AGENT_CONFIG] --> K[能力差异表 / config.toml / sync-paths]
 ```
 
 项目目录是唯一写入根；工作区根只用来新建项目目录。项目文档放根 README 与 `docs/`，交接文档固定放 `handoff/`；机器级状态（能力表、配置、安装注册表）统一放 `$AGENT_CONFIG`。
@@ -57,7 +57,7 @@ flowchart LR
 ```mermaid
 flowchart LR
   subgraph A[Agent A]
-    D[开工<br/>--doc] --> W1[工作]
+    D[开工] --> W1[工作]
     W1 --> S[收工<br/>--suspend]
   end
   subgraph B[Agent B]
@@ -68,7 +68,7 @@ flowchart LR
   F --> R
   W2 -.->|收工 / --suspend| F
   M[维护<br/>--check / --fix / --probe / --printpath] -.->|随时| F
-  L[旧布局] -.->|--doc| P
+  L[旧布局] -.->|--doc| N["根 README + docs/ + handoff/"]
 ```
 
 | 阶段 | 触发 | 动作 | 产出 / 结果 | 边界 |
@@ -99,7 +99,7 @@ flowchart LR
 flowchart LR
   subgraph P["项目目录：唯一写入根"]
     P0["项目目录"]
-    R["README / COMMANDS"]
+    R["README（项目根）"]
     D["docs/ 设计 / 方案 / 指导"]
     H["handoff/ 交接文档"]
     P0 --- R
