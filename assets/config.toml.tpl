@@ -1,5 +1,3 @@
-version = 1
-
 [paths]
 # 默认：~/agent_workspace（Windows 展开为 C:\Users\<user>\agent_workspace）
 # 作者本机自定义示例（默认注释，首次运行会询问）：
