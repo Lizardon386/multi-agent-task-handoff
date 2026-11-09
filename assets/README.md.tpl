@@ -19,6 +19,7 @@
 | [handoff/CONTEXT.md](handoff/CONTEXT.md) | 接手 agent | 完整文档表、当前状态、下一步、记忆提炼、坑 |
 
 完整文档表见 [handoff/CONTEXT.md](handoff/CONTEXT.md)。
+<!-- 命令参考可选：docs/COMMANDS.md；用户要求时由 --doc --init 生成，生成后加行。 -->
 
 <!-- 有其他交付文档时，在 CONTEXT 的文档表里加行，不在这里重复。 -->
 

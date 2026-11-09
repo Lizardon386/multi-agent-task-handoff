@@ -185,6 +185,54 @@ if [ "$mode" = doc ]; then
     case "$base" in README.md|SKILL.md) ;; *) printf 'WARN     根目录项目文档: %s（--doc 可迁移）\n' "$base"; warn=1 ;; esac
   done
 
+  # 可选角色建议：只报告，不创建；用户确认后才走 --doc --init。
+  design_exists=0
+  commands_exists=0
+  [ -f "$project/docs/DESIGN.md" ] && design_exists=1
+  [ -f "$project/docs/COMMANDS.md" ] && commands_exists=1
+  suggest_design=
+  if [ "$design_exists" = 0 ]; then
+    for f in "$project"/docs/*.md "$project"/*.md; do
+      [ -f "$f" ] || continue
+      base=${f##*/}
+      case "$base" in
+        *架构*.md|*设计*.md|*方案*.md|*DESIGN*.md|*ARCH*.md|*architecture*.md|*design*.md|*proposal*.md|ADR*.md|*RFC*.md)
+          suggest_design="发现 $f（设计/方案类文档）；若有架构取舍，可考虑 docs/DESIGN.md"
+          break ;;
+      esac
+    done
+    if [ -z "$suggest_design" ] && [ -f "$project/README.md" ]; then
+      if grep -qiE '架构|设计|方案|architecture|design|proposal|trade-?off' "$project/README.md"; then
+        suggest_design="README 提到架构/设计/方案；若有设计取舍，可考虑 docs/DESIGN.md"
+      fi
+    fi
+  fi
+  suggest_commands=
+  if [ "$commands_exists" = 0 ]; then
+    for d in cmd bin cli scripts; do
+      if [ -d "$project/$d" ]; then
+        suggest_commands="发现 $d/ 目录；若项目有多个命令/CLI，可考虑 docs/COMMANDS.md"
+        break
+      fi
+    done
+    if [ -z "$suggest_commands" ] && [ -f "$project/package.json" ] && grep -q '"bin"' "$project/package.json"; then
+      suggest_commands="package.json 含 bin；若项目有 CLI，可考虑 docs/COMMANDS.md"
+    fi
+    if [ -z "$suggest_commands" ] && [ -f "$project/pyproject.toml" ] && grep -qE '^\[project\.scripts\]|^\[tool\.poetry\.scripts\]' "$project/pyproject.toml"; then
+      suggest_commands="pyproject.toml 含 scripts；若项目有 CLI，可考虑 docs/COMMANDS.md"
+    fi
+    if [ -z "$suggest_commands" ] && [ -f "$project/Cargo.toml" ] && grep -q '^\[\[bin\]\]' "$project/Cargo.toml"; then
+      suggest_commands="Cargo.toml 含 [[bin]]；若项目有 CLI，可考虑 docs/COMMANDS.md"
+    fi
+    if [ -z "$suggest_commands" ] && [ -f "$project/README.md" ]; then
+      if grep -qiE '\-\-help|命令参考|command reference|usage:' "$project/README.md"; then
+        suggest_commands="README 提到 --help/命令参考；若项目有 CLI，可考虑 docs/COMMANDS.md"
+      fi
+    fi
+  fi
+  [ -n "$suggest_design" ] && printf 'SUGGEST  DESIGN：%s（仅建议，不自动创建）\n' "$suggest_design"
+  [ -n "$suggest_commands" ] && printf 'SUGGEST  COMMANDS：%s（仅建议，不自动创建）\n' "$suggest_commands"
+
   if [ "$warn" = 1 ]; then
     printf 'result: WARN（只报告，不写入；--doc 可继续布局）\n'
   else

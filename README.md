@@ -14,6 +14,7 @@
 |---|---|---|
 | [README.md](README.md) | 使用者 | 这是什么、怎么跑、限制（本文） |
 | [docs/DESIGN.md](docs/DESIGN.md) | 评审 / 开发 | 摘要、方案、备选、风险、决策 |
+| [docs/COMMANDS.md](docs/COMMANDS.md) | 使用者 | 命令参考：语法、默认值、副作用、错误（可选） |
 | [handoff/CONTEXT.md](handoff/CONTEXT.md) | 接手 agent | 完整文档表、当前状态、下一步、记忆提炼、坑 |
 
 完整文档表（含 PROMPT、SKILL、HELP、压卡备份）见 [handoff/CONTEXT.md](handoff/CONTEXT.md)。
@@ -102,7 +103,7 @@ agent 会把 skill 安装到当前宿主的 `skills/multi-agent-task-handoff`，
 
 | 场景 | 说法 / 命令 | 会发生什么 |
 |---|---|---|
-| 新任务开工 | `--doc [--guard \| --init]` | 默认挡位 `[defaults].doc=guard`；`--guard` 只读扫描，`--init` 显式创建缺失 CONTEXT（README 仅 GitHub/确认，不还原）；布局/标记/迁移链接由 `--doc` 处理 |
+| 新任务开工 | `--doc [--guard \| --init]` | 默认挡位 `[defaults].doc=guard`；`--guard` 只读扫描并建议 DESIGN/COMMANDS，`--init` 显式创建缺失 CONTEXT（README 仅 GitHub/确认，DESIGN 需取舍确认，COMMANDS 仅用户要求，不还原）；布局/标记/迁移链接由 `--doc` 处理 |
 | 接手别人的任务 | `接手` / `--resume` | 读 PROMPT → CONTEXT，核锚点、跑验证 |
 | 本轮收工 | `收工` / `--suspend` | 按需压卡、写 CONTEXT、覆盖 PROMPT、对齐安装副本（仅源仓库）；`--push` 网络错误重试 3 次，Windows 再走 TLS 回退 |
 | 热交接给另一个会话 | `--post "<内容>" [--new \| --next <ID \| 会话名>]` | 只投消息，不写卡、不动 git；默认目标读 `[defaults].post` |

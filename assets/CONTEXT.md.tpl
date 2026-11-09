@@ -19,6 +19,8 @@
 | `PROMPT.md` | 接手 agent | 交接指针，自动生成，默认 gitignore（不链接） |
 | [COMPACT_BACKUP.md](COMPACT_BACKUP.md) | 追溯 | 压卡搬出的历史 |
 
+<!-- 命令参考可选：docs/COMMANDS.md；用户明确要求时由 --doc --init 生成，生成后加行。 -->
+
 ## 目标与完成定义
 > 目标一句话；完成标准必须可验证，不写过程。
 

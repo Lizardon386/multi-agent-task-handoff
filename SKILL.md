@@ -93,12 +93,12 @@ argument-hint: "[--workspace <PATH>] [--nosave] [--gear <key>[=<值>] | --gear l
 
 ## --doc [--guard | --init]
 
-1. 确定项目目录；不带挡位时读 `[defaults].doc`（默认 guard）；先跑 `scripts/handoff.sh --doc --guard [--target <项目目录>]`，WARN 只报告、不创建/不还原、不询问用户；再扫描根 `*.md`、`docs/**`、`handoff/**`、`.github/*.md`，记录标记与角色候选。
+1. 确定项目目录；不带挡位时读 `[defaults].doc`（默认 guard）；先跑 `scripts/handoff.sh --doc --guard [--target <项目目录>]`，WARN 与 SUGGEST 只报告、不创建/不还原、不询问用户；再扫描根 `*.md`、`docs/**`、`handoff/**`、`.github/*.md`，记录标记与角色候选。
 2. 已有标记 → 校验 scope 与目录，不符则移动。
 3. 无标记但已在角色固定位置（根 `README.md`、`handoff/CONTEXT.md`）或已在 `docs/` → 确认归属后补对应 scope。
 4. 无标记但有 V1/V2/V3 三档特征 → 补标记并迁移。特征两条同时满足：①文件名符合模板（CONTEXT / README / DESIGN / COMPACT_BACKUP，含旧名 压卡备份.md、COMPACTION_BACKUP.md）；②标题含项目目录名，含义一致即可（如 color-duel 的「变色对决」）。
-5. `--doc` 不生成缺失角色；报告后由用户决定是否 `--doc --init`（先出清单并确认）：CONTEXT 必生成，README 仅在判定为 GitHub 项目（`git remote -v` 指向 GitHub）或用户明确要发布到 GitHub 时生成，DESIGN 仅在有设计取舍且用户确认时生成；一律从模板创建，不从会话记录、历史副本或备份还原。
-6. 角色映射：README → 根 `README.md`；方案设计类（DESIGN、架构设计、实施方案等）与指导类（INTEGRATION_GUIDE、接入/开发指南等）→ `docs/<原名>.md`；CONTEXT 与其他交接 → `handoff/`。
+5. `--doc` 不生成缺失角色；报告后由用户决定是否 `--doc --init`（先出清单并确认）：CONTEXT 必生成，README 仅在判定为 GitHub 项目（`git remote -v` 指向 GitHub）或用户明确要发布到 GitHub 时生成，DESIGN 仅在有设计取舍且用户确认时生成，COMMANDS 仅在用户明确要求时生成；guard 的 SUGGEST 只作为建议，不自动创建；一律从模板创建，不从会话记录、历史副本或备份还原。
+6. 角色映射：README → 根 `README.md`；COMMANDS → `docs/COMMANDS.md`；方案设计类（DESIGN、架构设计、实施方案等）与指导类（INTEGRATION_GUIDE、接入/开发指南等）→ `docs/<原名>.md`；CONTEXT 与其他交接 → `handoff/`。
 7. 根目录其他 `.md`：判为方案设计类或指导类的一律列入迁移；判不准的列出候选让用户选，不自行决定；用户不选就跳过。非文档产物不动。
 8. 冲突停：目标已存在且不是同一份、根 README 与 `docs/README` 同时存在、某角色有多份候选 → 出选择题，未获选择前不覆盖、不改名、不合并。
 9. 迁移用 `git mv`（git 仓）或 `mv`（非 git），只移动不复制；同批修正相对链接、CONTEXT 文档表与跨目录引用（从根进 `docs/` 加 `../`，仓库内绝对 GitHub URL 同步改）；只修迁移造成的链接问题，原有死链、旧路径与历史内容不改，另列报告。

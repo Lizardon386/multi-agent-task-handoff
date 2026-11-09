@@ -58,7 +58,7 @@ flowchart LR
 
 | 阶段 | 触发 | 动作 | 产出 / 结果 | 边界 |
 |---|---|---|---|---|
-| 开工 | `--doc [--guard \| --init]` | 默认挡位 `[defaults].doc=guard`；`--guard` 只读扫描，`--init` 显式创建缺失 CONTEXT（README 仅 GitHub/确认）；设计/方案/指导类迁 `docs/`；交接类迁 `handoff/`；补标记；同意后把 PROMPT 加入 `.gitignore` | README（GitHub 项目）+ `docs/` + `handoff/` | 冲突或判不准 → 出选择题，未选不动；缺失角色只 WARN，不创建/不还原 |
+| 开工 | `--doc [--guard \| --init]` | 默认挡位 `[defaults].doc=guard`；`--guard` 只读扫描并建议可选角色；`--init` 显式创建缺失 CONTEXT（README 仅 GitHub/确认，DESIGN 需取舍确认，COMMANDS 仅用户要求）；设计/方案/指导类迁 `docs/`；交接类迁 `handoff/`；补标记；同意后把 PROMPT 加入 `.gitignore` | README（GitHub 项目）+ `docs/` + `handoff/` | 冲突或判不准 → 出选择题，未选不动；缺失角色只 WARN，不创建/不还原 |
 | 工作 | — | 改代码/文档；状态或坑变化时更新 CONTEXT | 可交接的当前状态 | 一个项目同一时间一个写者 |
 | 收工 | `--suspend` | 超限先压卡；写现在/下一步/MEMORY 提炼/坑/记录；覆盖 PROMPT；按需读 memory 提炼规则；默认挡位读 `config.toml`；源仓库时末尾对齐副本（安装副本跳过；提交/推送时在其后） | CONTEXT 更新 + PROMPT 覆盖 + 副本对齐 | 默认不动 git；`--commit` 提交协议管理文档（`handoff/` 与带标记文档及其移动/删除）；`--push` 隐含 commit 并调 `scripts/handoff.sh --push`（网络错误 3 次 / 3 秒；Windows 再加 HTTP/1.1 + OpenSSL 回退 3 次）；未确认推送成功写「待推送」 |
 | 热交接 | `--post <message> [--new \| --next <ID \| 会话名>]` | 把 message 投给另一个会话；可追加项目目录/HEAD/指针，必须可见标注 | 目标会话收到消息 | 不写卡、不动 git；`--new` 必须绑定项目目录，落 worktree 视为失败 |
@@ -83,7 +83,7 @@ flowchart LR
 | 主题 | 约定 |
 |---|---|
 | 写入根 | 项目目录；工作区根永远不直接写 `handoff/` |
-| 文档路径 | 根 `README.md`（GitHub 项目；其他按需）；`docs/<设计/方案/指导>.md`；`handoff/{CONTEXT,PROMPT,COMPACT_BACKUP}.md` |
+| 文档路径 | 根 `README.md`（GitHub 项目；其他按需）；`docs/<设计/方案/指导>.md`（含可选 `docs/COMMANDS.md`）；`handoff/{CONTEXT,PROMPT,COMPACT_BACKUP}.md` |
 | 归属标记 | 末行隐藏注释 `scope=root\|docs\|handoff`；目录必须与 scope 一致；无标记文档协议只读 |
 | 冲突 | 目标已存在且非本协议生成 → 停，不覆盖、不换路径 |
 | 交接卡 | CONTEXT ≤100 行；交接记录 ≤10 条；坑类别 ≤10；MEMORY 提炼只放影响下一家的规则；只记关键动作 |
@@ -133,7 +133,8 @@ flowchart LR
 - 模板只播种、不覆盖：缺失的 `AGENT_CAPABILITIES.md` / `AGENTS.md` / `PROJECT_RULES.md` 可确认后从模板创建；已存在的不改写，只报过期。
 - 文档只留单一事实源：协议在 `SKILL.md`、取舍在 `docs/DESIGN.md`、状态在 `handoff/CONTEXT.md`；其他文件用指针，不复制正文。
 - 文档头块统一：用途 → 阅读对象 → 最近更新/生成时间 → 项目目录 → 源/生成关系；正文不重复这些元数据。
-- 文档分工：README 只答“是什么 / 怎么用”，SKILL 只答“怎么做”，DESIGN 只答“为什么”，CONTEXT 只答“现在在哪”；进度与待办只进 CONTEXT。
+- 文档分工：README 只答“是什么 / 怎么用”，COMMANDS 只答命令参考，SKILL 只答“怎么做”，DESIGN 只答“为什么”，CONTEXT 只答“现在在哪”；进度与待办只进 CONTEXT。
+- 命令参考只进 `docs/COMMANDS.md`；README 只留工作流，DESIGN 只留取舍，SKILL 只留协议；COMMANDS 仅在用户明确要求时生成。
 - 别名与命令并列写作「别名 / 命令」（斜杠两侧空格，命令用反引号）；同义别名列举写作「接盘/接手」（不加空格）。
 - `--printpath` 是视图不是存储：现读环境变量、`.skill-version`、`git config`，不生成缓存文件。
 - 批量循环只用 POSIX sh 内建（`while read`、`printf '%.7s'`）：Git Bash 每个外部进程约 0.9 秒，副本多时会把同步拖慢。
@@ -208,11 +209,12 @@ multi-agent-task-handoff/
 │  ├─ lib.sh                # 共享：配置 / 宿主 / 路径函数
 │  └─ 运行时.bat             # Windows 运行时入口
 ├─ LICENSE
-├─ assets/                  # HELP / 模板 / 示例
+├─ assets/                  # HELP / 模板（含 COMMANDS.md.tpl）/ 示例
 ├─ .gitignore
 ├─ README.md                # 项目说明；scope=root
 ├─ docs/
-│  └─ DESIGN.md             # 本文件；scope=docs
+│  ├─ DESIGN.md             # 本文件；scope=docs
+│  └─ COMMANDS.md           # 命令参考（可选）；scope=docs
 └─ handoff/
    ├─ CONTEXT.md            # 当前状态；scope=handoff
    ├─ PROMPT.md             # 自动生成（gitignore）
