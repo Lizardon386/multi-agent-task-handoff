@@ -17,7 +17,7 @@
 
 ## 命令索引
 > 只列命令、用途与默认挡位；详细说明见下文章节。
-> 脚本层直接支持 `--printpath` / `--doc` / `--syncall` / `--push` / `--save` / `--gear`；`--resume` / `--suspend` / `--post` / `--check` / `--fix` / `--probe` / `--workspace` 由 agent 按 SKILL 执行。
+> 脚本层直接支持 `--printpath` / `--doc` / `--syncall` / `--push` / `--save` / `--gear`；`--resume` / `--suspend` / `--post` / `--check` / `--fix` / `--probe` / `--workspace` 由 agent 按 SKILL 执行；`--probe` 的固定清单见 `assets/PROBE.md`。
 
 | 命令 | 用途 | 默认值 / 挡位 |
 |---|---|---|
@@ -84,7 +84,7 @@
 > 只说明只读检查项与报告口径。
 
 - 语法：`--check`，无参数。
-- 行为：只读检查安装副本 commit、文档布局与 scope、链接、config/workspace、能力表日期、`sync-paths`、`PROMPT.md` 忽略/跟踪状态、项目内 memory 是否 gitignore、PROMPT 是否过期、工作区文档、CONTEXT 行数/记录数/坑类别；源仓库额外核对 SKILL/scripts/HELP/模板一致性。
+- 行为：只读检查安装副本 commit、文档布局与 scope、链接、config/workspace、能力表日期、`sync-paths`、`PROMPT.md` 忽略/跟踪状态、项目内 memory 是否 gitignore、PROMPT 是否过期、工作区文档、CONTEXT 行数/记录数/坑类别；当前宿主能力表仍有「待测」时报 🟡 并列出缺失 P 项（不自动跑 probe）；源仓库额外核对 SKILL/scripts/HELP/模板一致性。
 - 边界：不改文件；缺 README/DESIGN 不算错误，只提示 `--doc`；文档整理项只报告，不自动修。
 - 常见错误：副本落后、PROMPT 被跟踪、CONTEXT 超限、能力表过期；按报告处理，不把 `--check` 当迁移工具。
 
@@ -97,15 +97,17 @@
 - 常见错误：把 `--fix` 当文档整理用；它不会迁移旧布局。
 
 ## --probe [--static | --live]
-> 只说明静态/实测能力与能力表更新。
+> 只说明固定清单、一次确认、L1/L2 与能力表完成定义。
 
 - 语法：`--probe`，可选一个挡位。
 - 默认：`[defaults].probe`；未配置按 `static`。
-- `--static`：静态检查 + 低成本实测（工作区根来源、会话列表、memory 路径、文件读写、git/CLI、config 解析）。
-- `--live`：实际建会话/发送/读回；需确认；可能留测试会话，报告并尝试删除；必须记录新会话是否落 worktree。
-- 行为：更新 `$AGENT_CONFIG/AGENT_CAPABILITIES.md`。
-- 边界：结果记可用/不可用与验证方法；不写真实会话 ID/凭据。
-- 常见错误：把「建会话成功」当「投递成功」；落 worktree 必须记 🟡/⛔。
+- 清单：读取 skill 安装目录的 `assets/PROBE.md`，按 P 项执行；static 只填 S 项。
+- `--live`：先输出完整计划（P 项、副作用、清理、将写的能力表格），确认一次后跑完全部适用项，仅计划外副作用停下。
+- L1 只证通道可达；L2 用临时项目真实投递指针，目标读 PROMPT/CONTEXT 后回报项目目录、锚点、下一步、勿动、MEMORY 提炼 5 项并核对；每次 live 都跑 L2。
+- 清理：删除临时项目/测试会话，删不掉只报告残留；不写真实会话 ID/凭据。
+- 行为：就地更新 `$AGENT_CONFIG/AGENT_CAPABILITIES.md`。
+- 完成：当前宿主必测格无「待测」，缺失/策略阻止记 ⛔/🟡 + 证据；未安装宿主整行可留「待测」。
+- 常见错误：把 L1（PONG）当 L2；把「建会话成功」当「投递成功」；落 worktree 记 🟡/⛔；把工具缺失留在「待测」。
 
 ## --printpath [--host NAME | --target DIR]
 > 只说明诊断输出项。

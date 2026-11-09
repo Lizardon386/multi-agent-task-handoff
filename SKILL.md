@@ -78,9 +78,8 @@ argument-hint: "[--workspace <PATH>] [--nosave] [--gear <key>[=<值>] | --gear l
    - ③「坑与约束」合并同类、删协议复述，≤10 类；④「下一步」「在飞文件」删已完成/失效项；⑤「MEMORY 提炼」只留影响下一家的规则。
 3. 再写本次「现在/下一步/坑/交接记录」；报告 before/after 行数与搬出的条目。
 4. 覆盖写 `handoff/PROMPT.md`；写前查 gitignore：git 仓且 `handoff/PROMPT.md` 未忽略时，确认后追加（拒绝或无交互则只报告，不阻塞写卡）；已跟踪只报告，交 `--fix` 处理。内容：项目目录、读卡顺序、交接文档表、锚点、验证命令、下一步 1–3 条、勿动文件、已决策、参考 ID、规则指针；末行带 `scope=handoff`；文件头注明自动生成。
-5. 默认挡位读 `scripts/handoff.sh --gear suspend`（local / commit / push），显式参数覆盖；local 不操作 git，`--commit` 提交协议管理文档（`handoff/` 下的文件、带标记的文档及其移动/删除），`--push` 隐含 commit 并调 `scripts/handoff.sh --push`（普通项目推当前目录仓库，源仓库环境推源仓库；网络错误 3 次 / 3 秒；Windows 再按 HTTP/1.1 + OpenSSL 回退 3 次），失败留本地并报告。收工末尾，若当前项目是本 skill 的源仓库（仓库根同时有 `.git` 与 `SKILL.md`）跑 `scripts/handoff.sh --syncall` 对齐副本；普通项目不是 skill 源仓库，安装副本没有 `.git`，都跳过并说明（有提交/推送时放在其后；幂等，只补落后）。不装钩子；写卡与指针按实际推送结果记「已推送 / 待推送」，未确认不写已推送。
+5. 默认挡位读 `scripts/handoff.sh --gear suspend`（local / commit / push），显式参数覆盖；local 不操作 git，`--commit` 提交协议管理文档（`handoff/` 下的文件、带标记的文档及其移动/删除），`--push` 隐含 commit 并调 `scripts/handoff.sh --push`（普通项目推当前目录仓库，源仓库环境推源仓库；网络错误 3 次 / 3 秒；Windows 再按 HTTP/1.1 + OpenSSL 回退 3 次），失败留本地并报告。收工末尾，若当前项目是本 skill 的源仓库（仓库根同时有 `.git` 与 `SKILL.md`）跑 `scripts/handoff.sh --syncall` 对齐副本；普通项目不是 skill 源仓库，安装副本没有 `.git`，都跳过并说明（有提交/推送时放在其后；幂等，只补落后）。不装钩子；写卡与指针按实际推送结果记「已推送 / 待推送」，未确认不写已推送；不强制结束会话，可当 checkpoint 用。
 6. memory：按能力表「memory 读取」定位宿主 memory；读 `MEMORY.md` 指针 + 相关条目；只把“会影响下一家”的规则/偏好写入 `CONTEXT.md` 的「MEMORY 提炼」章（无则写「无」）；不复制原文、不写回、不搬运；冲突以 CONTEXT/DESIGN/git 为准。
-7. 不强制结束会话；可当 checkpoint 用。
 
 ## --post <message> [--new | --next <ID | 会话名>]
 
@@ -106,14 +105,15 @@ argument-hint: "[--workspace <PATH>] [--nosave] [--gear <key>[=<值>] | --gear l
 
 ## --check / --fix
 
-- `--check` 只读：安装副本 commit（`.skill-version`）与源仓库 HEAD、文档布局（scope 与目录、角色缺失/重复、V3 残留、CONTEXT 文档表断链）、config/workspace、能力表日期、`sync-paths`、`handoff/PROMPT.md` 是否未忽略或已跟踪、项目内 memory 是否 gitignore、PROMPT 是否过期、工作区文档（AGENTS/PROJECT_RULES 是否存在、是否指向 `$AGENT_CONFIG` 与 `handoff/`、是否残留旧路径）、CONTEXT 行数/记录数/坑类别是否超限；源仓库（根有 `SKILL.md` + `scripts/`）额外核对 SKILL 正文与 scripts/HELP/模板的命令、参数、路径、输出是否一致（只报告）；`--save` 是脚本层维护命令，不进 SKILL/HELP 命令表，缺失不报；不改文件。缺 README/DESIGN 不算错误，只提示可跑 `--doc`；README 仅 GitHub 项目建议生成。
-- `--fix`：先跑同一套检查，再修非文档整理项：安装副本对齐（只从源仓库跑 `scripts/handoff.sh --syncall`；副本没有 HEAD 会被拒绝；按 commit 只补落后，整体重装会覆盖副本内改动）、`git rm --cached` 取消 PROMPT 跟踪、补 `.gitignore` 规则、配置/能力表缺失项；文档布局、分类、标记、链接、文档表一律只报告「需跑 `--doc`」，不创建、不删除、不移动、不改链。
-- 默认不提交，由 `--suspend --commit` 一起提交；无 `handoff/` 且无旧文档 → 提示 `--doc`，不自动建。
+- `--check` 只读：安装副本 commit（`.skill-version`）与源仓库 HEAD、文档布局（scope 与目录、角色缺失/重复、V3 残留、CONTEXT 文档表断链）、config/workspace、能力表日期、`sync-paths`、`handoff/PROMPT.md` 是否未忽略或已跟踪、项目内 memory 是否 gitignore、PROMPT 是否过期、工作区文档（AGENTS/PROJECT_RULES 是否存在、是否指向 `$AGENT_CONFIG` 与 `handoff/`、是否残留旧路径）、CONTEXT 行数/记录数/坑类别是否超限；源仓库（根有 `SKILL.md` + `scripts/`）额外核对 SKILL 正文与 scripts/HELP/模板的命令、参数、路径、输出是否一致（只报告）；`--save` 是脚本层维护命令，不进 SKILL/HELP 命令表，缺失不报；当前宿主能力表仍有「待测」时报 🟡 并列出缺失 P 项（不自动跑 probe）；不改文件。缺 README/DESIGN 不算错误，只提示可跑 `--doc`；README 仅 GitHub 项目建议生成。
+- `--fix`：先跑同一套检查，再修非文档整理项：安装副本对齐（只从源仓库跑 `scripts/handoff.sh --syncall`；副本没有 HEAD 会被拒绝；按 commit 只补落后，整体重装会覆盖副本内改动）、`git rm --cached` 取消 PROMPT 跟踪、补 `.gitignore` 规则、配置/能力表缺失项；文档布局、分类、标记、链接、文档表一律只报告「需跑 `--doc`」，不创建、不删除、不移动、不改链；默认不提交，由 `--suspend --commit` 一起提交；无 `handoff/` 且无旧文档 → 提示 `--doc`，不自动建。
 
 ## --probe [--static | --live]
 
-- `--probe`：默认挡位读 `scripts/handoff.sh --gear probe`（static / live），显式参数覆盖；先检查，再做低成本实测（工作区根来源、会话列表、memory 路径、文件读写、git/CLI、config 解析）；更新能力表。
-- `--probe --live`：先检查，再实际建会话/发送/读回；需确认；可能留测试会话，报告并尝试删除。实测 `--post --new` 时必须记录新会话是否落 worktree；落 worktree 记 🟡/⛔，不能只记「建会话成功」。结果记可用/不可用与验证方法，不写会话 ID。
+- `--probe`：默认挡位读 `scripts/handoff.sh --gear probe`；static 只做零副作用检查，按 `assets/PROBE.md` 填静态格。
+- `--probe --live`：读 `assets/PROBE.md` 固定清单；先输出完整计划（P 项、副作用、清理、将写的能力表格），确认一次后跑完全部适用项，仅计划外副作用停下。
+- L1 只证通道可达；L2 用临时项目真实投递指针，目标读 PROMPT/CONTEXT 后回报项目目录、锚点、下一步、勿动、MEMORY 提炼 5 项并核对；每次 live 都跑 L2，L2 未过投递/读回不得记 ✅；测后清理并报告残留，不写会话 ID。
+- 完成：当前宿主必测格无「待测」，缺失/策略阻止记 ⛔/🟡 + 证据；未安装宿主整行可留「待测」。
 
 ## --printpath [--host NAME | --target DIR]
 
@@ -133,8 +133,7 @@ argument-hint: "[--workspace <PATH>] [--nosave] [--gear <key>[=<值>] | --gear l
 
 ## --gear <key>[=<值>] | --gear list
 
-- `--gear <key>`：读 `[defaults].<key>`，缺省/非法值按默认值；`--gear <key>=<值>`：校验后写入，值非法报错且不改文件；`--gear list` 列出键、默认值与允许值；读写时配置不存在报错，键不存在时插入 `[defaults]`。
-- 键名与 `config.toml` 的 `[defaults]` 一致；新增挡位只改 `scripts/lib.sh` 的 `gear_meta` / `gear_keys`，SKILL/HELP 无需跟随。
+- `--gear <key>`：读 `[defaults].<key>`，缺省/非法值按默认值；`--gear <key>=<值>`：校验后写入，值非法报错且不改文件；`--gear list` 列出键、默认值与允许值；读写时配置不存在报错，键不存在时插入 `[defaults]`；键名与 `[defaults]` 一致，新增挡位只改 `scripts/lib.sh` 的 `gear_meta` / `gear_keys`，SKILL/HELP 无需跟随。
 
 ## 边界
 

@@ -108,7 +108,7 @@ agent 会把 skill 安装到当前宿主的 `skills/multi-agent-task-handoff`，
 | 本轮收工 | `收工` / `--suspend` | 按需压卡、写 CONTEXT、覆盖 PROMPT、对齐安装副本（仅源仓库）；`--push` 在项目目录推送当前仓库（源仓库环境推源仓库），网络错误重试 3 次，Windows 再走 TLS 回退 |
 | 热交接给另一个会话 | `--post "<内容>" [--new \| --next <ID \| 会话名>]` | 只投消息，不写卡、不动 git；默认目标读 `[defaults].post` |
 | 体检/修复 | `--check` / `--fix` | 检查安装、布局、配置、链接；`--fix` 只修非文档整理项，文档整理交给 `--doc` |
-| 摸底宿主能力 | `--probe` | 实测当前 agent 并更新能力表；`--live` 会实际建会话 |
+| 摸底宿主能力 | `--probe` | 按 `assets/PROBE.md` 固定清单实测并更新能力表；`--live` 先出计划、确认一次，跑完 L1（通道）+ L2（真接盘），临时项目/会话测后清理 |
 | 路径诊断 | `--printpath` | 表格输出配置目录、工作区根、能力表（含日期）、源仓库、宿主识别来源、当前安装副本与全部副本的路径和 commit；`--host` / `--target` 可显式指定 |
 | 改默认挡位 | `--gear <key>=<值>` / `--gear list` | 写入 `config.toml` 的 `[defaults]`；用 `--gear list` 查看键与允许值，非法值不改文件 |
 
@@ -173,7 +173,7 @@ agent 会把 skill 安装到当前宿主的 `skills/multi-agent-task-handoff`，
 1. `git clone` 本仓库并执行 `install.sh`：会创建模板 `config.toml` 和能力表。
 2. 用旧机器的能力表覆盖模板——`install.sh` 只在文件不存在时创建，不会覆盖已有内容。
 3. 复制 `AGENTS.md` / `PROJECT_RULES.md` 到新工作区根，改 `config.toml` 的 workspace。
-4. 重填能力表「本机环境」块；跑 `--printpath`、`--check`、`--probe` 复验。
+4. 重填能力表「本机环境」块；跑 `--printpath`、`--check`、`--probe --live` 复验（L1+L2）。
 
 `PROMPT.md` 不带走：默认 gitignore，含本机路径和会话 ID。
 

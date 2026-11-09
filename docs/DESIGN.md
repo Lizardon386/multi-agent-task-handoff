@@ -134,13 +134,13 @@ flowchart LR
 | GitHub | README 固定在根，首页直接显示；不生成 `.github/README.md`；不用 symlink |
 | 一个写者 | 同一项目同一时间一个 agent 写；交接后旧 agent 停写 |
 | 跨任务规则 | 项目目录 → 父目录 → `$AGENT_CONFIG/PROJECT_RULES.md` |
-| 能力表 | `$AGENT_CONFIG/AGENT_CAPABILITIES.md`；差异表驱动，协议不写宿主分支 |
+| 能力表 | `$AGENT_CONFIG/AGENT_CAPABILITIES.md`；差异表驱动，协议不写宿主分支；`--probe` 按 `assets/PROBE.md` 固定清单执行 |
 | 机器级状态 | `config.toml`、`AGENT_CAPABILITIES.md`、`sync-paths` 统一放 `$AGENT_CONFIG`；工作区根只放规则与入口 |
 | 触发分层 | 上下文注入（`AGENTS.md` 读序）+ 显式命令（接手/收工，含副本同步与 push）；无后台触发；`AGENTS.md` 只做指针 |
 | 换机迁移 | 能力表整表带走，只重填「本机环境」块；`AGENTS.md` / `PROJECT_RULES.md` 复制；`sync-paths` 与宿主 memory 不带；`config.toml` 只改 workspace |
 | 迁移范围 | 所有项目级文档按角色迁移：README（若存在）留根；设计/方案/指导类进 `docs/`；交接类进 `handoff/`；客制化名同样按类迁移，不留在根 |
 | 迁移判定 | V1/V2/V3 三档特征两条同时满足：文件名符合模板（含旧名 压卡备份.md、COMPACTION_BACKUP.md），标题含项目目录名（含义一致即可，如 color-duel 的「变色对决」）；不命中的设计/方案类按角色判定，判不准问用户 |
-| 完成定义 | 文档与安装副本一致；`--help` 与命令表一致；`--check` 无 ⛔；卡 ≤100 行；根目录若存在项目文档 `.md`，只能是 `README.md`（包文件 `SKILL.md` 除外） |
+| 完成定义 | 文档与安装副本一致；`--help` 与命令表一致；`--check` 无 ⛔；当前宿主 probe 必测格无「待测」；卡 ≤100 行；根目录若存在项目文档 `.md`，只能是 `README.md`（包文件 `SKILL.md` 除外） |
 
 ### 数据、兼容性与迁移
 
@@ -166,6 +166,7 @@ flowchart LR
 - 修 bug 优先结构性根治：脚本守卫、收敛动作/权限面、状态隔离；不要用记忆或追加散文规则修补；跨 agent 的问题必须落在安装副本可执行的机制上。
 - 衍生挡位统一写成 `--命令 [--模式 ...]`，默认值放 `[defaults].<命令>`，用 `--gear <命令>=<模式>` 修改；SKILL 标题与 `--help` 写全签名，不用 `--命令-模式` 形式。
 - 宿主差异只进 `$AGENT_CONFIG/AGENT_CAPABILITIES.md`；`SKILL.md` 只举例，不写宿主专属规则。
+- `--probe` 固定清单放 `assets/PROBE.md`；`SKILL.md` 只留指针、确认粒度与完成定义；live 先出计划，确认一次后跑完全部适用项，仅计划外副作用停。
 - 旧仓迁移是逐项目人工动作，不默认扫描全盘；先 `--check` 出清单，再由 `--doc` 迁移。
 - 迁移按角色处理所有项目级文档：README（若存在）留根，设计/方案/指导类进 `docs/`，交接类进 `handoff/`；客制化名同样迁移，不留在根。判不准时给选项，不自行决定。
 - 文档增删迁移只在 `--doc`；先跑 `scripts/handoff.sh --doc --guard`，只删 `## 文档` 表中的失效协议行，其余 WARN/SUGGEST 只报告；只修迁移造成的链接/标记问题，不改正文/历史/项目内容的死链、旧路径或历史内容；内容创建只走 `--doc --init`，只新增、不重建/还原；`--fix` 不搬、不建、不删文档。
@@ -224,7 +225,7 @@ guard 只写 `## 文档` 表；init 只从模板新增；两者都不恢复正�
 |---|---|---|
 | 忘记显式收工 | 没有交接卡，下一家从零猜 | 接受；`--check` 报 PROMPT 过期，入口提示读序 |
 | 不装钩子 / 后台服务 | 普通提交不同步副本 | 接受；用 `--save` / `--suspend` 显式同步 |
-| 宿主差异（worktree、会话 API、memory） | `--post --new` 或读回可能失败 | 能力表 + `--probe`；落 worktree 拒绝 |
+| 宿主差异（worktree、会话 API、memory） | `--post --new` 或读回可能失败 | 能力表 + `--probe` 清单；落 worktree 拒绝；L2 需临时会话/项目，清理失败只报告 |
 | 长会话缓存旧 skill 文本 | 可能按旧规则执行 | `--doc --guard` 扫描/维护；仍需宿主重新加载（开放问题） |
 | 非 GitHub 项目 README 缺失但被引用 | 断链或误恢复 | `--doc --guard` 删文档表失效行、正文只报告；`--doc --init` 只新增 |
 | 配置模板不覆盖已有文件 | 新键 / 注释不自动同步 | `--check` 或人工更新；无 version；`--gear` 显式改 |
@@ -256,7 +257,7 @@ guard 只写 `## 文档` 表；init 只从模板新增；两者都不恢复正�
 | `PROMPT.md` 自动生成并 gitignore | 含会话 ID/本机路径，默认不提交 | 跨机交接要另发内容 |
 | 默认不操作 git | commit/push 是外部可见动作 | 要落锚点时必须显式 `--commit`/`--push` |
 | 机械动作由显式命令执行 | 钩子依赖本机配置、外部宿主可改；已删除钩子，同步与 push 只由显式命令执行 | 不走 `--save` / `--suspend` 的普通提交不会同步副本 |
-| 能力表按差异拆分 | 宿主叫法、目录来源、会话能力各不同 | 表多，首次要填 |
+| 能力表按差异拆分 | 宿主叫法、目录来源、会话能力各不同 | 表多，首次要填；每次 live 跑 L1+L2，完成格不留「待测」 |
 | memory 只读提升 | 保持 `CONTEXT.md` 是唯一可移植真源 | 宿主记忆的细节不自动搬运 |
 | 归属标记用末行隐藏注释 | 不污染公开页面；机器可读；无标记即项目自有 | 旧文档未标记时只能靠角色与用户确认 |
 | 安装只认当前宿主 | 不替没打开它的 agent 铺副本 | 换宿主要重跑一次 |
@@ -277,7 +278,7 @@ multi-agent-task-handoff/
 │  ├─ lib.sh                # 共享：配置 / 宿主 / 路径函数
 │  └─ 运行时.bat             # Windows 运行时入口
 ├─ LICENSE
-├─ assets/                  # HELP / 模板（含 COMMANDS.md.tpl）/ 示例
+├─ assets/                  # HELP / 模板（含 COMMANDS.md.tpl）/ PROBE.md / 示例
 ├─ .gitignore
 ├─ README.md                # 项目说明；scope=root
 ├─ docs/
@@ -316,7 +317,7 @@ multi-agent-task-handoff/
 1. **项目 ↔ 工作区根**：项目目录是写入根；工作区根只建项目目录。
 2. **交接文档 ↔ 项目文档**：`handoff/` 放交接文档；根 README 与 `docs/` 放项目文档；所有项目同一布局，旧布局由 `--doc` 迁移，只移不复制。
 3. **CONTEXT ↔ PROMPT**：CONTEXT 人维护；PROMPT 自动生成，冲突以 CONTEXT 为准。
-4. **能力表 ↔ 自动化**：建会话/绑定目录/切目录/UI 打开/文件迁移/会话搬运分级；未知按手动。
+4. **能力表 ↔ 自动化**：建会话/绑定目录/切目录/UI 打开/文件迁移/会话搬运分级；未知按手动；测试矩阵见 `assets/PROBE.md`。
 5. **memory ↔ 交接**：只读提升；不复制、不写回；位置与读取方式查能力表「memory 读取」。
 6. **归属标记 ↔ 目录**：标记声明 scope（root/docs/handoff），所在目录必须一致；无标记文档归项目所有，协议只读。
 
@@ -335,7 +336,7 @@ multi-agent-task-handoff/
 
 `--save` 内部依次：`git add` → `git commit` → `--syncall` → `--push`（网络错误重试）。普通 `git commit` 不会自动同步副本。
 
-自动化边界：**流程编排全部由人触发；自动化只发生在命令内部。**
+自动化边界：**流程编排全部由人触发；自动化只发生在命令内部。** `--probe --live` 仍由 agent 执行；计划确认一次后，命令内动作按清单全自动。
 
 | 步骤 | 谁触发 | 谁执行 | 性质 |
 |---|---|---|---|
