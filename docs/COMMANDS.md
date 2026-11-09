@@ -11,7 +11,7 @@
 | `--resume` | 接手：读 PROMPT → CONTEXT，核锚点、跑验证 | — |
 | `--suspend [--local \| --commit \| --push]` | 收工：压卡、写 CONTEXT、生成 PROMPT、对齐副本 | `[defaults].suspend`，默认 `local` |
 | `--post <message> [--new \| --next <ID \| 会话名>]` | 热交接：把消息投给另一个会话 | `[defaults].post`，默认 `new` |
-| `--doc [--guard \| --init]` | 文档整理：布局、标记、迁移；可选创建缺失文档 | `[defaults].doc`，默认 `guard` |
+| `--doc [--guard \| --init]` | 文档整理：布局、标记、迁移；guard 维护/删失效行，init 只新增 | `[defaults].doc`，默认 `guard` |
 | `--check` | 只读体检 | — |
 | `--fix` | 体检 + 修非文档整理项 | — |
 | `--probe [--static \| --live]` | 摸底宿主能力并更新能力表 | `[defaults].probe`，默认 `static` |
@@ -52,15 +52,15 @@
 
 - 语法：`--doc`，可选一个挡位。
 - 默认：`[defaults].doc`；未配置按 `guard`。
-- `--guard`：只读扫描；检查缺失角色、被引用文档、README 引用、标记和链接；输出 `OK` / `WARN`，并评估项目是否**建议**生成 DESIGN / COMMANDS；不创建、不还原、不询问用户。
-- `--init`：显式创建缺失文档，先出清单并确认：
+- `--guard`：维护已有文档；检查缺失角色、被引用文档、README 引用、标记和链接；删除 `## 文档` 表中指向缺失协议角色的整行；其余输出 `OK` / `WARN` / `SUGGEST`，只报告；不新增、不还原、不改正文。
+- `--init`：只新增缺失文档，先出清单并确认：
   - `CONTEXT.md`：必生成。
   - `README.md`：仅 GitHub 项目（`git remote -v` 指向 GitHub）或用户明确要发布到 GitHub 时生成。
   - `DESIGN.md`：仅在有设计取舍且用户确认时生成；`--guard` 检出设计/方案类文档时会建议。
   - `COMMANDS.md`：仅在用户明确要求时生成；`--guard` 检出 CLI/多命令迹象时会建议。
   - 一律从模板创建；不从会话记录、历史副本或备份还原。
 - 行为：布局整理、角色迁移、补标记、只修迁移造成的链接；内容增删迁移只由 `--doc` 执行。
-- 边界：`--guard` 与 `--doc` 不改文档原有死链/旧路径/历史内容；冲突停，不覆盖、不改名、不合并。
+- 边界：`--guard` 只改 `## 文档` 表（删失效协议行）；正文/历史/项目内容死链只报告；冲突停，不覆盖、不改名、不合并。
 - 常见错误：目标已存在且非本协议生成、角色有多份候选、判不准分类；出选择题，未选不动。
 
 ## --check

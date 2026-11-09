@@ -10,7 +10,7 @@
 # --gear <key>[=<值>] 写入挡位；--gear list 查看可写键（值非法不修改）
 suspend = "local"
 probe = "static"
-# --doc 默认挡位：guard = 只读扫描；init = 显式创建
+# --doc 默认挡位：guard = 维护已有文档（删协议表失效行）；init = 只新增
 doc = "guard"
 # --post 目标：new = 新建会话后投递；next = 投递到已有会话（必须给 --next，可填会话 ID 或会话名）
 post = "new"

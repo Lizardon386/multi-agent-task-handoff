@@ -20,7 +20,7 @@ multi-agent-task-handoff — 多 agent 任务交接
                             默认读 config.toml 的 [defaults].post（new / next）
   --doc [--guard | --init]
                             默认挡位读 config.toml 的 [defaults].doc（guard）
-                              --guard   只读扫描：报告 + 建议 DESIGN/COMMANDS，不创建/不还原
+                              --guard   维护已有文档：删 ## 文档 表的失效协议行；其余只报告/建议，不新增/不还原
                               --init    显式创建缺失文档：CONTEXT 必生成；README 仅 GitHub/确认；
                                         DESIGN 需取舍+确认；COMMANDS 仅用户要求
                             布局/标记/迁移链接由 --doc 本身处理；拿不准给选项

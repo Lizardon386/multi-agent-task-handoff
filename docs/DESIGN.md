@@ -58,7 +58,7 @@ flowchart LR
 
 | 阶段 | 触发 | 动作 | 产出 / 结果 | 边界 |
 |---|---|---|---|---|
-| 开工 | `--doc [--guard \| --init]` | 默认挡位 `[defaults].doc=guard`；`--guard` 只读扫描并建议可选角色；`--init` 显式创建缺失 CONTEXT（README 仅 GitHub/确认，DESIGN 需取舍确认，COMMANDS 仅用户要求）；设计/方案/指导类迁 `docs/`；交接类迁 `handoff/`；补标记；同意后把 PROMPT 加入 `.gitignore` | README（GitHub 项目）+ `docs/` + `handoff/` | 冲突或判不准 → 出选择题，未选不动；缺失角色只 WARN，不创建/不还原 |
+| 开工 | `--doc [--guard \| --init]` | 默认挡位 `[defaults].doc=guard`；`--guard` 维护已有文档（删文档表失效协议行，其余只报告）并建议可选角色；`--init` 只新增缺失 CONTEXT（README 仅 GitHub/确认，DESIGN 需取舍确认，COMMANDS 仅用户要求）；设计/方案/指导类迁 `docs/`；交接类迁 `handoff/`；补标记；同意后把 PROMPT 加入 `.gitignore` | README（GitHub 项目）+ `docs/` + `handoff/` | 冲突或判不准 → 出选择题，未选不动；缺失角色只 WARN，不新增/不还原 |
 | 工作 | — | 改代码/文档；状态或坑变化时更新 CONTEXT | 可交接的当前状态 | 一个项目同一时间一个写者 |
 | 收工 | `--suspend` | 超限先压卡；写现在/下一步/MEMORY 提炼/坑/记录；覆盖 PROMPT；按需读 memory 提炼规则；默认挡位读 `config.toml`；源仓库时末尾对齐副本（安装副本跳过；提交/推送时在其后） | CONTEXT 更新 + PROMPT 覆盖 + 副本对齐 | 默认不动 git；`--commit` 提交协议管理文档（`handoff/` 与带标记文档及其移动/删除）；`--push` 隐含 commit 并调 `scripts/handoff.sh --push`（网络错误 3 次 / 3 秒；Windows 再加 HTTP/1.1 + OpenSSL 回退 3 次）；未确认推送成功写「待推送」 |
 | 热交接 | `--post <message> [--new \| --next <ID \| 会话名>]` | 把 message 投给另一个会话；可追加项目目录/HEAD/指针，必须可见标注 | 目标会话收到消息 | 不写卡、不动 git；`--new` 必须绑定项目目录，落 worktree 视为失败 |
@@ -121,7 +121,7 @@ flowchart LR
 - 宿主差异只进 `$AGENT_CONFIG/AGENT_CAPABILITIES.md`；`SKILL.md` 只举例，不写宿主专属规则。
 - 旧仓迁移是逐项目人工动作，不默认扫描全盘；先 `--check` 出清单，再由 `--doc` 迁移。
 - 迁移按角色处理所有项目级文档：README（若存在）留根，设计/方案/指导类进 `docs/`，交接类进 `handoff/`；客制化名同样迁移，不留在根。判不准时给选项，不自行决定。
-- 文档增删迁移只在 `--doc`；先跑 `scripts/handoff.sh --doc --guard`，WARN 只报告、不创建/不还原、不询问；只修迁移造成的链接/标记问题，不改文档原有死链、旧路径或历史内容；内容创建只走 `--doc --init`，不重建/还原缺失文档；`--fix` 不搬、不建、不删文档。
+- 文档增删迁移只在 `--doc`；先跑 `scripts/handoff.sh --doc --guard`，只删 `## 文档` 表中的失效协议行，其余 WARN/SUGGEST 只报告；只修迁移造成的链接/标记问题，不改正文/历史/项目内容的死链、旧路径或历史内容；内容创建只走 `--doc --init`，只新增、不重建/还原；`--fix` 不搬、不建、不删文档。
 - README 若存在必须在根目录；不生成 `.github/README.md` 或 `docs/README.md`。
 - 安装只装 HEAD；工作树未提交时只装上一个 commit。
 - 状态以 git 为准：未确认推送成功，不写「已推送」；卡与指针记「已提交，待推送」或实际结果。
@@ -149,7 +149,7 @@ flowchart LR
 | `.github/README.md` 副本或 symlink | 根 README 已能被 GitHub 原生显示；副本会漂移 | README 固定在根 |
 | `post-commit` 自动 push / 钩子兜底同步 | 与「默认不操作 git」冲突；外部宿主可反复改写 | `--save` / `--suspend` 显式提交、同步、推送 |
 | `--suspend <ID>` 投递 | 投递与收工耦合，无法在不写卡时投递 | `--post <message>` |
-| `--doc` 直接创建/恢复内容 | 越界改正文，无法跨 agent 约束 | `--doc --guard` 只报告 + `--doc --init` 显式创建 |
+| `--doc` 直接创建/恢复内容 | 越界改正文，无法跨 agent 约束 | `--doc --guard` 只维护协议表 + `--doc --init` 只新增 |
 | cwd 即项目根 | 多仓 / 散落仓 / Ubuntu 下不成立 | 项目目录是唯一写入根 |
 | 工作区根当产物根 | 会把 `handoff/` 写到容器 | 工作区根只做容器 |
 
@@ -160,8 +160,8 @@ flowchart LR
 | 忘记显式收工 | 没有交接卡，下一家从零猜 | 接受；`--check` 报 PROMPT 过期，入口提示读序 |
 | 不装钩子 / 后台服务 | 普通提交不同步副本 | 接受；用 `--save` / `--suspend` 显式同步 |
 | 宿主差异（worktree、会话 API、memory） | `--post --new` 或读回可能失败 | 能力表 + `--probe`；落 worktree 拒绝 |
-| 长会话缓存旧 skill 文本 | 可能按旧规则执行 | `--doc --guard` 只读扫描；仍需宿主重新加载（开放问题） |
-| 非 GitHub 项目 README 缺失但被引用 | 断链或误恢复 | `--doc --guard` 只 WARN；`--doc --init` 显式创建 |
+| 长会话缓存旧 skill 文本 | 可能按旧规则执行 | `--doc --guard` 扫描/维护；仍需宿主重新加载（开放问题） |
+| 非 GitHub 项目 README 缺失但被引用 | 断链或误恢复 | `--doc --guard` 删文档表失效行、正文只报告；`--doc --init` 只新增 |
 | 配置模板不覆盖已有文件 | 新键 / 注释不自动同步 | `--check` 或人工更新；无 version；`--gear` 显式改 |
 | 跨会话消息队列 | `queued` ≠ 已消费；stopped 不唤醒 | 发送后 `WaitSessions` / `ReadSession` 读回，不以入队为成功 |
 
@@ -183,7 +183,7 @@ flowchart LR
 | 项目目录是唯一写入根 | 多仓/AOSP 场景下不会把卡写到工作区根 | 无项目时要先建目录 |
 | 工作区根只做容器 | 与“产物根”区分，避免把 `handoff/` 写到容器 | 用户要理解两个概念的区别 |
 | 命令一次只用一个 | 组合过长、顺序和冲突难维护 | 需要多步时分开跑 |
-| `--doc` 独占文档增删迁移 | 结构操作集中，其他命令不会意外搬文件；只修迁移造成的链接，不改文档原有内容；内容创建拆到 `--doc --init`，默认挡位 `[defaults].doc=guard` | 迁移必须显式跑 `--doc`；判不准时要问用户；缺失被引用文档由 `--doc --guard` 只报告，不阻断、不创建 |
+| `--doc` 独占文档增删迁移 | 结构操作集中，其他命令不会意外搬文件；只修迁移造成的链接，不改正文/历史内容；内容创建拆到 `--doc --init`，默认挡位 `[defaults].doc=guard` | 迁移必须显式跑 `--doc`；判不准时要问用户；缺失被引用文档由 `--doc --guard` 删文档表失效行、其余只报告 |
 | `--post` 与 `--suspend` 分离 | 热交接只传消息，冷交接才落盘；两者可单独使用 | 需要用户提供 message 与目标会话 |
 | 交接只发指针 | 跨 agent 不复制聊天历史；PROMPT 可复用 | 目标读不到文件时要附全文 |
 | `PROMPT.md` 自动生成并 gitignore | 含会话 ID/本机路径，默认不提交 | 跨机交接要另发内容 |

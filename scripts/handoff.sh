@@ -42,7 +42,8 @@ usage() {
                    值不在白名单时不修改文件
   --doc [--guard | --init] [--target DIR]
                    默认挡位读 config.toml 的 [defaults].doc（guard）
-                   --guard 只读扫描；--init 由 agent 显式创建，脚本不写内容
+                   --guard 维护已有文档：只删 ## 文档 表中的失效协议行，其余只报告
+                   --init 由 agent 显式创建，脚本不写内容
   -h, --help       显示本表
 
 安装用 install.sh；本脚本一次只做一件事。
@@ -116,6 +117,52 @@ if [ -n "$host_arg" ]; then
   esac
 fi
 
+# --doc --guard 的有限修复：只删 ## 文档 表中指向缺失协议角色的整行。
+repair_doc_tables() {
+  for pair in "$project/handoff/CONTEXT.md|$project/handoff" "$project/handoff/PROMPT.md|$project"; do
+    file=${pair%%|*}
+    base=${pair#*|}
+    [ -f "$file" ] || continue
+    tmp=$file.tmp.$$
+    removed=0
+    in_doc=0
+    while IFS= read -r line || [ -n "$line" ]; do
+      case "$line" in
+        '## 文档'*) in_doc=1; printf '%s\n' "$line"; continue ;;
+        '## '*) in_doc=0; printf '%s\n' "$line"; continue ;;
+      esac
+      if [ "$in_doc" = 1 ]; then
+        case "$line" in
+          '|'*']('*)
+            link=$(printf '%s' "$line" | grep -oE '\]\([^)]*\)' | head -1 | sed 's/^](//; s/)$//')
+            target=${link%%#*}
+            if [ -n "$target" ] && [ ! -e "$base/$target" ]; then
+              case "${target##*/}" in
+                README.md|DESIGN.md|CONTEXT.md|COMPACT_BACKUP.md|COMMANDS.md|PROMPT.md)
+                  removed=$((removed + 1)); continue ;;
+              esac
+            fi
+            ;;
+        esac
+      fi
+      printf '%s\n' "$line"
+    done < "$file" > "$tmp"
+    if [ "$removed" -gt 0 ]; then
+      before=$(wc -l < "$file")
+      if mv "$tmp" "$file"; then
+        after=$(wc -l < "$file")
+        printf 'FIXED    stale-role-ref  %s（删除 %s 行；before=%s after=%s）\n' "$file" "$removed" "$before" "$after"
+      else
+        rm -f "$tmp"
+        printf 'WARN     stale-role-ref  %s（删除失败，保留原文件）\n' "$file"
+        warn=1
+      fi
+    else
+      rm -f "$tmp"
+    fi
+  done
+}
+
 if [ "$mode" = doc ]; then
   config_dir=$(agent_config_dir)
   cfg_file=$config_dir/config.toml
@@ -129,6 +176,7 @@ if [ "$mode" = doc ]; then
   project=$(CDPATH= cd -- "$project" 2>/dev/null && pwd -P) || die "项目目录不存在: ${target_arg:-$PWD}"
   warn=0
   printf 'doc(guard): %s\n' "$project"
+  repair_doc_tables
 
   if [ -f "$project/handoff/CONTEXT.md" ]; then
     printf 'OK       handoff/CONTEXT.md\n'
@@ -151,9 +199,8 @@ if [ "$mode" = doc ]; then
     esac
   else
     if [ -n "$readme_refs" ]; then
-      printf 'WARN     README.md 缺失，但被以下位置引用：\n'
+      printf 'WARN     dead-link  README.md 缺失（正文/历史引用；只报告）：\n'
       printf '%s\n' "$readme_refs" | sed 's/^/         /'
-      printf '         只报告，不创建/不还原，不询问用户\n'
       warn=1
     elif git -C "$project" remote -v 2>/dev/null | grep -qi github; then
       printf 'WARN     README.md 缺失（GitHub 项目；可显式 --doc --init）\n'
@@ -170,7 +217,8 @@ if [ "$mode" = doc ]; then
       grep -oE '\]\([^)]*\.md[^)]*\)' "$f" 2>/dev/null | sed 's/^](//; s/)$//' | while IFS= read -r link; do
         case "$link" in http*|mailto:*|\#*) continue;; esac
         target=${link%%#*}; [ -n "$target" ] || continue
-        [ -e "$dir/$target" ] || printf 'WARN     %s -> %s（原有死链，只报告）\n' "$f" "$target"
+        case "${target##*/}" in README.md) continue;; esac
+        [ -e "$dir/$target" ] || [ -e "$project/$target" ] || printf 'WARN     dead-link  %s -> %s（只报告）\n' "$f" "$target"
       done
     done
   )
@@ -234,9 +282,9 @@ if [ "$mode" = doc ]; then
   [ -n "$suggest_commands" ] && printf 'SUGGEST  COMMANDS：%s（仅建议，不自动创建）\n' "$suggest_commands"
 
   if [ "$warn" = 1 ]; then
-    printf 'result: WARN（只报告，不写入；--doc 可继续布局）\n'
+    printf 'result: WARN（协议表已检查；其余只报告）\n'
   else
-    printf 'result: OK\n'
+    printf 'result: OK（协议表已检查）\n'
   fi
   exit 0
 fi
