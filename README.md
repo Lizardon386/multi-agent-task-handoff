@@ -236,10 +236,12 @@ agent 会把 skill 安装到当前宿主的 `skills/multi-agent-task-handoff`，
 </details>
 
 ## 参与
+> 只写如何反馈问题与贡献。
 
 问题、想法、宿主适配的实测结论都欢迎开 issue；改动协议或命令前先看 [docs/DESIGN.md](docs/DESIGN.md) 的工程约束。
 
 ## 许可
+> 只写许可证与版权归属。
 
 [MIT](LICENSE) © 2026 Lizardon386
 

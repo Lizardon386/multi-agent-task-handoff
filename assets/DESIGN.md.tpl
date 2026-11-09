@@ -4,8 +4,19 @@
 
 > <一句话：要解决什么问题 / 做到什么>
 > 状态：草稿 / 提议中 / 已采纳 / 已废弃（可选）
-> 文档表见 [CONTEXT.md](../handoff/CONTEXT.md)。
 > 最近更新：YYYY-MM-DD
+
+## 文档
+> 只列主要文档与阅读对象；完整索引见 CONTEXT；不复制正文。
+
+| 文档 | 阅读对象 | 内容 |
+|---|---|---|
+| [README.md](../README.md) | 使用者 | 这是什么、怎么跑、限制 |
+| [DESIGN.md](DESIGN.md) | 评审 / 开发 | 摘要、方案、备选、风险、决策（本文） |
+| [COMMANDS.md](COMMANDS.md) | 使用者 | 命令参考（可选；有则加行） |
+| [CONTEXT.md](../handoff/CONTEXT.md) | 接手 agent | 完整文档表、当前状态、下一步、记忆提炼、坑 |
+
+完整文档表（含 PROMPT、SKILL、HELP、压卡备份）见 [CONTEXT.md](../handoff/CONTEXT.md)。
 
 ## 摘要（Summary）
 > 一段话讲清：问题、方案、为什么现在做。只读这一节也应能明白。

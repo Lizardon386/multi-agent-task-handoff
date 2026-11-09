@@ -3,16 +3,29 @@
 <!-- 本文件是 docs/COMMANDS.md；可选角色，仅在用户明确要求时由 --doc --init 生成。只做命令参考：工作流见 README，协议见 SKILL，取舍见 DESIGN。 -->
 
 > <一句话：这份参考覆盖哪些命令 / 适用对象>
-> 文档表见 [CONTEXT.md](../handoff/CONTEXT.md)。
 > 最近更新：YYYY-MM-DD
 
+## 文档
+> 只列主要文档与阅读对象；完整索引见 CONTEXT；不复制正文。
+
+| 文档 | 阅读对象 | 内容 |
+|---|---|---|
+| [README.md](../README.md) | 使用者 | 这是什么、怎么跑、限制 |
+| [DESIGN.md](DESIGN.md) | 评审 / 开发 | 摘要、方案、备选、风险、决策 |
+| [COMMANDS.md](COMMANDS.md) | 使用者 | 命令参考（本文） |
+| [CONTEXT.md](../handoff/CONTEXT.md) | 接手 agent | 完整文档表、当前状态、下一步、记忆提炼、坑 |
+
+完整文档表（含 PROMPT、SKILL、HELP、压卡备份）见 [CONTEXT.md](../handoff/CONTEXT.md)。
+
 ## 命令索引
+> 只列命令、用途与默认挡位；详细说明见下文章节。
 
 | 命令 | 用途 | 默认值 / 挡位 |
 |---|---|---|
 | `<命令>` |  |  |
 
 ## <命令>
+> 只说明语法、默认值、行为边界与常见错误。
 
 - 语法：`<命令> [参数]`
 - 默认：<默认挡位 / 配置键>
@@ -21,15 +34,10 @@
 - 常见错误：<错误 / 处理>
 
 ## 默认值与配置
+> 只列配置键、默认值与允许值。
 
 | 键 | 默认 | 允许值 | 说明 |
 |---|---|---|---|
 |  |  |  |  |
-
-## 相关文档
-
-- 工作流：[README.md](../README.md)
-- 协议：[SKILL.md](../SKILL.md)
-- 设计取舍：[DESIGN.md](DESIGN.md)
 
 <!-- multi-agent-task-handoff: scope=docs -->

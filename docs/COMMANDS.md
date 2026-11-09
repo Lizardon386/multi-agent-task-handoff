@@ -1,10 +1,22 @@
 # multi-agent-task-handoff · 命令参考
 
 > 面向使用者和 agent：逐命令说明语法、默认值、行为边界和常见错误。
-> 工作流与最短路径见 [README.md](../README.md)；协议正文见 [SKILL.md](../SKILL.md)；设计取舍见 [DESIGN.md](DESIGN.md)。
 > 最近更新：2026-11-06
 
+## 文档
+> 只列主要文档与阅读对象；完整索引见 CONTEXT；不复制正文。
+
+| 文档 | 阅读对象 | 内容 |
+|---|---|---|
+| [README.md](../README.md) | 使用者 | 这是什么、怎么跑、限制 |
+| [DESIGN.md](DESIGN.md) | 评审 / 开发 | 摘要、方案、备选、风险、决策 |
+| [COMMANDS.md](COMMANDS.md) | 使用者 | 命令参考（本文） |
+| [CONTEXT.md](../handoff/CONTEXT.md) | 接手 agent | 完整文档表、当前状态、下一步、记忆提炼、坑 |
+
+完整文档表（含 PROMPT、SKILL、HELP、压卡备份）见 [CONTEXT.md](../handoff/CONTEXT.md)。
+
 ## 命令索引
+> 只列命令、用途与默认挡位；详细说明见下文章节。
 
 | 命令 | 用途 | 默认值 / 挡位 |
 |---|---|---|
@@ -21,6 +33,7 @@
 | `--help` | 输出帮助 | — |
 
 ## --resume
+> 只说明接手的读取顺序、核对项与输出。
 
 - 语法：`--resume`，无参数；不写命令时默认也是它。
 - 行为：读 `handoff/PROMPT.md` → `handoff/CONTEXT.md` → 跨任务规则；核对 cwd 与项目目录、HEAD/工作树/副本锚点；跑 PROMPT 的验证命令；汇报状态、下一步、阻塞。
@@ -28,6 +41,7 @@
 - 常见错误：cwd 与项目目录不一致、PROMPT 缺失或锚点过期、验证命令失败；先报告，不静默按过期状态开工。
 
 ## --suspend [--local | --commit | --push]
+> 只说明收工、压卡、PROMPT 与挡位。
 
 - 语法：`--suspend`，可选一个挡位。
 - 默认：`[defaults].suspend`；未配置按 `local`。
@@ -40,6 +54,7 @@
 - 常见错误：CONTEXT 缺失、推送认证失败/非快进、从安装副本跑 `--syncall`；保留本地提交并报告。
 
 ## --post <message> [--new | --next <ID | 会话名>]
+> 只说明投递目标、新会话约束与不写卡边界。
 
 - 语法：`--post "<message>"`，必须给 message；目标二选一。
 - 默认：`[defaults].post`；`new` 或 `next`。配成 `next` 但没给目标时停下问。
@@ -49,6 +64,7 @@
 - 常见错误：message 为空、目标会话不存在/不唯一、workDir 不一致、宿主不支持跨会话；停下报告或给替代。
 
 ## --doc [--guard | --init]
+> 只说明 guard/init 分工、布局与标记。
 
 - 语法：`--doc`，可选一个挡位。
 - 默认：`[defaults].doc`；未配置按 `guard`。
@@ -64,6 +80,7 @@
 - 常见错误：目标已存在且非本协议生成、角色有多份候选、判不准分类；出选择题，未选不动。
 
 ## --check
+> 只说明只读检查项与报告口径。
 
 - 语法：`--check`，无参数。
 - 行为：只读检查安装副本 commit、文档布局与 scope、链接、config/workspace、能力表日期、`sync-paths`、`PROMPT.md` 忽略/跟踪状态、项目内 memory 是否 gitignore、PROMPT 是否过期、工作区文档、CONTEXT 行数/记录数/坑类别；源仓库额外核对 SKILL/scripts/HELP/模板一致性。
@@ -71,6 +88,7 @@
 - 常见错误：副本落后、PROMPT 被跟踪、CONTEXT 超限、能力表过期；按报告处理，不把 `--check` 当迁移工具。
 
 ## --fix
+> 只说明非文档修复项；文档整理交给 --doc。
 
 - 语法：`--fix`，无参数。
 - 行为：先跑同一套检查，再修非文档整理项：安装副本对齐、`git rm --cached` 取消 PROMPT 跟踪、补 `.gitignore` 规则、配置/能力表缺失项。
@@ -78,6 +96,7 @@
 - 常见错误：把 `--fix` 当文档整理用；它不会迁移旧布局。
 
 ## --probe [--static | --live]
+> 只说明静态/实测能力与能力表更新。
 
 - 语法：`--probe`，可选一个挡位。
 - 默认：`[defaults].probe`；未配置按 `static`。
@@ -88,6 +107,7 @@
 - 常见错误：把「建会话成功」当「投递成功」；落 worktree 必须记 🟡/⛔。
 
 ## --printpath [--host NAME | --target DIR]
+> 只说明诊断输出项。
 
 - 语法：`--printpath`，可选显式宿主或安装目录。
 - 行为：只读表格输出配置目录、配置文件、工作区根及来源、能力表日期、安装注册表、源仓库、宿主识别来源、当前安装副本和全部副本的路径/commit。
@@ -95,6 +115,7 @@
 - 常见错误：把路径诊断当安装/修复命令；它只读。
 
 ## --gear <key>[=<值>] | --gear list
+> 只说明键、允许值与非法值处理。
 
 - 语法：`--gear suspend` / `--gear probe` / `--gear post` / `--gear doc` 读取；`--gear <key>=<值>` 写入；`--gear list` 列出键、默认值与允许值。
 - 允许值：`suspend=local|commit|push`、`probe=static|live`、`post=new|next`、`doc=guard|init`。
@@ -103,6 +124,7 @@
 - 常见错误：拼错键/值、在未安装配置的机器上直接写；先跑 `install.sh` 或 `--gear list`。
 
 ## --workspace <PATH> [--nosave]
+> 只说明工作区根来源与写回规则。
 
 - 语法：`--workspace "D:/agent_workspace"`，可搭配一个命令；`--nosave` 只本次生效。
 - 行为：设置工作区根；默认写回 `[paths].workspace`。
@@ -110,12 +132,14 @@
 - 常见错误：把项目目录当工作区根；只想本次生效却忘了 `--nosave`。
 
 ## --help
+> 只说明帮助输出来源。
 
 - 语法：`--help`，单独使用。
 - 行为：输出 `assets/HELP.txt` 的速查表；找不到时输出 SKILL 的用法表和边界。
 - 边界：不替代本参考；详细语法和示例以本文为准。
 
 ## 默认值与配置
+> 只列配置键、默认值与允许值。
 
 | 键 | 默认 | 允许值 | 说明 |
 |---|---|---|---|
@@ -126,12 +150,5 @@
 | `[defaults].doc` | `guard` | `guard` / `init` | `--doc` 默认挡位 |
 
 配置只解析简单 `key = "value"`；不 `source`，不依赖 Python。
-
-## 相关文档
-
-- 工作流与安装：[README.md](../README.md)
-- 交接协议：[SKILL.md](../SKILL.md)
-- 设计取舍：[DESIGN.md](DESIGN.md)
-- 当前状态：[handoff/CONTEXT.md](../handoff/CONTEXT.md)
 
 <!-- multi-agent-task-handoff: scope=docs -->
