@@ -213,7 +213,7 @@ multi-agent-task-handoff/
 - `.gitignore` 只增 `handoff/PROMPT.md`，不改项目其他忽略规则；已跟踪的文件先 `git rm --cached` 取消跟踪，再提交。
 - `scripts/handoff.sh --push` 只重试网络类错误（TLS / reset / timeout 等）；认证失败、非快进、保护分支立即失败。
 - 换机迁移只带知识，不带本机状态：能力表本身可搬（覆盖模板），`sync-paths` 重建，宿主 memory 不搬，`PROMPT.md` 不带走。
-- 机器级状态只放 `$AGENT_CONFIG`，不放仓库；仓库里不留 `.skill-sync-paths`。
+- 机器级状态只放 `$AGENT_CONFIG`，不放仓库；仓库里不留 `.skill-sync-paths`；状态文件只写有读取方的字段，`.skill-version` 只留 `commit` / `source`。
 - 已删除钩子；worktree、外部宿主或本地 git 配置都不再影响同步与 push。
 - 模板只播种、不覆盖：缺失的 `AGENT_CAPABILITIES.md` / `AGENTS.md` / `PROJECT_RULES.md` 可确认后从模板创建；已存在的不改写，只报过期。
 - 文档只留单一事实源：协议在 `SKILL.md`、取舍在 `docs/DESIGN.md`、状态在 `handoff/CONTEXT.md`；其他文件用指针，不复制正文。

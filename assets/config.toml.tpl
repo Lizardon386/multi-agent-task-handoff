@@ -1,6 +1,6 @@
 [paths]
 # 默认：~/agent_workspace（Windows 展开为 C:\Users\<user>\agent_workspace）
-# 作者本机自定义示例（默认注释，首次运行会询问）：
+# 作者本机自定义示例（默认注释；需要时手动取消注释）：
 # workspace = "D:/agent_workspace"
 
 # 能力表固定为同目录 AGENT_CAPABILITIES.md（不支持自定义路径）

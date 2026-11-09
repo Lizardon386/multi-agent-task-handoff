@@ -130,12 +130,10 @@ fi
 if [ "$is_git" = 1 ]; then
   full_commit=$(git -C "$repo" rev-parse HEAD) || die "读不到 HEAD"
   commit=$(printf '%s' "$full_commit" | cut -c1-7)
-  commit_date=$(git -C "$repo" log -1 --format=%cI)
   dirty=$(git -C "$repo" status --porcelain)
 else
   full_commit=unknown
   commit=unknown
-  commit_date=$(date -Iseconds 2>/dev/null || date)
   dirty=
 fi
 
@@ -221,7 +219,7 @@ if ! diff -u "$exp" "$act" >/dev/null; then
   die "安装校验失败：文件清单与 HEAD 不一致"
 fi
 
-printf 'commit=%s\ndate=%s\nsource=%s\n' "$full_commit" "$commit_date" "$repo_real" > "$target/.skill-version" || die "写 .skill-version 失败"
+printf 'commit=%s\nsource=%s\n' "$full_commit" "$repo_real" > "$target/.skill-version" || die "写 .skill-version 失败"
 
 if [ ! -f "$cfg_file" ]; then
   if mkdir -p "$config_dir" 2>/dev/null; then
