@@ -95,6 +95,30 @@ flowchart LR
 
 ### 已定语义与边界
 
+```mermaid
+flowchart LR
+  subgraph P["项目目录：唯一写入根"]
+    P0["项目目录"]
+    R["README / COMMANDS"]
+    D["docs/ 设计 / 方案 / 指导"]
+    H["handoff/ 交接文档"]
+    P0 --- R
+    P0 --- D
+    P0 --- H
+  end
+  subgraph C["$AGENT_CONFIG：机器状态"]
+    CFG["config.toml"]
+    CAP["AGENT_CAPABILITIES.md"]
+    SP["sync-paths"]
+  end
+  A["当前写者 agent"] --> R
+  A --> D
+  A --> H
+  W["工作区根"] -. "只创建项目目录" .-> P0
+  C -. "读 / 写" .-> A
+  M["宿主 memory"] -. "只读提升" .-> H
+```
+
 | 主题 | 约定 |
 |---|---|
 | 写入根 | 项目目录；工作区根永远不直接写 `handoff/` |
@@ -125,6 +149,14 @@ flowchart LR
 - 配置：模板只播种、不覆盖；不设无消费者的 `version` 字段；`[defaults]` 的键用 `--gear` 读写，非法值不修改。
 - `handoff/PROMPT.md` 默认 gitignore；`--check` 查未忽略/已跟踪，`--fix` 补规则或取消跟踪。
 
+```mermaid
+flowchart LR
+  OLD["旧布局：根三档 / handoff/README"] -->|--doc| NEW["根 README + docs/ + handoff/"]
+  REG["旧 .skill-sync-paths"] -->|install.sh| REG2["$AGENT_CONFIG/sync-paths"]
+  TPL["assets/*.tpl"] -->|只播种| CONF["config.toml / 能力表"]
+  PROMPT["handoff/PROMPT.md"] -.->|gitignore| GIT["不提交"]
+```
+
 ### 工程约束
 
 - 一次只用一个命令；不提供 `+` / 空格叠加。
@@ -154,6 +186,22 @@ flowchart LR
 - `--printpath` 是视图不是存储：现读环境变量、`.skill-version`、`git config`，不生成缓存文件。
 - 批量循环只用 POSIX sh 内建（`while read`、`printf '%.7s'`）：Git Bash 每个外部进程约 0.9 秒，副本多时会把同步拖慢。
 - 版本表只列主版本，小版本进 `CONTEXT.md` 记录与 `COMPACT_BACKUP.md`；废弃表按阶段追加；`CONTEXT.md` 的坑平时可追加，`--suspend` 时归并成 ≤10 类；`--check` 只报行数/记录数/类别超限，不自动改写。
+
+### --doc 的 guard / init
+
+```mermaid
+flowchart TD
+  DOC["--doc"] --> G["--guard：维护已有文档"]
+  DOC --> I["--init：只新增"]
+  G --> G1["删除 ## 文档 表失效协议行"]
+  G --> G2["报告 dead-link / SUGGEST"]
+  I --> I1["CONTEXT 必生成"]
+  I --> I2["README 仅 GitHub / 确认"]
+  I --> I3["DESIGN 需取舍 / 确认"]
+  I --> I4["COMMANDS 仅用户要求"]
+```
+
+guard 只写 `## 文档` 表；init 只从模板新增；两者都不恢复正文。
 
 ## 备选方案（Alternatives）
 > 只写考虑过但没选的方案与原因；已实施后废弃的方案见附录 C「已废弃方案」。
