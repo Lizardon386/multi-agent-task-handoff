@@ -33,6 +33,7 @@
   - V4 协议：统一布局（根 README、`docs/` 设计/方案/指导类、`handoff/` 交接文档）；文档增删迁移只由 `--doc`；`--post` 热交接；`--suspend` 去掉 `<ID>`；不再生成 `.github/README.md`。
   - 2026-11-06：`SKILL.md`、`assets/*.tpl`、`HELP.txt`、`README.md`、`docs/DESIGN.md`、`CONTEXT.md`、工作区根规则全部更新；提交 `4d05229`，5 份副本已同步。
   - 2026-11-09：修正 `docs/DESIGN.md` 5 处图问题（悬空节点 `P`、开工误绑 `--doc`、`PROJECT_RULES` 误归 `$AGENT_CONFIG`、`README / COMMANDS` 标签、带文本箭头缺空格）；全局校验 8 张 Mermaid 图节点引用通过；提交 `9de3a1f`，5 份副本已同步。
+  - 2026-11-09：`--push` 支持普通项目（安装副本环境推当前目录仓库，源仓库环境推源仓库）；脚本对 agent 协议命令给出明确提示，HELP/SKILL/COMMANDS/DESIGN/README 标注执行层；提交 `913431d`，5 份副本已同步。
   - 推送状态以 `git status -sb` 为准。
 - 进行中：无。
 - 在飞文件（勿动）：无。
@@ -66,13 +67,14 @@
 - 入口 / 发布：`install.sh` 只安装，诊断/同步用 `scripts/handoff.sh`（Windows `scripts/运行时.bat`），不要再给 install.sh 加运行时子命令；包文件（`SKILL.md`、`scripts/`、`install.sh`、`安装.bat`、`assets/`、`LICENSE`）必须留根。
 - 工作区文档：`AGENTS.md` / `PROJECT_RULES.md` 缺失时 `--check` 报 🟡，`--fix` 确认后从模板播种；已存在的只报过期。
 - 文档：模板不会被 `--check` 校验；改协议或文档结构后手动扫 `assets/*.tpl`，避免模板与正文互相矛盾；命令/挡位文档只写通用机制（键与允许值由 `--gear list` 与 `scripts/lib.sh` 映射给出），新增挡位不用改 SKILL/HELP；PROMPT 锚点提交后天然落后一个 commit，按「本次提交在其后」读；`--doc` 只处理布局/标记/迁移造成的链接，不改文档原有死链/旧路径/历史内容；不默认生成 README（仅 GitHub remote/用户确认）；非 GitHub 项目 README 缺失时只报告，不因项目自有文档引用而创建或改引用；不从会话记录/历史副本还原缺失文档；`--doc` 先跑 `--doc --guard`（只删 `## 文档` 表失效协议行，其余只报告），内容创建只走 `--doc --init`（只新增）。
-- git：不装钩子；只有 `--push` 会显式推送，`--commit` 提交协议管理文档（`handoff/` 与带标记文档及其移动/删除）；`--push` 由 `scripts/handoff.sh --push` 重试 3 次 / 3 秒，只重试网络错误；Windows 再加 HTTP/1.1 + OpenSSL 回退 3 次；未确认推送成功不写「已推送」。
+- git：不装钩子；只有 `--push` 会显式推送，`--commit` 提交协议管理文档（`handoff/` 与带标记文档及其移动/删除）；`--push` 在源仓库环境推源仓库、安装副本环境推当前目录仓库，重试 3 次 / 3 秒，只重试网络错误；Windows 再加 HTTP/1.1 + OpenSSL 回退 3 次；未确认推送成功不写「已推送」。
 - `--post`：`--new` 的新会话必须绑定当前项目目录，Claude Code `CreateSession` 即使传项目目录仍落 worktree（2026-11-06 实测），且新 worktree 无 `PROMPT.md`（gitignore），按能力表应拒绝，改走主项目 UI 新建 + `--next`；`--next` 接受会话 ID 或会话名，宿主有会话列表工具（如 `ListSessions`）就直接查，不要让用户手抄 ID，查到的 `workDir` 必须等于项目目录；工具的模糊查询会命中正文（2026-11-06 实测），必须按 `title` 过滤后再判唯一；本机 `[defaults].post = "new"`；Claude 上 `--new` 落 worktree，裸 `--post` 应改 `--next`，或设 `post = "next"` 强制询问目标。
 - 不回到全自动：文件改动无法触发 git（边界禁止常驻服务），没有可靠触发器时全自动=全不自动；与「git 可选」「敏感信息不提交」冲突。`--commit` / `--push` 保留；嫌步骤多只能封成一条显式命令。
 
 ## 交接记录（只记关键动作，≤10 条）
 > 超出先压卡到 `COMPACT_BACKUP.md`；不写日常细节。
 
+- 2026-11-09 Claude：修复 `--push` 普通项目支持（安装副本环境推当前目录仓库，源仓库环境推源仓库，保留重试/TLS 回退）；脚本对 `--resume / --suspend / --post / --check / --fix / --probe / --workspace` 提示「由 agent 按 SKILL 执行」；HELP/SKILL/COMMANDS/DESIGN/README 同步执行层分工；临时 bare remote 实测普通项目推送成功、非 git 目录报明确错误、源仓库行为不变；提交 `913431d`，5 份副本同步。
 - 2026-11-09 Claude：修正 DESIGN 5 处图问题（悬空节点 `P`、开工误绑 `--doc`、`PROJECT_RULES` 误归 `$AGENT_CONFIG`、`README / COMMANDS` 标签、带文本箭头缺空格）；8 张 Mermaid 图节点引用全局校验通过；提交 `9de3a1f`，5 份副本同步；决定图表检查/修复不纳入 `--doc` / `--check`，保持 guard 权限面与 SKILL 150 行上限。
 - 2026-11-06 Claude：`--doc` 不再默认生成 README（仅 GitHub remote/用户确认）；dsp-hal-eval 实测非 git 项目零写入，旧 README 引用冲突只报告；发现另一会话从会话日志恢复其 README（5 条旧路径死链），补规则：`--doc` 不重建/还原缺失文档；README/HELP/DESIGN/模板/规则同步；`--doc [--guard | --init]` 拆分，默认 `[defaults].doc=guard`；修 bug 优先结构性根治写入工程约束；跨会话验证通过（371d87f）；guard WARN 汇总修正（根目录多文档/普通死链计入 WARN）；清理死元数据（`.skill-version` date、sync-paths 旧头、config 模板假注释、能力表旧规则）；COMMANDS 作为可选角色，guard 输出 DESIGN/COMMANDS 建议。
 - 2026-11-06 Claude：`--gear` 改为 `[defaults]` 映射驱动（含 post）+ `--gear list`，非法值不改；SKILL/HELP/README/DESIGN/模板/工作区规则同步；文档复核去命令计数、修 PROMPT 锚点与本机挡位值；功能改完必须自测；`--doc` 边界明确（只修迁移链接，不改原有内容；不默认生成 README，仅 GitHub 项目）。
@@ -81,7 +83,6 @@
 - 2026-11-05 Qoder：`--check` / `--fix` / `--probe --live` 通过；能力表 Qoder 行补 `--dryrun` 与实测方法；CONTEXT 清掉本机副本/探测状态；压卡一条旧记录。
 - 2026-11-05 WorkBuddy / Claude：v3.2–v3.10 迭代（入口拆分、`--save` 与挡位、删钩子、归档改名、README 落地页化、压卡/接手清单）；全自动方案不采纳；SKILL 正文审计（`--syncall` 条件、`--printpath` 输出、模板路径、边界措辞）；`--check` 增源仓库正文一致性审计（只报告，不自动改）；按 WorkBuddy 审计修正 `--printpath` 用法串，并写明 `--save` 属脚本层、不在 SKILL/HELP 命令表；`--push` 内置 Windows HTTP/1.1 + OpenSSL 回退；DESIGN/README 与 SKILL 口径对齐；`.gitignore` 自动评估/维护入 `--check` / `--fix` / `--suspend`。详细流水见 [COMPACT_BACKUP.md](COMPACT_BACKUP.md)。
 - 2026-11-05 WorkBuddy：压卡沉降一条旧记录；`--suspend --push` 收工并推送前序提交。
-- 2026-11-04 Claude：v3.1——迁移语义与 `--syncall` 护栏；能力表路径固定；README 增换机迁移；DESIGN 版本/废弃表收敛。
 - 2026-11-04 Claude：文档重整——README 安装/使用分章、DESIGN 完整历程与图表、交接主体统一为 agent、`--printpath` 全量视图、5 份模板对齐；收窄自动提交记忆，`--suspend` 未给 `--push` 时抑制钩子推送；能力表补 `CreateSession` 的 worktree 落点。
 
 ## 参考 ID
