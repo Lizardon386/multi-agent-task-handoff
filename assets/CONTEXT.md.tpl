@@ -14,7 +14,7 @@
 | 文档 | 阅读对象 | 内容 |
 |---|---|---|
 | [README.md](../README.md) | 使用者 | 项目介绍、用法、限制（GitHub 项目必需；其他按需，没有删行） |
-| [DESIGN.md](../docs/DESIGN.md) | 评审 / 开发 | 目标、架构、流程、决策（可选，没有删行） |
+| [DESIGN.md](../docs/DESIGN.md) | 评审 / 开发 | 摘要、方案、备选、风险、决策（可选，没有删行） |
 | [CONTEXT.md](CONTEXT.md) | 接手 agent | 当前状态、下一步、记忆提炼、坑（本文） |
 | `PROMPT.md` | 接手 agent | 交接指针，自动生成，默认 gitignore（不链接） |
 | [COMPACT_BACKUP.md](COMPACT_BACKUP.md) | 追溯 | 压卡搬出的历史 |

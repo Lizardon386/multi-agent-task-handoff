@@ -2,33 +2,26 @@
 
 > 面向改这套协议的人：为什么交接文档固定在 `handoff/`、GitHub 项目 README 固定在根（非 GitHub 按需）、设计/方案类在 `docs/`，以及项目与工作区根怎么分、命令如何收敛、宿主差异如何驱动自动化。
 > 文档表见 [CONTEXT.md](../handoff/CONTEXT.md)；使用者说明见 [README.md](../README.md)，协议正文见 [SKILL.md](../SKILL.md)。
+> 状态：已采纳（v4）
 > 最近更新：2026-11-06
 
-## 目标与约束
-> 只写目标、约束、非目标；不写实现。
+## 摘要（Summary）
+
+agent 的上下文易失：换 agent、换宿主、换机器后，接盘的人只能从目录和上一任留下的只言片语猜。这个 skill 把“现在到哪了”写成项目内 `handoff/` 的固定文档，让任何 agent 读文件即可接手；同时用统一布局、显式命令和宿主能力表，把文档整理、交接和宿主差异从“靠记忆”变成“可检查、可迁移的流程”。
+
+## 背景与问题（Motivation）
 
 agent 的上下文是易失的：换 agent、换宿主、换机器，接盘的人只能从目录和上一任留下的只言片语猜。靠人记会漏，靠常驻强制会拖慢每轮，靠文档自身又会写成日志；所以需要一个目录内、任何 agent 都能读的最小协议。
 
-目标：所有项目同一套文档布局——GitHub 项目 README 固定在项目根（非 GitHub 按需），设计/方案/指导类在 `docs/`，交接文档在 `handoff/`；交接只发状态和指针；能自动的自动做，做不到的明确列给用户；宿主差异不写进协议正文。
+## 目标与非目标（Goals / Non-Goals）
 
-约束：不装常驻服务、不装钩子、不写宿主全局规则、不内嵌模型调用；git 可选；任何 agent 读文件即可介入。
+- 目标：所有项目同一套文档布局——GitHub 项目 README 固定在项目根（非 GitHub 按需），设计/方案/指导类在 `docs/`，交接文档在 `handoff/`；交接只发状态和指针；能自动的自动做，做不到的明确列给用户；宿主差异不写进协议正文。
+- 约束：不装常驻服务、不装钩子、不写宿主全局规则、不内嵌模型调用；git 可选；任何 agent 读文件即可介入。
+- 非目标：自动记忆、会话回放、AI 摘要、向量检索、强制合规、命令叠加。
 
-非目标：自动记忆、会话回放、AI 摘要、向量检索、强制合规、命令叠加。
+## 方案（Proposal）
 
-## 术语
-> 只定义协议词；不写同义词表。
-
-| 术语 | 定义 | 不是什么 |
-|---|---|---|
-| 项目 | 宿主 UI 的工作单元：Claude 项目、Qoder 工作区、WorkBuddy 空间、OpenCode/ZCode/Codex 项目 | 不是 `AGENT_WORKSPACE` |
-| 项目目录 | 项目的绝对路径；唯一写入根；可为已打开项目或新建项目目录 | 不是工作区根 |
-| 工作区根 | `AGENT_WORKSPACE` 容器；只用来新建项目目录 | 不是写入目标 |
-| 当前目录 | `pwd`；可 `cd` | 不改变项目 |
-
-判定：宿主给出打开目录就用它；否则用会话启动时的 `pwd`；打开的目录等于工作区根 / `$HOME` / 盘根 / 临时目录时不算项目，先在工作区根下新建项目目录；不按 git 根自动上溯。
-
-## 运行模式与拓扑
-> 只画组件关系；时间线见「完整历程」。
+### 核心设计
 
 ```mermaid
 flowchart LR
@@ -42,10 +35,9 @@ flowchart LR
   G[$AGENT_CONFIG] --> K[能力差异表 / config.toml / sync-paths / 可选 PROJECT_RULES]
 ```
 
-## 完整历程
-> 先图后表；异常与不可逆点单列。
+项目目录是唯一写入根；工作区根只用来新建项目目录。项目文档放根 README 与 `docs/`，交接文档固定放 `handoff/`；机器级状态（能力表、配置、安装注册表）统一放 `$AGENT_CONFIG`。
 
-「运行模式与拓扑」给组件拓扑，这里给时间线：建档、工作、收工，到另一个 agent 接手，再回到工作；维护与迁移是旁路。命令语义见 [SKILL.md](../SKILL.md)，本节只讲顺序、产出和边界。
+### 关键流程 / 接口
 
 ```mermaid
 flowchart LR
@@ -64,8 +56,6 @@ flowchart LR
   L[旧布局] -.->|--doc| P
 ```
 
-### 阶段与产出
-
 | 阶段 | 触发 | 动作 | 产出 / 结果 | 边界 |
 |---|---|---|---|---|
 | 开工 | `--doc [--guard \| --init]` | 默认挡位 `[defaults].doc=guard`；`--guard` 只读扫描，`--init` 显式创建缺失 CONTEXT（README 仅 GitHub/确认）；设计/方案/指导类迁 `docs/`；交接类迁 `handoff/`；补标记；同意后把 PROMPT 加入 `.gitignore` | README（GitHub 项目）+ `docs/` + `handoff/` | 冲突或判不准 → 出选择题，未选不动；缺失角色只 WARN，不创建/不还原 |
@@ -76,7 +66,7 @@ flowchart LR
 | 维护 | `--check` / `--fix` / `--probe` / `--printpath` | 只读检查 / 非文档修复 / 实测能力 / 路径诊断 | 报告或修复 | 默认不提交；文档整理项只报告「需跑 `--doc`」 |
 | 迁移 | `--doc` | 先出清单；按 scope 与角色移动；同批改链；git 仓用 `git mv` | 旧布局并入根 / `docs/` / `handoff/` | 判不准问用户；只移动不复制；不扫描全盘 |
 
-### 异常与不可逆点
+异常与不可逆点：
 
 - 没有 `handoff/` 不自动建：先 `--doc`。
 - 目标文档已存在且非本协议生成：停，不覆盖、不换路径。
@@ -84,92 +74,11 @@ flowchart LR
 - `PROMPT` 与 `CONTEXT` 冲突以 `CONTEXT` 为准。
 - 默认不操作 git；外部可见动作必须显式 `--commit` / `--push`。
 - 文档的增、删、迁移只在 `--doc`；其他命令只修改已有文档。
-- 安装、副本同步与配置不在这条线上：见「架构与关键接缝」。
+- 安装、副本同步与配置不在这条线上：见附录 A。
 
 一次只用一个命令；`--workspace` 可与一个命令同用，`--nosave` 只跟 `--workspace`。
 
-## 架构与关键接缝
-> 只写模块边界与接口；不重复流程。
-
-### 仓库布局
-
-```text
-multi-agent-task-handoff/
-├─ SKILL.md                 # 协议正文（包文件，必须在根）
-├─ install.sh               # 只安装：宿主识别、target、注册表
-├─ 安装.bat                  # Windows 安装入口
-├─ scripts/
-│  ├─ handoff.sh            # 运行时：--printpath / --doc [--guard|--init] / --syncall / --push / --save / --gear（读写挡位）
-│  ├─ lib.sh                # 共享：配置 / 宿主 / 路径函数
-│  └─ 运行时.bat             # Windows 运行时入口
-├─ LICENSE
-├─ assets/                  # HELP / 模板 / 示例
-├─ .gitignore
-├─ README.md                # 项目说明；scope=root
-├─ docs/
-│  └─ DESIGN.md             # 本文件；scope=docs
-└─ handoff/
-   ├─ CONTEXT.md            # 当前状态；scope=handoff
-   ├─ PROMPT.md             # 自动生成（gitignore）
-   └─ COMPACT_BACKUP.md     # 历史
-```
-
-包文件（`SKILL.md`、`scripts/`、`install.sh`、`安装.bat`、`assets/`、`LICENSE`）必须在根；GitHub 项目 README 在根（非 GitHub 按需），设计/方案/指导类进 `docs/`，交接文档进 `handoff/`。
-
-#### 机器级状态统一放 `$AGENT_CONFIG`
-
-按作用域归属，不按文件类型：
-
-| 文件 | 归属 | 位置 |
-|---|---|---|
-| `config.toml` | 用户/机器偏好 | `$AGENT_CONFIG/` |
-| `AGENT_CAPABILITIES.md` | 各宿主能力实测缓存 | `$AGENT_CONFIG/` |
-| `sync-paths` | 本机安装目录注册表 | `$AGENT_CONFIG/` |
-| `PROJECT_RULES.md` / `AGENTS.md` | 工作区跨任务规则与入口指针 | 工作区根 |
-| `handoff/*` | 任务状态 | 项目目录 |
-
-- `$AGENT_CONFIG`：Linux/macOS `${XDG_CONFIG_HOME:-$HOME/.config}/multi-agent-task-handoff`；Windows `%APPDATA%\multi-agent-task-handoff`；可用 `AGENT_CONFIG` 覆盖。
-- `sync-paths` 是“一行一个安装目录”的纯文本，由 `install.sh` 追加；`scripts/handoff.sh --syncall` 是唯一读取路径。
-- `--syncall` 只允许从源仓库运行：安装副本没有 HEAD，强行同步会把所有副本写成 `commit=unknown`，等于降级。对齐是整体重装，副本内本地改动会被覆盖。
-- 旧位置 `<repo>/.skill-sync-paths` 由 `install.sh` 一次性迁到新位置后删除。
-- 三者不合并成一个文件：偏好（人工低频编辑）、能力缓存（Markdown 表）、注册表（工具追加、可重建）的写入者和失败域不同，合并会让 bash 解析变脆，并把“装到哪”和“同步哪些”绑在一起。
-- `config.toml` 只放用户选择；可推导的运行时状态（宿主、副本版本、各路径）不写入配置，由 `--printpath` 现算；不设无消费者的 `version` 字段，需要迁移时再加带迁移逻辑的版本号。
-- 挡位：`[defaults]` 下的键；显式参数覆盖；`--gear` 可读写，键/默认值/允许值由 `scripts/lib.sh` 映射驱动，`--gear list` 查看，非法值不修改。
-
-### 关键接缝
-
-1. **项目 ↔ 工作区根**：项目目录是写入根；工作区根只建项目目录。
-2. **交接文档 ↔ 项目文档**：`handoff/` 放交接文档；根 README 与 `docs/` 放项目文档；所有项目同一布局，旧布局由 `--doc` 迁移，只移不复制。
-3. **CONTEXT ↔ PROMPT**：CONTEXT 人维护；PROMPT 自动生成，冲突以 CONTEXT 为准。
-4. **能力表 ↔ 自动化**：建会话/绑定目录/切目录/UI 打开/文件迁移/会话搬运分级；未知按手动。
-5. **memory ↔ 交接**：只读提升；不复制、不写回；位置与读取方式查能力表「memory 读取」。
-6. **归属标记 ↔ 目录**：标记声明 scope（root/docs/handoff），所在目录必须一致；无标记文档归项目所有，协议只读。
-
-## 关键设计决策
-> 只记取舍与代价；不写进度。
-
-| 决策 | 理由 | 代价 |
-|---|---|---|
-| 统一布局：GitHub 项目根 README + `docs/` + `handoff/`；非 GitHub 项目 README 按需 | 不按项目类型猜路径；GitHub 原生显示根 README；非 GitHub 项目不必为首页造文档 | 旧项目要迁一次并改链；README 生成需判断 remote/用户意图 |
-| 交接文档固定在 `handoff/` | 路径唯一，避免与项目自有文档混放 | 不在项目根直接可见，依赖 skill 入口或指针 |
-| GitHub 项目 README 固定在根，不生成副本 | GitHub 原生显示根 README；无副本漂移，也不需要判断 remote | GitLab/Gitee/npm 同样读根，无额外收益 |
-| 项目目录是唯一写入根 | 多仓/AOSP 场景下不会把卡写到工作区根 | 无项目时要先建目录 |
-| 工作区根只做容器 | 与“产物根”区分，避免把 `handoff/` 写到容器 | 用户要理解两个概念的区别 |
-| 命令一次只用一个 | 组合过长、顺序和冲突难维护 | 需要多步时分开跑 |
-| `--doc` 独占文档增删迁移 | 结构操作集中，其他命令不会意外搬文件；只修迁移造成的链接，不改文档原有内容；内容创建拆到 `--doc --init`，默认挡位 `[defaults].doc=guard` | 迁移必须显式跑 `--doc`；判不准时要问用户；缺失被引用文档由 `--doc --guard` 只报告，不阻断、不创建 |
-| `--post` 与 `--suspend` 分离 | 热交接只传消息，冷交接才落盘；两者可单独使用 | 需要用户提供 message 与目标会话 |
-| 交接只发指针 | 跨 agent 不复制聊天历史；PROMPT 可复用 | 目标读不到文件时要附全文 |
-| `PROMPT.md` 自动生成并 gitignore | 含会话 ID/本机路径，默认不提交 | 跨机交接要另发内容 |
-| 默认不操作 git | commit/push 是外部可见动作 | 要落锚点时必须显式 `--commit`/`--push` |
-| 机械动作由显式命令执行 | 钩子依赖本机配置、外部宿主可改；已删除钩子，同步与 push 只由显式命令执行 | 不走 `--save` / `--suspend` 的普通提交不会同步副本 |
-| 能力表按差异拆分 | 宿主叫法、目录来源、会话能力各不同 | 表多，首次要填 |
-| memory 只读提升 | 保持 `CONTEXT.md` 是唯一可移植真源 | 宿主记忆的细节不自动搬运 |
-| 归属标记用末行隐藏注释 | 不污染公开页面；机器可读；无标记即项目自有 | 旧文档未标记时只能靠角色与用户确认 |
-| 安装只认当前宿主 | 不替没打开它的 agent 铺副本 | 换宿主要重跑一次 |
-| 自动化只留机械动作 | 提示层（入口文件、模型遵守）不可靠；v1 的强制层已证明成本高于收益 | 需要保证的动作靠显式命令；git hook 只作可选加速 |
-
-## 已定语义与边界
-> 只写不能变的约定；实现细节进 SKILL。
+### 已定语义与边界
 
 | 主题 | 约定 |
 |---|---|
@@ -194,8 +103,14 @@ multi-agent-task-handoff/
 | 迁移判定 | V1/V2/V3 三档特征两条同时满足：文件名符合模板（含旧名 压卡备份.md、COMPACTION_BACKUP.md），标题含项目目录名（含义一致即可，如 color-duel 的「变色对决」）；不命中的设计/方案类按角色判定，判不准问用户 |
 | 完成定义 | 文档与安装副本一致；`--help` 与命令表一致；`--check` 无 ⛔；卡 ≤100 行；根目录若存在项目文档 `.md`，只能是 `README.md`（包文件 `SKILL.md` 除外） |
 
-## 工程约束
-> 只写维护时必须遵守的规则；不写项目状态。
+### 数据、兼容性与迁移
+
+- 旧布局：由 `--doc` 迁移，只移动、不复制；迁移造成的相对链接与 CONTEXT 文档表同批修正。
+- 旧安装注册表：`install.sh` 把 `<repo>/.skill-sync-paths` 一次性迁到 `$AGENT_CONFIG/sync-paths` 后删除。
+- 配置：模板只播种、不覆盖；不设无消费者的 `version` 字段；`[defaults]` 的键用 `--gear` 读写，非法值不修改。
+- `handoff/PROMPT.md` 默认 gitignore；`--check` 查未忽略/已跟踪，`--fix` 补规则或取消跟踪。
+
+### 工程约束
 
 - 一次只用一个命令；不提供 `+` / 空格叠加。
 - 参数名不带中间连字符：`--dryrun`、`--syncall`、`--noregister`；多词直接连写。
@@ -224,14 +139,124 @@ multi-agent-task-handoff/
 - 批量循环只用 POSIX sh 内建（`while read`、`printf '%.7s'`）：Git Bash 每个外部进程约 0.9 秒，副本多时会把同步拖慢。
 - 版本表只列主版本，小版本进 `CONTEXT.md` 记录与 `COMPACT_BACKUP.md`；废弃表按阶段追加；`CONTEXT.md` 的坑平时可追加，`--suspend` 时归并成 ≤10 类；`--check` 只报行数/记录数/类别超限，不自动改写。
 
-## 开发者维护
-> 只写提交、推送、同步；不写用户用法。
+## 备选方案（Alternatives）
+
+| 备选方案 | 为什么没选 | 现在的选择 |
+|---|---|---|
+| 强制层（闸门、看门狗、全局规则） | 每轮变慢、卡长成日志，成本高于收益 | 最小协议 + 显式命令 |
+| 根目录三档 / `handoff/README` + `handoff/DESIGN` | 接手只读 PROMPT/CONTEXT，三档副本无人读，且与产品文档重复 | 统一布局：根 README + `docs/` + `handoff/` |
+| `.github/README.md` 副本或 symlink | 根 README 已能被 GitHub 原生显示；副本会漂移 | README 固定在根 |
+| `post-commit` 自动 push / 钩子兜底同步 | 与「默认不操作 git」冲突；外部宿主可反复改写 | `--save` / `--suspend` 显式提交、同步、推送 |
+| `--suspend <ID>` 投递 | 投递与收工耦合，无法在不写卡时投递 | `--post <message>` |
+| `--doc` 直接创建/恢复内容 | 越界改正文，无法跨 agent 约束 | `--doc --guard` 只报告 + `--doc --init` 显式创建 |
+| cwd 即项目根 | 多仓 / 散落仓 / Ubuntu 下不成立 | 项目目录是唯一写入根 |
+| 工作区根当产物根 | 会把 `handoff/` 写到容器 | 工作区根只做容器 |
+
+## 风险、代价与缓解（Risks / Drawbacks）
+
+| 风险 / 代价 | 影响 | 缓解 / 接受理由 |
+|---|---|---|
+| 忘记显式收工 | 没有交接卡，下一家从零猜 | 接受；`--check` 报 PROMPT 过期，入口提示读序 |
+| 不装钩子 / 后台服务 | 普通提交不同步副本 | 接受；用 `--save` / `--suspend` 显式同步 |
+| 宿主差异（worktree、会话 API、memory） | `--post --new` 或读回可能失败 | 能力表 + `--probe`；落 worktree 拒绝 |
+| 长会话缓存旧 skill 文本 | 可能按旧规则执行 | `--doc --guard` 只读扫描；仍需宿主重新加载（开放问题） |
+| 非 GitHub 项目 README 缺失但被引用 | 断链或误恢复 | `--doc --guard` 只 WARN；`--doc --init` 显式创建 |
+| 配置模板不覆盖已有文件 | 新键 / 注释不自动同步 | `--check` 或人工更新；无 version；`--gear` 显式改 |
+| 跨会话消息队列 | `queued` ≠ 已消费；stopped 不唤醒 | 发送后 `WaitSessions` / `ReadSession` 读回，不以入队为成功 |
+
+## 开放问题（Open Questions）
+
+- [ ] Ubuntu/Linux、非 git、空格路径是否全部成立？
+- [ ] 其他宿主 `--post --new` 的落点与读回是否可用？
+- [ ] 长会话如何保证加载当前 `SKILL.md` 文本？
+- [ ] `--doc --init` 是否值得脚本化（目前由 agent 执行）？
+- [ ] 配置 schema 变化是否需要版本号 + 迁移机制？
+
+## 决策与后果（Decision / Consequences）
+
+| 决策 | 理由 | 后果 / 代价 |
+|---|---|---|
+| 统一布局：GitHub 项目根 README + `docs/` + `handoff/`；非 GitHub 项目 README 按需 | 不按项目类型猜路径；GitHub 原生显示根 README；非 GitHub 项目不必为首页造文档 | 旧项目要迁一次并改链；README 生成需判断 remote/用户意图 |
+| 交接文档固定在 `handoff/` | 路径唯一，避免与项目自有文档混放 | 不在项目根直接可见，依赖 skill 入口或指针 |
+| GitHub 项目 README 固定在根，不生成副本 | GitHub 原生显示根 README；无副本漂移，也不需要判断 remote | GitLab/Gitee/npm 同样读根，无额外收益 |
+| 项目目录是唯一写入根 | 多仓/AOSP 场景下不会把卡写到工作区根 | 无项目时要先建目录 |
+| 工作区根只做容器 | 与“产物根”区分，避免把 `handoff/` 写到容器 | 用户要理解两个概念的区别 |
+| 命令一次只用一个 | 组合过长、顺序和冲突难维护 | 需要多步时分开跑 |
+| `--doc` 独占文档增删迁移 | 结构操作集中，其他命令不会意外搬文件；只修迁移造成的链接，不改文档原有内容；内容创建拆到 `--doc --init`，默认挡位 `[defaults].doc=guard` | 迁移必须显式跑 `--doc`；判不准时要问用户；缺失被引用文档由 `--doc --guard` 只报告，不阻断、不创建 |
+| `--post` 与 `--suspend` 分离 | 热交接只传消息，冷交接才落盘；两者可单独使用 | 需要用户提供 message 与目标会话 |
+| 交接只发指针 | 跨 agent 不复制聊天历史；PROMPT 可复用 | 目标读不到文件时要附全文 |
+| `PROMPT.md` 自动生成并 gitignore | 含会话 ID/本机路径，默认不提交 | 跨机交接要另发内容 |
+| 默认不操作 git | commit/push 是外部可见动作 | 要落锚点时必须显式 `--commit`/`--push` |
+| 机械动作由显式命令执行 | 钩子依赖本机配置、外部宿主可改；已删除钩子，同步与 push 只由显式命令执行 | 不走 `--save` / `--suspend` 的普通提交不会同步副本 |
+| 能力表按差异拆分 | 宿主叫法、目录来源、会话能力各不同 | 表多，首次要填 |
+| memory 只读提升 | 保持 `CONTEXT.md` 是唯一可移植真源 | 宿主记忆的细节不自动搬运 |
+| 归属标记用末行隐藏注释 | 不污染公开页面；机器可读；无标记即项目自有 | 旧文档未标记时只能靠角色与用户确认 |
+| 安装只认当前宿主 | 不替没打开它的 agent 铺副本 | 换宿主要重跑一次 |
+| 自动化只留机械动作 | 提示层（入口文件、模型遵守）不可靠；v1 的强制层已证明成本高于收益 | 需要保证的动作靠显式命令；git hook 只作可选加速 |
+
+## 附录 A：架构与目录（可选）
+
+### 仓库布局
+
+```text
+multi-agent-task-handoff/
+├─ SKILL.md                 # 协议正文（包文件，必须在根）
+├─ install.sh               # 只安装：宿主识别、target、注册表
+├─ 安装.bat                  # Windows 安装入口
+├─ scripts/
+│  ├─ handoff.sh            # 运行时：--printpath / --doc [--guard|--init] / --syncall / --push / --save / --gear（读写挡位）
+│  ├─ lib.sh                # 共享：配置 / 宿主 / 路径函数
+│  └─ 运行时.bat             # Windows 运行时入口
+├─ LICENSE
+├─ assets/                  # HELP / 模板 / 示例
+├─ .gitignore
+├─ README.md                # 项目说明；scope=root
+├─ docs/
+│  └─ DESIGN.md             # 本文件；scope=docs
+└─ handoff/
+   ├─ CONTEXT.md            # 当前状态；scope=handoff
+   ├─ PROMPT.md             # 自动生成（gitignore）
+   └─ COMPACT_BACKUP.md     # 历史
+```
+
+包文件（`SKILL.md`、`scripts/`、`install.sh`、`安装.bat`、`assets/`、`LICENSE`）必须在根；GitHub 项目 README 在根（非 GitHub 按需），设计/方案/指导类进 `docs/`，交接文档进 `handoff/`。
+
+### 机器级状态统一放 `$AGENT_CONFIG`
+
+按作用域归属，不按文件类型：
+
+| 文件 | 归属 | 位置 |
+|---|---|---|
+| `config.toml` | 用户/机器偏好 | `$AGENT_CONFIG/` |
+| `AGENT_CAPABILITIES.md` | 各宿主能力实测缓存 | `$AGENT_CONFIG/` |
+| `sync-paths` | 本机安装目录注册表 | `$AGENT_CONFIG/` |
+| `PROJECT_RULES.md` / `AGENTS.md` | 工作区跨任务规则与入口指针 | 工作区根 |
+| `handoff/*` | 任务状态 | 项目目录 |
+
+- `$AGENT_CONFIG`：Linux/macOS `${XDG_CONFIG_HOME:-$HOME/.config}/multi-agent-task-handoff`；Windows `%APPDATA%\multi-agent-task-handoff`；可用 `AGENT_CONFIG` 覆盖。
+- `sync-paths` 是“一行一个安装目录”的纯文本，由 `install.sh` 追加；`scripts/handoff.sh --syncall` 是唯一读取路径。
+- `--syncall` 只允许从源仓库运行：安装副本没有 HEAD，强行同步会把所有副本写成 `commit=unknown`，等于降级。对齐是整体重装，副本内本地改动会被覆盖。
+- 旧位置 `<repo>/.skill-sync-paths` 由 `install.sh` 一次性迁到新位置后删除。
+- 三者不合并成一个文件：偏好（人工低频编辑）、能力缓存（Markdown 表）、注册表（工具追加、可重建）的写入者和失败域不同，合并会让 bash 解析变脆，并把“装到哪”和“同步哪些”绑在一起。
+- `config.toml` 只放用户选择；可推导的运行时状态（宿主、副本版本、各路径）不写入配置，由 `--printpath` 现算；不设无消费者的 `version` 字段，需要迁移时再加带迁移逻辑的版本号。
+- 挡位：`[defaults]` 下的键；显式参数覆盖；`--gear` 可读写，键/默认值/允许值由 `scripts/lib.sh` 映射驱动，`--gear list` 查看，非法值不修改。
+
+### 关键接缝
+
+1. **项目 ↔ 工作区根**：项目目录是写入根；工作区根只建项目目录。
+2. **交接文档 ↔ 项目文档**：`handoff/` 放交接文档；根 README 与 `docs/` 放项目文档；所有项目同一布局，旧布局由 `--doc` 迁移，只移不复制。
+3. **CONTEXT ↔ PROMPT**：CONTEXT 人维护；PROMPT 自动生成，冲突以 CONTEXT 为准。
+4. **能力表 ↔ 自动化**：建会话/绑定目录/切目录/UI 打开/文件迁移/会话搬运分级；未知按手动。
+5. **memory ↔ 交接**：只读提升；不复制、不写回；位置与读取方式查能力表「memory 读取」。
+6. **归属标记 ↔ 目录**：标记声明 scope（root/docs/handoff），所在目录必须一致；无标记文档归项目所有，协议只读。
+
+## 附录 B：测试、发布与运维（可选）
 
 面向直接改这个仓库的人，不面向任务使用者。日常只有三件事：提交、推送、同步副本。
 
 ### 日常改动流程
 
-1. 改文件；涉及协议/脚本/文档时同步改 `SKILL.md`、`README.md`、`docs/DESIGN.md`、模板，以及各文档头块与章节编号。
+1. 改文件；涉及协议/脚本/文档时同步改 `SKILL.md`、`README.md`、`docs/DESIGN.md`、模板，以及各文档头块与章节标题。
 2. 自检：`sh -n scripts/lib.sh scripts/handoff.sh install.sh`；`bash install.sh --dryrun`。
 3. 诊断：`bash scripts/handoff.sh --printpath`；`bash scripts/handoff.sh --syncall --dryrun`。
 4. 保存：`bash scripts/handoff.sh --save`（默认已跟踪文件，新文件 `--all`，消息 `-m`）。
@@ -285,7 +310,8 @@ flowchart LR
 - `.bat` 必须 CRLF；仓库用 `*.bat text eol=crlf`，`git archive` 会按属性输出。
 - 普通提交不会自动同步副本；同步由 `--save` / `--suspend` 显式执行。
 
-## 版本与设计演进
+## 附录 C：版本与演进（可选）
+
 > 只列主版本；小版本进 CONTEXT / COMPACT_BACKUP。
 
 旧版代码已从工作树删除；这里只留设计演进。2026-10-29 公开发布前用 git-filter-repo 脱敏重写历史，旧哈希失效。
@@ -329,5 +355,16 @@ flowchart LR
 | v4 | `--fix` 迁移旧布局 | 修改与结构变更混在一个命令，容易误搬 | 增删迁移收归 `--doc`（v4） |
 
 注：v3 否决的是把 `docs/` 当交接文档目录（`docs/handoff/`）；v4 的 `docs/` 只放设计/方案/指导类，交接文档仍固定在 `handoff/`，两者不冲突。
+
+## 附录 D：术语（可选）
+
+| 术语 | 定义 | 不是什么 |
+|---|---|---|
+| 项目 | 宿主 UI 的工作单元：Claude 项目、Qoder 工作区、WorkBuddy 空间、OpenCode/ZCode/Codex 项目 | 不是 `AGENT_WORKSPACE` |
+| 项目目录 | 项目的绝对路径；唯一写入根；可为已打开项目或新建项目目录 | 不是工作区根 |
+| 工作区根 | `AGENT_WORKSPACE` 容器；只用来新建项目目录 | 不是写入目标 |
+| 当前目录 | `pwd`；可 `cd` | 不改变项目 |
+
+判定：宿主给出打开目录就用它；否则用会话启动时的 `pwd`；打开的目录等于工作区根 / `$HOME` / 盘根 / 临时目录时不算项目，先在工作区根下新建项目目录；不按 git 根自动上溯。
 
 <!-- multi-agent-task-handoff: scope=docs -->

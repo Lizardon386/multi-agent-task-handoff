@@ -12,7 +12,7 @@
 | 文档 | 阅读对象 | 内容 |
 |---|---|---|
 | [README.md](../README.md) | 使用者 | 这是什么、怎么跑、限制（项目根） |
-| [DESIGN.md](../docs/DESIGN.md) | 评审 / 开发 | 目标、架构、流程、决策 |
+| [DESIGN.md](../docs/DESIGN.md) | 评审 / 开发 | 摘要、方案、备选、风险、决策 |
 | [CONTEXT.md](CONTEXT.md) | 接手 agent | 当前状态、下一步、记忆提炼、坑（本文） |
 | `PROMPT.md` | 接手 agent | 交接指针，自动生成，默认 gitignore（不链接） |
 | [COMPACT_BACKUP.md](COMPACT_BACKUP.md) | 追溯 | 状态历史、逐条变更 |

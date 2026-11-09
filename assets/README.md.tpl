@@ -15,7 +15,7 @@
 | 文档 | 阅读对象 | 内容 |
 |---|---|---|
 | [README.md](README.md) | 使用者 | 这是什么、怎么跑、限制（本文） |
-| [docs/DESIGN.md](docs/DESIGN.md) | 评审 / 开发 | 目标、架构、流程、决策（可选） |
+| [docs/DESIGN.md](docs/DESIGN.md) | 评审 / 开发 | 摘要、方案、备选、风险、决策（可选） |
 | [handoff/CONTEXT.md](handoff/CONTEXT.md) | 接手 agent | 完整文档表、当前状态、下一步、记忆提炼、坑 |
 
 完整文档表见 [handoff/CONTEXT.md](handoff/CONTEXT.md)。
