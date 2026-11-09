@@ -43,6 +43,11 @@ multi-agent-task-handoff — 多 agent 任务交接
                             --nosave 只本次生效，不写回
   --help                    显示本表
 
+执行层:
+  agent 协议命令（--resume / --suspend / --post / --check / --fix / --probe / --workspace）
+  由 agent 按 SKILL 执行；脚本直接支持 --printpath / --doc / --syncall / --push / --save / --gear。
+  普通项目的 --suspend --push 在项目目录运行安装副本的 --push（推当前目录仓库；源仓库环境推源仓库）。
+
 规则:
   一次只用一个命令；不支持命令叠加
   --workspace 可与一个命令同用；--nosave 只跟 --workspace

@@ -17,6 +17,7 @@
 
 ## 命令索引
 > 只列命令、用途与默认挡位；详细说明见下文章节。
+> 脚本层直接支持 `--printpath` / `--doc` / `--syncall` / `--push` / `--save` / `--gear`；`--resume` / `--suspend` / `--post` / `--check` / `--fix` / `--probe` / `--workspace` 由 agent 按 SKILL 执行。
 
 | 命令 | 用途 | 默认值 / 挡位 |
 |---|---|---|
@@ -48,7 +49,7 @@
 - 挡位：
   - `--local`：写 CONTEXT/PROMPT、按需压卡，不操作 git。
   - `--commit`：额外提交协议管理文档（`handoff/` 与带标记文档及其移动/删除）。
-  - `--push`：隐含 commit，提交后推送；网络错误重试 3 次 / 3 秒，Windows 再加 HTTP/1.1 + OpenSSL 回退 3 次。
+  - `--push`：隐含 commit，提交后推送；普通项目在项目目录运行安装副本的 `scripts/handoff.sh --push`（推当前目录仓库），源仓库环境推源仓库；网络错误重试 3 次 / 3 秒，Windows 再加 HTTP/1.1 + OpenSSL 回退 3 次。
 - 行为：必要时压卡；覆盖 `handoff/PROMPT.md`；源仓库收工末尾跑 `scripts/handoff.sh --syncall` 对齐安装副本。
 - 边界：默认不操作 git；不装钩子；安装副本跳过 syncall；未确认推送成功不写「已推送」。
 - 常见错误：CONTEXT 缺失、推送认证失败/非快进、从安装副本跑 `--syncall`；保留本地提交并报告。

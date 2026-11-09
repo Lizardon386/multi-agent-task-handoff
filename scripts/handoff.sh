@@ -32,8 +32,8 @@ usage() {
                    按 $AGENT_CONFIG/sync-paths 逐份对齐到当前 HEAD，只补落后的
                    （必须从源仓库运行；--dryrun 只打印）
   --push [--retries N] [--delay S]
-                   显式推送当前分支；网络错误重试 3 次 / 3 秒；
-                   Windows 再加 HTTP/1.1 + OpenSSL 回退 3 次
+                   显式推送当前分支；源仓库推源仓库，安装副本环境推当前项目；
+                   网络错误重试 3 次 / 3 秒；Windows 再加 HTTP/1.1 + OpenSSL 回退 3 次
   --save [--all] [-m MSG] [--retries N] [--delay S]
                    提交已跟踪修改（--all 含新文件），同步副本，再推送（重试）
   --gear <key>[=<值>] | --gear list
@@ -45,6 +45,11 @@ usage() {
                    --guard 维护已有文档：只删 ## 文档 表中的失效协议行，其余只报告
                    --init 由 agent 显式创建，脚本不写内容
   -h, --help       显示本表
+
+脚本层命令：--printpath / --doc / --syncall / --push / --save / --gear
+--resume / --suspend / --post / --check / --fix / --probe / --workspace
+由 agent 按 SKILL 执行，不是脚本参数。
+完整协议帮助见 assets/HELP.txt。
 
 安装用 install.sh；本脚本一次只做一件事。
 EOF
@@ -77,6 +82,8 @@ while [ $# -gt 0 ]; do
     --target) [ $# -ge 2 ] || usage_die "--target 需要一个值"; target_arg=$2; shift ;;
     --target=*) target_arg=${1#*=} ;;
     -h|--help) usage; exit 0 ;;
+    --resume|--suspend|--post|--check|--fix|--probe|--workspace)
+      usage_die "$1 由 agent 按 SKILL 执行，不是脚本参数（脚本支持 --printpath / --doc / --syncall / --push / --save / --gear）" ;;
     *) usage_die "未知参数 $1" ;;
   esac
   shift
@@ -351,9 +358,17 @@ if [ "$mode" = save ]; then
 fi
 
 if [ "$mode" = push ]; then
-  git -C "$repo" rev-parse --git-dir >/dev/null 2>&1 || die "--push 必须在源仓库运行"
-  git -C "$repo" rev-parse --abbrev-ref --symbolic-full-name '@{u}' >/dev/null 2>&1 \
+  # 源仓库（脚本所在仓库有 .git）推源仓库；安装副本环境推当前项目的 git 仓库
+  if git -C "$repo" rev-parse --git-dir >/dev/null 2>&1; then
+    push_dir=$repo
+  else
+    push_dir=$(pwd -P)
+    git -C "$push_dir" rev-parse --git-dir >/dev/null 2>&1 \
+      || die "--push 需要 git 仓库：源仓库或当前项目"
+  fi
+  git -C "$push_dir" rev-parse --abbrev-ref --symbolic-full-name '@{u}' >/dev/null 2>&1 \
     || die "当前分支没有上游；先 git push -u origin <branch>"
+  printf '推送目标: %s\n' "$push_dir"
   case "$(uname -s 2>/dev/null)" in
     MINGW*|MSYS*|CYGWIN*) tls_fallback=1 ;;
     *) tls_fallback=0 ;;
@@ -366,13 +381,13 @@ if [ "$mode" = push ]; then
     i=1
     while [ "$i" -le "$retries" ]; do
       if [ "$phase" = fallback ]; then
-        out=$(git -C "$repo" -c http.version=HTTP/1.1 -c http.sslBackend=openssl push 2>&1); rc=$?
+        out=$(git -C "$push_dir" -c http.version=HTTP/1.1 -c http.sslBackend=openssl push 2>&1); rc=$?
       else
-        out=$(git -C "$repo" push 2>&1); rc=$?
+        out=$(git -C "$push_dir" push 2>&1); rc=$?
       fi
       if [ "$rc" -eq 0 ]; then
         printf '%s\n' "$out"
-        printf '已推送: %s\n' "$(git -C "$repo" rev-parse --short HEAD)"
+        printf '已推送: %s\n' "$(git -C "$push_dir" rev-parse --short HEAD)"
         exit 0
       fi
       case "$out" in
