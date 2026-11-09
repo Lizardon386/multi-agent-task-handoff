@@ -5,7 +5,7 @@
 > 本文件是项目根 `README.md`；GitHub 首页直接显示它，不生成副本。
 > 最近更新：2026-11-06
 
-[这是什么](#1-这是什么) · [安装](#2-安装) · [最短路径](#24-最短路径3-步) · [使用说明](#3-使用说明) · [产物](#4-产物与目录) · [限制](#6-限制与注意事项) · [常见问题](#7-常见问题)
+[这是什么](#这是什么) · [安装](#安装) · [最短路径](#最短路径3-步) · [使用说明](#使用说明) · [产物](#产物与目录) · [限制](#限制与注意事项) · [常见问题](#常见问题)
 
 ## 文档
 > 只列项目文档与阅读对象；跨目录用相对路径；不复制正文。
@@ -18,7 +18,7 @@
 
 完整文档表（含 PROMPT、SKILL、HELP、压卡备份）见 [handoff/CONTEXT.md](handoff/CONTEXT.md)。
 
-## 1. 这是什么
+## 这是什么
 > 只写痛点、适用与不适用；不写命令细节。
 
 agent 的上下文是易失的。换一个 agent、换一个宿主、隔一天回来，上一个 agent 想过什么、试过什么、卡在哪，全都没了。通常只能翻聊天记录，或者靠人复述。
@@ -44,10 +44,10 @@ flowchart LR
   F -->|接手 / --resume| B[Agent B]
 ```
 
-## 2. 安装
+## 安装
 > 只写安装；人装与由 agent 装分开；多宿主用 `--host`，副本用 `--syncall`。
 
-### 2.1 平台入口
+### 平台入口
 
 | 平台 | 入口 | 说明 |
 |---|---|---|
@@ -57,7 +57,7 @@ flowchart LR
 
 先跑 `bash install.sh --dryrun` 可确认安装目标，不写文件。
 
-### 2.2 手动安装
+### 手动安装
 
 ```bash
 git clone https://github.com/Lizardon386/multi-agent-task-handoff.git
@@ -68,7 +68,7 @@ bash install.sh               # 只装当前宿主
 
 需要安装到多个宿主时，对每个宿主各执行一次 `--host` 安装；从源仓库收工时 `--suspend` 会跑 `scripts/handoff.sh --syncall` 对齐各副本（安装副本没有 HEAD，跳过），幂等，可随时手动重跑。
 
-### 2.3 由 agent 安装
+### 由 agent 安装
 
 把仓库地址交给 agent，由它执行安装：
 
@@ -79,7 +79,7 @@ bash install.sh               # 只装当前宿主
 
 agent 会把 skill 安装到当前宿主的 `skills/multi-agent-task-handoff`，把目标登记到 `$AGENT_CONFIG/sync-paths`；首次安装还会创建 `config.toml` 和能力表模板。
 
-### 2.4 最短路径（3 步）
+### 最短路径（3 步）
 
 1. **装**：按上表任选一种方式安装。
 2. **建档**：在项目里说「建档」或跑 `/multi-agent-task-handoff --doc --init`，生成 `handoff/CONTEXT.md`。
@@ -87,10 +87,10 @@ agent 会把 skill 安装到当前宿主的 `skills/multi-agent-task-handoff`，
 
 之后不用记命令，自然语言即可；`--check` 用于体检，`--printpath` 用于排查路径。
 
-## 3. 使用说明
+## 使用说明
 > 只写触发方式与常用场景；命令语义见 SKILL / HELP。
 
-### 3.1 触发方式
+### 触发方式
 
 - 支持斜杠命令：`/multi-agent-task-handoff <参数>`
 - 支持 skill 工具：直接说「接手 / 收工 / 修复」，或从 skill 列表里选
@@ -98,7 +98,7 @@ agent 会把 skill 安装到当前宿主的 `skills/multi-agent-task-handoff`，
 
 参数可省略（默认 `--resume`）；完整列表见 `--help`。
 
-### 3.2 常用场景
+### 常用场景
 
 | 场景 | 说法 / 命令 | 会发生什么 |
 |---|---|---|
@@ -115,7 +115,7 @@ agent 会把 skill 安装到当前宿主的 `skills/multi-agent-task-handoff`，
 
 一次只用一个命令。`--suspend` / `--probe` / `--post` / `--doc` 的默认值读 `$AGENT_CONFIG/config.toml` 的 `[defaults]`；`--gear` 可读写 `[defaults]` 挡位（键名与 `[defaults]` 一致，`--gear list` 查看），非法值不修改；显式参数覆盖。安装、配置、旧布局迁移的细节见 [docs/DESIGN.md](docs/DESIGN.md) 和 [SKILL.md](SKILL.md)。
 
-## 4. 产物与目录
+## 产物与目录
 > 只列产物位置与用途；项目自有文档不动。
 
 ```text
@@ -132,12 +132,12 @@ agent 会把 skill 安装到当前宿主的 `skills/multi-agent-task-handoff`，
 交接卡长这样（节选）：
 
 ```markdown
-## 3. 现在在哪
+## 现在在哪
 - 已完成：登录接口与单测
 - 进行中：刷新 token 的并发处理
 - 在飞文件：src/auth/refresh.ts
 
-## 4. 下一步
+## 下一步
 1. 补 refresh 并发测试
 2. 跑 `npm test` 后提交
 ```
@@ -153,7 +153,7 @@ agent 会把 skill 安装到当前宿主的 `skills/multi-agent-task-handoff`，
 
 统一布局：GitHub 项目 README 固定在根（非 GitHub 项目按需），设计/方案/指导类在 `docs/`，交接文档在 `handoff/`。旧布局由 `--doc` 迁移，只移动、不复制。
 
-## 5. 换机迁移
+## 换机迁移
 > 只写带什么 / 不带什么；细节见 PROJECT_RULES。
 
 协议本体随仓库走；机器上另有几样东西要分清带不带：
@@ -176,7 +176,7 @@ agent 会把 skill 安装到当前宿主的 `skills/multi-agent-task-handoff`，
 
 `PROMPT.md` 不带走：默认 gitignore，含本机路径和会话 ID。
 
-## 6. 限制与注意事项
+## 限制与注意事项
 > 只写用户会遇到、协议不替你解决的事；机制见 DESIGN。
 
 - 不后台捕获 agent 上下文；必须显式触发一次。
@@ -189,7 +189,7 @@ agent 会把 skill 安装到当前宿主的 `skills/multi-agent-task-handoff`，
 - 没有 `handoff/` 也不会自动建：先跑 `--doc`。
 - `--post --new` 建出的会话必须绑定当前项目目录；落 worktree 视为失败，改用主项目 UI 新建 + `--next`。
 
-## 7. 常见问题
+## 常见问题
 > 只答使用者会问的；机制细节链接到 DESIGN / SKILL。
 
 <details>
@@ -219,7 +219,7 @@ agent 会把 skill 安装到当前宿主的 `skills/multi-agent-task-handoff`，
 <details>
 <summary>换机要带走什么？</summary>
 
-能力表和工作区规则复制过去；任务状态随项目仓库 clone；`sync-paths` 和 `PROMPT.md` 不带。完整清单见[第 5 节](#5-换机迁移)。
+能力表和工作区规则复制过去；任务状态随项目仓库 clone；`sync-paths` 和 `PROMPT.md` 不带。完整清单见[换机迁移](#换机迁移)。
 </details>
 
 <details>

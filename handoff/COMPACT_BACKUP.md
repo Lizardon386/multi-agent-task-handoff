@@ -46,7 +46,7 @@
 - 2026-10-28：压卡收成正式命令（`--help` 可见）；snippet 加压卡检查，uno-online / handoff-pilot-test 的 AGENTS 同步（fixture 432 字节）。
 - 2026-10-28：`接手/工程化/压卡/接续` 的任务名改为可选，默认 cwd 目录名；只有操作别的目录时才带名字。
 
-## 已完成流水（2026-11-05 自 CONTEXT §3 搬出）
+## 已完成流水（2026-11-05 自 CONTEXT「现在在哪」搬出）
 
 > 原样保留；当前状态以 [CONTEXT.md](CONTEXT.md) 为准。
 
