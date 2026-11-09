@@ -71,6 +71,13 @@
 - Claude `--probe --live` 通过：`CreateSession` 投递、`ReadSession` 读回；能力表补 `workDir` 落 worktree 的实测结论。
 - WorkBuddy `--probe --live` 通过：前台子会话投递、同步读回，回传内容一致，无残留。
 - 推送状态以 `git status -sb` 为准（网络异常时可能 ahead）。
+- 2026-11-06：临时 git / 非 git 项目往返测试通过（分类、迁移、标记、改链、PROMPT 读序）。
+- 2026-11-06：`--post` 实测——`--next` 投递到主目录手动会话通过（读卡、HEAD、工作树均正常）；`--new` 仍落 worktree，且新 worktree 无 `PROMPT.md`，判定失败；能力表已更新。
+- 2026-11-06：完备体检通过（布局/标记/链接/上限/忽略/副本/安装守卫/命令面）；`--post --next` 名称解析实测发现 `ListSessions` 会命中正文，SKILL 已要求按 `title` 过滤；`--suspend --local` 写路径本次自测。
+- 2026-11-06：`--gear <key>[=<值>]` / `--gear list` 支持读写 `[defaults]`（含 `post`）；键/默认值/允许值由 `scripts/lib.sh` 映射驱动，非法值不修改；SKILL/HELP 增命令与独立小节（保持 150 行）。
+- 2026-11-06：`--gear` 改为映射驱动收尾；文档复核修正 PROMPT 锚点、硬编码命令计数与 DESIGN 本机挡位值，模板补自测规则与 gear 注释。
+- 2026-11-06：`--doc` 不再默认生成 README，仅 GitHub remote 或用户确认发布时生成；CONTEXT 仍必生成；SKILL/README/HELP/DESIGN/模板同步；dsp-hal-eval 实测：非 git 项目跳过 README，旧 README 引用只报告不改。
+- 2026-11-06：`--doc [--guard | --init]`——默认挡位 `[defaults].doc=guard`；`--guard` 只删 `## 文档` 表失效协议行，其余只报告；`--init` 只新增（不还原）；跨会话验证通过（371d87f）。
 
 ## 交接记录（压卡沉降）
 
@@ -87,5 +94,6 @@
 - 2026-11-03 Claude：V3 文档重整——README 按落地页模板重写；DESIGN 删除进度/待办、已废弃方案移入版本节；CONTEXT 承接待办。
 - 2026-11-03 Claude：机器级状态收口——`sync-paths` 迁到 `$AGENT_CONFIG`，仓库内不再留；工作区根能力表副本删除，只留 `$AGENT_CONFIG` 一份；DESIGN 补 5.1.1 与迁移范围。
 - 2026-11-03 Claude：钩子防护——`--printpath` 打印 hooksPath，`--check` 校验、`--fix` 恢复；定位 worktree 会话改共享 hooksPath 的坑。
+- 2026-11-03 Claude：能力表拆「memory 读取」表；DESIGN 版本表补 v2 卸载、v3 评审排在 v3 前。
 
 <!-- multi-agent-task-handoff: scope=handoff -->

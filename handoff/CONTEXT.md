@@ -1,7 +1,7 @@
 # multi-agent-task-handoff · 上下文与进展
 
 > 多 agent 任务交接：状态写在 `handoff/`，下一个 agent 读卡接手；本卡只记跨机有用的状态与坑。
-> 最近更新：2026-11-06
+> 最近更新：2026-11-09
 > 项目目录：`D:\agent_workspace\multi-agent-task-handoff`
 > 状态锚点：`git log -1 --oneline`；推 GitHub 前 `gh auth status`
 > 验证命令：`git status -sb`；`bash install.sh --dryrun`；`bash scripts/handoff.sh --printpath`；`bash scripts/handoff.sh --syncall --dryrun`
@@ -32,13 +32,7 @@
 - 已完成：
   - V4 协议：统一布局（根 README、`docs/` 设计/方案/指导类、`handoff/` 交接文档）；文档增删迁移只由 `--doc`；`--post` 热交接；`--suspend` 去掉 `<ID>`；不再生成 `.github/README.md`。
   - 2026-11-06：`SKILL.md`、`assets/*.tpl`、`HELP.txt`、`README.md`、`docs/DESIGN.md`、`CONTEXT.md`、工作区根规则全部更新；提交 `4d05229`，5 份副本已同步。
-  - 2026-11-06：临时 git / 非 git 项目往返测试通过（分类、迁移、标记、改链、PROMPT 读序）。
-  - 2026-11-06：`--post` 实测——`--next` 投递到主目录手动会话通过（读卡、HEAD、工作树均正常）；`--new` 仍落 worktree，且新 worktree 无 `PROMPT.md`，判定失败；能力表已更新。
-  - 2026-11-06：完备体检通过（布局/标记/链接/上限/忽略/副本/安装守卫/命令面）；`--post --next` 名称解析实测发现 `ListSessions` 会命中正文，SKILL 已要求按 `title` 过滤；`--suspend --local` 写路径本次自测。
-  - 2026-11-06：`--gear <key>[=<值>]` / `--gear list` 支持读写 `[defaults]`（含 `post`）；键/默认值/允许值由 `scripts/lib.sh` 映射驱动，非法值不修改；SKILL/HELP 增命令与独立小节（保持 150 行）。
-  - 2026-11-06：`--gear` 改为映射驱动收尾；文档复核修正 PROMPT 锚点、硬编码命令计数与 DESIGN 本机挡位值，模板补自测规则与 gear 注释。
-  - 2026-11-06：`--doc` 不再默认生成 README，仅 GitHub remote 或用户确认发布时生成；CONTEXT 仍必生成；SKILL/README/HELP/DESIGN/模板同步；dsp-hal-eval 实测：非 git 项目跳过 README，旧 README 引用只报告不改。
-  - 2026-11-06：`--doc [--guard | --init]`——默认挡位 `[defaults].doc=guard`；`--guard` 只删 `## 文档` 表失效协议行，其余只报告；`--init` 只新增（不还原）；跨会话验证通过（371d87f）。
+  - 2026-11-09：修正 `docs/DESIGN.md` 5 处图问题（悬空节点 `P`、开工误绑 `--doc`、`PROJECT_RULES` 误归 `$AGENT_CONFIG`、`README / COMMANDS` 标签、带文本箭头缺空格）；全局校验 8 张 Mermaid 图节点引用通过；提交 `9de3a1f`，5 份副本已同步。
   - 推送状态以 `git status -sb` 为准。
 - 进行中：无。
 - 在飞文件（勿动）：无。
@@ -60,6 +54,7 @@
 - `--doc` 边界：只处理布局/标记/迁移造成的链接；`--guard` 只删 `## 文档` 表中的失效协议行，其余死链/旧路径/历史内容只报告；不重建/还原缺失文档（包括从会话记录恢复）；默认挡位 `[defaults].doc=guard`；内容创建只走 `--doc --init`（只新增）。
 - 衍生挡位：`--命令 [--模式 ...]`；默认值放 `[defaults].<命令>`，`--gear` 可改；标题/HELP 写全签名。
 - `--doc` 不默认生成 README：仅 GitHub remote 或用户确认要发布时生成；CONTEXT 仍必生成。
+- 图表检查/修复不纳入协议：Mermaid 图问题按一次性人工修复处理，不新增 `--doc` / `--check` 检查项（语义判断 + SKILL 已满 150 行）。
 
 ## 坑与约束
 > 只写会踩的坑与约束；协议级边界见 `SKILL.md` / `../docs/DESIGN.md`，本卡不重复；平时可追加，`--suspend` 时归并，≤10 类。
@@ -78,6 +73,7 @@
 ## 交接记录（只记关键动作，≤10 条）
 > 超出先压卡到 `COMPACT_BACKUP.md`；不写日常细节。
 
+- 2026-11-09 Claude：修正 DESIGN 5 处图问题（悬空节点 `P`、开工误绑 `--doc`、`PROJECT_RULES` 误归 `$AGENT_CONFIG`、`README / COMMANDS` 标签、带文本箭头缺空格）；8 张 Mermaid 图节点引用全局校验通过；提交 `9de3a1f`，5 份副本同步；决定图表检查/修复不纳入 `--doc` / `--check`，保持 guard 权限面与 SKILL 150 行上限。
 - 2026-11-06 Claude：`--doc` 不再默认生成 README（仅 GitHub remote/用户确认）；dsp-hal-eval 实测非 git 项目零写入，旧 README 引用冲突只报告；发现另一会话从会话日志恢复其 README（5 条旧路径死链），补规则：`--doc` 不重建/还原缺失文档；README/HELP/DESIGN/模板/规则同步；`--doc [--guard | --init]` 拆分，默认 `[defaults].doc=guard`；修 bug 优先结构性根治写入工程约束；跨会话验证通过（371d87f）；guard WARN 汇总修正（根目录多文档/普通死链计入 WARN）；清理死元数据（`.skill-version` date、sync-paths 旧头、config 模板假注释、能力表旧规则）；COMMANDS 作为可选角色，guard 输出 DESIGN/COMMANDS 建议。
 - 2026-11-06 Claude：`--gear` 改为 `[defaults]` 映射驱动（含 post）+ `--gear list`，非法值不改；SKILL/HELP/README/DESIGN/模板/工作区规则同步；文档复核去命令计数、修 PROMPT 锚点与本机挡位值；功能改完必须自测；`--doc` 边界明确（只修迁移链接，不改原有内容；不默认生成 README，仅 GitHub 项目）。
 - 2026-11-06 Claude：V4 完备测试——`--next` 主目录会话通过；`--new` 落 worktree 判失败（新 worktree 无 PROMPT.md）；`ListSessions` 查询命中正文，SKILL 增按 `title` 过滤；`--suspend --local` 写路径验证；`--gear key=value` 写挡位（非法值不改），改为 `[defaults]` 映射驱动（含 post），SKILL/HELP 增命令与独立小节。
@@ -87,7 +83,6 @@
 - 2026-11-05 WorkBuddy：压卡沉降一条旧记录；`--suspend --push` 收工并推送前序提交。
 - 2026-11-04 Claude：v3.1——迁移语义与 `--syncall` 护栏；能力表路径固定；README 增换机迁移；DESIGN 版本/废弃表收敛。
 - 2026-11-04 Claude：文档重整——README 安装/使用分章、DESIGN 完整历程与图表、交接主体统一为 agent、`--printpath` 全量视图、5 份模板对齐；收窄自动提交记忆，`--suspend` 未给 `--push` 时抑制钩子推送；能力表补 `CreateSession` 的 worktree 落点。
-- 2026-11-03 Claude：能力表拆「memory 读取」表；DESIGN 版本表补 v2 卸载、v3 评审排在 v3 前。
 
 ## 参考 ID
 > 只放可回读的 ID / 路径；不复制历史。
