@@ -34,6 +34,7 @@
   - 2026-11-06：`SKILL.md`、`assets/*.tpl`、`HELP.txt`、`README.md`、`docs/DESIGN.md`、`CONTEXT.md`、工作区根规则全部更新；提交 `4d05229`，5 份副本已同步。
   - 2026-11-09：修正 `docs/DESIGN.md` 5 处图问题（悬空节点 `P`、开工误绑 `--doc`、`PROJECT_RULES` 误归 `$AGENT_CONFIG`、`README / COMMANDS` 标签、带文本箭头缺空格）；全局校验 8 张 Mermaid 图节点引用通过；提交 `9de3a1f`，5 份副本已同步。
   - 2026-11-09：`--push` 支持普通项目（安装副本环境推当前目录仓库，源仓库环境推源仓库）；脚本对 agent 协议命令给出明确提示，HELP/SKILL/COMMANDS/DESIGN/README 标注执行层；提交 `913431d`，5 份副本已同步。
+  - 2026-11-09：`--probe` 固定清单（`assets/PROBE.md`）+ 一次性确认 + L1/L2 验收 + 完成定义；能力表模板/HELP/COMMANDS/DESIGN/README 同步；Claude 实测 L1/L2 5/5（临时项目，测后清理）；提交 `d76add9`，5 份副本已同步。
   - 推送状态以 `git status -sb` 为准。
 - 进行中：无。
 - 在飞文件（勿动）：无。
@@ -56,6 +57,7 @@
 - 衍生挡位：`--命令 [--模式 ...]`；默认值放 `[defaults].<命令>`，`--gear` 可改；标题/HELP 写全签名。
 - `--doc` 不默认生成 README：仅 GitHub remote 或用户确认要发布时生成；CONTEXT 仍必生成。
 - 图表检查/修复不纳入协议：Mermaid 图问题按一次性人工修复处理，不新增 `--doc` / `--check` 检查项（语义判断 + SKILL 已满 150 行）。
+- `--probe --live`：按 `assets/PROBE.md` 固定清单，先出计划、确认一次后跑完 S+L1+L2；L2 未过投递/读回不记 ✅；完成时当前宿主必测格无「待测」。
 
 ## 坑与约束
 > 只写会踩的坑与约束；协议级边界见 `SKILL.md` / `../docs/DESIGN.md`，本卡不重复；平时可追加，`--suspend` 时归并，≤10 类。
@@ -74,6 +76,7 @@
 ## 交接记录（只记关键动作，≤10 条）
 > 超出先压卡到 `COMPACT_BACKUP.md`；不写日常细节。
 
+- 2026-11-09 Claude：`--probe` 固定清单落地（`assets/PROBE.md`）：S/L1/L2/K 分级、一次计划确认、临时项目隔离与清理、完成定义；每次 live 跑 L2；能力表模板/HELP/COMMANDS/DESIGN/README 同步；Claude 实测 L1/L2 5/5（临时项目，测后清理）；提交 `d76add9`，5 份副本同步。
 - 2026-11-09 Claude：修复 `--push` 普通项目支持（安装副本环境推当前目录仓库，源仓库环境推源仓库，保留重试/TLS 回退）；脚本对 `--resume / --suspend / --post / --check / --fix / --probe / --workspace` 提示「由 agent 按 SKILL 执行」；HELP/SKILL/COMMANDS/DESIGN/README 同步执行层分工；临时 bare remote 实测普通项目推送成功、非 git 目录报明确错误、源仓库行为不变；提交 `913431d`，5 份副本同步。
 - 2026-11-09 Claude：修正 DESIGN 5 处图问题（悬空节点 `P`、开工误绑 `--doc`、`PROJECT_RULES` 误归 `$AGENT_CONFIG`、`README / COMMANDS` 标签、带文本箭头缺空格）；8 张 Mermaid 图节点引用全局校验通过；提交 `9de3a1f`，5 份副本同步；决定图表检查/修复不纳入 `--doc` / `--check`，保持 guard 权限面与 SKILL 150 行上限。
 - 2026-11-06 Claude：`--doc` 不再默认生成 README（仅 GitHub remote/用户确认）；dsp-hal-eval 实测非 git 项目零写入，旧 README 引用冲突只报告；发现另一会话从会话日志恢复其 README（5 条旧路径死链），补规则：`--doc` 不重建/还原缺失文档；README/HELP/DESIGN/模板/规则同步；`--doc [--guard | --init]` 拆分，默认 `[defaults].doc=guard`；修 bug 优先结构性根治写入工程约束；跨会话验证通过（371d87f）；guard WARN 汇总修正（根目录多文档/普通死链计入 WARN）；清理死元数据（`.skill-version` date、sync-paths 旧头、config 模板假注释、能力表旧规则）；COMMANDS 作为可选角色，guard 输出 DESIGN/COMMANDS 建议。
@@ -83,7 +86,6 @@
 - 2026-11-05 Qoder：`--check` / `--fix` / `--probe --live` 通过；能力表 Qoder 行补 `--dryrun` 与实测方法；CONTEXT 清掉本机副本/探测状态；压卡一条旧记录。
 - 2026-11-05 WorkBuddy / Claude：v3.2–v3.10 迭代（入口拆分、`--save` 与挡位、删钩子、归档改名、README 落地页化、压卡/接手清单）；全自动方案不采纳；SKILL 正文审计（`--syncall` 条件、`--printpath` 输出、模板路径、边界措辞）；`--check` 增源仓库正文一致性审计（只报告，不自动改）；按 WorkBuddy 审计修正 `--printpath` 用法串，并写明 `--save` 属脚本层、不在 SKILL/HELP 命令表；`--push` 内置 Windows HTTP/1.1 + OpenSSL 回退；DESIGN/README 与 SKILL 口径对齐；`.gitignore` 自动评估/维护入 `--check` / `--fix` / `--suspend`。详细流水见 [COMPACT_BACKUP.md](COMPACT_BACKUP.md)。
 - 2026-11-05 WorkBuddy：压卡沉降一条旧记录；`--suspend --push` 收工并推送前序提交。
-- 2026-11-04 Claude：文档重整——README 安装/使用分章、DESIGN 完整历程与图表、交接主体统一为 agent、`--printpath` 全量视图、5 份模板对齐；收窄自动提交记忆，`--suspend` 未给 `--push` 时抑制钩子推送；能力表补 `CreateSession` 的 worktree 落点。
 
 ## 参考 ID
 > 只放可回读的 ID / 路径；不复制历史。
