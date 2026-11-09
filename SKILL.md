@@ -87,7 +87,7 @@ argument-hint: "[--workspace <PATH>] [--nosave] [--gear <key>[=<值>] | --gear l
 1. `<message>` 必填；缺了报错，不猜、不代写。
 2. 目标：`--new` 或 `--next <ID | 会话名>` 二选一；都不给时读 `config.toml` 的 `[defaults].post`。配成 `next` 却没有目标时停下问。
 3. 解析 `--next`：先按 ID 精确匹配；不中再按会话标题匹配（唯一命中才用，多个命中列出让用户选）。宿主提供会话列表工具（如 `ListSessions`）就直接查，不要让用户手抄 ID；工具的模糊查询可能命中正文，必须按返回项的 `title` 过滤后再判唯一；查到的 `workDir` 必须等于项目目录，不一致就停。
-4. `--new` 必须绑定当前项目目录：目录取自 `handoff/PROMPT.md` / `CONTEXT.md`，**不用 `pwd` 推导**（当前会话可能在 worktree）。建会话前查能力表「新建会话并绑定目录 / 落 worktree」；已知落 worktree 的宿主不走 `--new`，改给手动卡（主项目 UI 新建 → agent 用会话列表工具找到它 → `--next`）。建后核对目录，不合格就停：不投递、报告残留。
+4. `--new` 必须绑定当前项目目录：目录取自 `handoff/PROMPT.md` / `CONTEXT.md`，**不用 `pwd` 推导**（当前会话可能在 worktree）。建会话前查能力表「新建会话并绑定目录」（含实际 cwd 是否落 worktree）；已知落 worktree 的宿主不走 `--new`，改给手动卡（主项目 UI 新建 → agent 用会话列表工具找到它 → `--next`）。建后核对目录，不合格就停：不投递、报告残留。
 5. 投递按能力表「投递与读回手段」；不支持跨会话的宿主报 ⛔ 并给替代，不伪造成功。
 6. 可酌情追加项目目录、HEAD、PROMPT 路径，必须可见标注，不混进用户原文；不写 `handoff/`、不改文档、不动 git；报告实际结果（成功 / 失败原因 / 目标会话标识），不写进仓库文件。
 
