@@ -163,20 +163,26 @@ if [ "$mode" = doc ]; then
     fi
   fi
 
-  for f in "$project/handoff/CONTEXT.md" "$project/handoff/PROMPT.md" "$project/README.md" "$project"/docs/*.md; do
-    [ -f "$f" ] || continue
-    dir=$(dirname "$f")
-    grep -oE '\]\([^)]*\.md[^)]*\)' "$f" 2>/dev/null | sed 's/^](//; s/)$//' | while IFS= read -r link; do
-      case "$link" in http*|mailto:*|\#*) continue;; esac
-      target=${link%%#*}; [ -n "$target" ] || continue
-      [ -e "$dir/$target" ] || printf 'WARN     %s -> %s（原有死链，只报告）\n' "$f" "$target"
+  link_warnings=$(
+    for f in "$project/handoff/CONTEXT.md" "$project/handoff/PROMPT.md" "$project/README.md" "$project"/docs/*.md; do
+      [ -f "$f" ] || continue
+      dir=$(dirname "$f")
+      grep -oE '\]\([^)]*\.md[^)]*\)' "$f" 2>/dev/null | sed 's/^](//; s/)$//' | while IFS= read -r link; do
+        case "$link" in http*|mailto:*|\#*) continue;; esac
+        target=${link%%#*}; [ -n "$target" ] || continue
+        [ -e "$dir/$target" ] || printf 'WARN     %s -> %s（原有死链，只报告）\n' "$f" "$target"
+      done
     done
-  done
+  )
+  if [ -n "$link_warnings" ]; then
+    printf '%s\n' "$link_warnings"
+    warn=1
+  fi
 
   for f in "$project"/*.md; do
     [ -f "$f" ] || continue
     base=${f##*/}
-    case "$base" in README.md|SKILL.md) ;; *) printf 'WARN     根目录项目文档: %s（--doc 可迁移）\n' "$base" ;; esac
+    case "$base" in README.md|SKILL.md) ;; *) printf 'WARN     根目录项目文档: %s（--doc 可迁移）\n' "$base"; warn=1 ;; esac
   done
 
   if [ "$warn" = 1 ]; then
