@@ -86,6 +86,13 @@
 - 2026-11-09：`--push` 支持普通项目（安装副本环境推当前目录仓库，源仓库环境推源仓库）；脚本对 agent 协议命令给出明确提示，HELP/SKILL/COMMANDS/DESIGN/README 标注执行层；提交 `913431d`，5 份副本已同步。
 - 2026-11-09：`--probe` 固定清单（`assets/PROBE.md`）+ 一次性确认 + L1/L2 验收 + 完成定义；能力表模板/HELP/COMMANDS/DESIGN/README 同步；Claude 全项实测：S 全过、L1/L2 5/5、自动新建落 worktree、手动主目录会话 `--next` 可用；测试会话有残留（无法删除），测试 worktree 已清理；提交 `d76add9`，5 份副本已同步。
 
+> 以下 4 条 2026-11-10 OpenCode 收工时自 CONTEXT「现在在哪」搬出，原样保留。
+
+- V4 协议：统一布局（根 README、`docs/` 设计/方案/指导类、`handoff/` 交接文档）；文档增删迁移只由 `--doc`；`--post` 热交接；`--suspend` 去掉 `<ID>`；不再生成 `.github/README.md`。
+- 2026-11-10 WorkBuddy：按 `assets/PROBE.md` 全量跑 `--probe --live`（计划先行、一次确认）；S + L1 + L2 全执行，L101 PONG 逐字回显、L201 真接盘 5/5、L202 哨兵一致；L103 绑定临时项目、L104 会话级切目录记 ⛔（无 workDir / 无切目录工具）；临时项目与会话清理干净；能力表就地更新 6 处，WorkBuddy 必测格无「待测」，投递/读回改记 `✅ L2（5/5）`。
+- 2026-11-10 Qoder：`--check` 通过，报 4 条源仓库一致性问题（修复计划待批准）；`--probe --live` 按 `assets/PROBE.md` 全项实测：L201 真接盘 5/5、L202 哨兵一致、K03 fork 重测通过，L103/L104 记 ⛔（建会话只绑注册 workspaceId，无建工作区/切目录 API）；能力表就地更新至 Qoder Desktop 0.5.7（stable 73fe8d7），Qoder 必测格无「待测」；临时项目已删，4 个测试会话（含 11-05 残留）经用户 UI 删除并复验清零；`--suspend --push` 收工。
+- 2026-11-10 cc-haha：修复 4 条一致性问题（HELP `--target` 适用范围、SKILL 别名补「路径诊断」、CONTEXT/PROMPT 模板改命令式锚点、examples 跨任务规则改工作区根）并补齐 `--doc [--target DIR]` 签名；`--help`/别名一致，`--doc --target` 实跑通过。
+
 ## 交接记录（压卡沉降）
 
 > 交接记录超 10 条时先沉降到本节，条目一字未改。
@@ -107,5 +114,7 @@
 - 2026-11-05 WorkBuddy：压卡沉降一条旧记录；`--suspend --push` 收工并推送前序提交。
 - 2026-11-05 Qoder：`--check` / `--fix` / `--probe --live` 通过；能力表 Qoder 行补 `--dryrun` 与实测方法；CONTEXT 清掉本机副本/探测状态；压卡一条旧记录。
 - 2026-11-05 WorkBuddy / Claude：v3.2–v3.10 迭代（入口拆分、`--save` 与挡位、删钩子、归档改名、README 落地页化、压卡/接手清单）；全自动方案不采纳；SKILL 正文审计（`--syncall` 条件、`--printpath` 输出、模板路径、边界措辞）；`--check` 增源仓库正文一致性审计（只报告，不自动改）；按 WorkBuddy 审计修正 `--printpath` 用法串，并写明 `--save` 属脚本层、不在 SKILL/HELP 命令表；`--push` 内置 Windows HTTP/1.1 + OpenSSL 回退；DESIGN/README 与 SKILL 口径对齐；`.gitignore` 自动评估/维护入 `--check` / `--fix` / `--suspend`。详细流水见 [COMPACT_BACKUP.md](COMPACT_BACKUP.md)。
+
+- 2026-11-06 Claude：V4 布局落地——README 在根、设计/方案/指导类入 `docs/`、`--doc` 独占增删迁移、`--post` 热交接、`--suspend` 去 ID；本仓库迁移并同步 5 份副本；`--post --new` 加项目目录校验；HELP 的 post 默认值改 `new / next`，坑合并至 10 类，清理 3 个已合并的 worktree 分支；`--post` 实测：`--next` 主目录会话通过，`--new` 落 worktree 判失败（新 worktree 无 PROMPT.md），能力表更新。
 
 <!-- multi-agent-task-handoff: scope=handoff -->

@@ -30,10 +30,8 @@
 > 只写当前状态与在飞文件；已完成项压缩为结果，逐版本流水搬入 `COMPACT_BACKUP.md`。
 
 - 已完成：
-  - V4 协议：统一布局（根 README、`docs/` 设计/方案/指导类、`handoff/` 交接文档）；文档增删迁移只由 `--doc`；`--post` 热交接；`--suspend` 去掉 `<ID>`；不再生成 `.github/README.md`。
-  - 2026-11-10 WorkBuddy：按 `assets/PROBE.md` 全量跑 `--probe --live`（计划先行、一次确认）；S + L1 + L2 全执行，L101 PONG 逐字回显、L201 真接盘 5/5、L202 哨兵一致；L103 绑定临时项目、L104 会话级切目录记 ⛔（无 workDir / 无切目录工具）；临时项目与会话清理干净；能力表就地更新 6 处，WorkBuddy 必测格无「待测」，投递/读回改记 `✅ L2（5/5）`。
-  - 2026-11-10 Qoder：`--check` 通过，报 4 条源仓库一致性问题（修复计划待批准）；`--probe --live` 按 `assets/PROBE.md` 全项实测：L201 真接盘 5/5、L202 哨兵一致、K03 fork 重测通过，L103/L104 记 ⛔（建会话只绑注册 workspaceId，无建工作区/切目录 API）；能力表就地更新至 Qoder Desktop 0.5.7（stable 73fe8d7），Qoder 必测格无「待测」；临时项目已删，4 个测试会话（含 11-05 残留）经用户 UI 删除并复验清零；`--suspend --push` 收工。
-  - 2026-11-10 cc-haha：修复 4 条一致性问题（HELP `--target` 适用范围、SKILL 别名补「路径诊断」、CONTEXT/PROMPT 模板改命令式锚点、examples 跨任务规则改工作区根）并补齐 `--doc [--target DIR]` 签名；`--help`/别名一致，`--doc --target` 实跑通过。
+  - 2026-11-10 OpenCode：`--probe --live` S+L1+L2 全项通过；L101 PONG 逐字、L103 实际 cwd=临时项目、L104 `opencode.session_move` 可搬空闲会话、L105 `cd` 不影响项目、L106 哈希一致、L107 无独立 memory、L201 5/5、L202 哨兵一致、K03 fork 独立；能力表更新至 OpenChamber 2.5.3 + OpenCode 2.2.0（内置 managed；PATH CLI 2.1.2），OpenCode 必测格无「待测」；临时项目与 3 个测试会话已删，残留 1 条 `opencode.db` 项目元数据。
+  - 2026-11-10 `--fix`：非文档整理项全部通过，6 份副本对齐，工作树干净；PROMPT 内容过期与两条源仓库一致性问题（`--printpath`/`--dryrun` 可迁移注册表、`--gear` 读缺配置不报错）未修。
   - 推送状态以 `git status -sb` 为准。
 - 进行中：无。
 - 在飞文件（勿动）：无。
@@ -41,8 +39,9 @@
 ## 下一步
 > 只写可执行的 1–3 条；不写愿望或背景。
 
-1. Ubuntu/Linux 双平台往返（Windows 已通过）：`--doc` → `--resume` → `--suspend`，再跑 `--check`、`--fix`、`--probe`、`--post`；顺带覆盖非 git 项目、空格路径、XDG / `%APPDATA%` 变体。
-2. 现有项目逐个 `--check` → `--doc` 迁移，不默认扫描全盘；dsp-hal-eval README 缺失且被 CONTEXT 引用，`--doc --guard` 会删除文档表 README 行（其余只报告），布局继续；`[defaults].post` 当前为 `new`，如需裸 `--post` 走已有会话可跑 `--gear post=next`（之后会要求目标）。
+1. 修源仓库两条一致性问题：`--printpath` / `install.sh --dryrun` 不迁移 `.skill-sync-paths`；`--gear <key>` 读在配置缺失时报错；同步 SKILL/HELP/COMMANDS 并实跑。
+2. Ubuntu/Linux 双平台往返（Windows 已通过）：`--doc` → `--resume` → `--suspend`，再跑 `--check`、`--fix`、`--probe`、`--post`；覆盖非 git 项目、空格路径、XDG / `%APPDATA%` 变体。
+3. 现有项目逐个 `--check` → `--doc` 迁移，不默认扫描全盘；dsp-hal-eval README 缺失且被 CONTEXT 引用，`--doc --guard` 会删除文档表 README 行（其余只报告）；`[defaults].post` 当前为 `new`，如需裸 `--post` 走已有会话可跑 `--gear post=next`。
 
 ## MEMORY 提炼
 
@@ -76,6 +75,7 @@
 ## 交接记录（只记关键动作，≤10 条）
 > 超出先压卡到 `COMPACT_BACKUP.md`；不写日常细节。
 
+- 2026-11-10 OpenCode：`--probe --live` S+L1+L2 全项通过（L201 5/5、L202 哨兵一致、K03 fork 独立；L103 cwd=临时项目、L104 session_move）；能力表更新至 OpenChamber 2.5.3 + OpenCode 2.2.0（内置 managed；PATH CLI 2.1.2），OpenCode 必测格无「待测」；临时项目与 3 个测试会话清理，残留 1 条项目元数据；`--fix` 非文档项通过，两条源仓库一致性问题待修。
 - 2026-11-10 cc-haha：确认并修复 Qoder 报的 4 条一致性问题 + 补齐 `--doc [--target DIR]` 签名（SKILL/HELP/COMMANDS/README/DESIGN）；模板锚点改命令式、examples 跨任务规则改工作区根；`--help`/别名一致，`--doc --target`、install/syncall 复验通过。
 - 2026-11-10 Qoder：`--check` 报 4 条一致性问题（修复计划待批准）；`--probe --live` 全项实测（L201 5/5、L202 哨兵一致、K03 fork 重测），L103/L104 记 ⛔；能力表更新至 Qoder Desktop 0.5.7、Qoder 必测格无「待测」；临时项目已删，4 个测试会话经用户 UI 删除并复验清零；压卡沉降 4 条已完成流水与 1 条最旧交接记录；`--suspend --push` 收工。
 - 2026-11-10 WorkBuddy：`--probe --live` 按 `assets/PROBE.md` 全项实测（S+L1+L2），L201 5/5、L202 哨兵一致，L103/L104 记 ⛔；临时项目与会话清理干净；能力表更新 6 处、WorkBuddy 必测格无「待测」；PROMPT 锚点改为命令式；`--suspend --push` 收工。
@@ -85,7 +85,6 @@
 - 2026-11-06 Claude：`--doc` 不再默认生成 README（仅 GitHub remote/用户确认）；dsp-hal-eval 实测非 git 项目零写入，旧 README 引用冲突只报告；发现另一会话从会话日志恢复其 README（5 条旧路径死链），补规则：`--doc` 不重建/还原缺失文档；README/HELP/DESIGN/模板/规则同步；`--doc [--guard | --init]` 拆分，默认 `[defaults].doc=guard`；修 bug 优先结构性根治写入工程约束；跨会话验证通过（371d87f）；guard WARN 汇总修正（根目录多文档/普通死链计入 WARN）；清理死元数据（`.skill-version` date、sync-paths 旧头、config 模板假注释、能力表旧规则）；COMMANDS 作为可选角色，guard 输出 DESIGN/COMMANDS 建议。
 - 2026-11-06 Claude：`--gear` 改为 `[defaults]` 映射驱动（含 post）+ `--gear list`，非法值不改；SKILL/HELP/README/DESIGN/模板/工作区规则同步；文档复核去命令计数、修 PROMPT 锚点与本机挡位值；功能改完必须自测；`--doc` 边界明确（只修迁移链接，不改原有内容；不默认生成 README，仅 GitHub 项目）。
 - 2026-11-06 Claude：V4 完备测试——`--next` 主目录会话通过；`--new` 落 worktree 判失败（新 worktree 无 PROMPT.md）；`ListSessions` 查询命中正文，SKILL 增按 `title` 过滤；`--suspend --local` 写路径验证；`--gear key=value` 写挡位（非法值不改），改为 `[defaults]` 映射驱动（含 post），SKILL/HELP 增命令与独立小节。
-- 2026-11-06 Claude：V4 布局落地——README 在根、设计/方案/指导类入 `docs/`、`--doc` 独占增删迁移、`--post` 热交接、`--suspend` 去 ID；本仓库迁移并同步 5 份副本；`--post --new` 加项目目录校验；HELP 的 post 默认值改 `new / next`，坑合并至 10 类，清理 3 个已合并的 worktree 分支；`--post` 实测：`--next` 主目录会话通过，`--new` 落 worktree 判失败（新 worktree 无 PROMPT.md），能力表更新。
 
 ## 参考 ID
 > 只放可回读的 ID / 路径；不复制历史。
