@@ -30,7 +30,7 @@ usage() {
                    路径诊断：配置 / 工作区 / 能力表 / 源仓库 / 宿主 / 副本清单
   --syncall [--dryrun]
                    按 $AGENT_CONFIG/sync-paths 逐份对齐到当前 HEAD，只补落后的
-                   （必须从源仓库运行；--dryrun 只打印）
+                   （必须从源仓库运行；--dryrun 只打印；注册表缺失时提示先跑 install.sh）
   --push [--retries N] [--delay S]
                    显式推送当前分支；源仓库推源仓库，安装副本环境推当前项目；
                    网络错误重试 3 次 / 3 秒；Windows 再加 HTTP/1.1 + OpenSSL 回退 3 次
@@ -38,8 +38,8 @@ usage() {
                    提交已跟踪修改（--all 含新文件），同步副本，再推送（重试）
   --gear <key>[=<值>] | --gear list
                    读/写 config.toml 的 [defaults] 挡位；省略值只读取
-                   键与允许值由脚本映射决定；list 列出当前键、默认值与允许值
-                   值不在白名单时不修改文件
+                   读取/写入需要 config.toml；list 只列静态映射，不需要配置
+                   键与允许值由脚本映射决定；值不在白名单时不修改文件
   --doc [--guard | --init] [--target DIR]
                    默认挡位读 config.toml 的 [defaults].doc（guard）
                    --guard 维护已有文档：只删 ## 文档 表中的失效协议行，其余只报告
@@ -325,6 +325,7 @@ if [ "$mode" = gear ]; then
       ;;
     *)
       meta=$(gear_meta "$gear_arg") || die "--gear 不支持键 $gear_arg；用 --gear list 查看"
+      [ -f "$cfg_file" ] || die "配置文件不存在: $cfg_file；先运行 install.sh"
       default=$(printf '%s\n' "$meta" | sed -n '1p')
       allowed=$(printf '%s\n' "$meta" | sed -n '2p')
       v=$(config_get "$gear_arg" "$cfg_file" 2>/dev/null || true)
@@ -410,10 +411,15 @@ if [ "$mode" = push ]; then
   die "推送连续失败 $retries 次；提交留在本地"
 fi
 
-resolve_paths_file
+resolve_paths
 
 if [ "$mode" = syncall ]; then
-  [ -f "$paths_file" ] || die "找不到 $paths_file（先跑一次 install.sh 生成）"
+  if [ ! -f "$paths_file" ]; then
+    if [ -f "$repo/.skill-sync-paths" ]; then
+      die "找不到 $paths_file；检测到旧 $repo/.skill-sync-paths，请先运行 install.sh 迁移"
+    fi
+    die "找不到 $paths_file（先跑一次 install.sh 生成）"
+  fi
   # 必须从源仓库跑：安装副本没有 HEAD，强行同步会把所有副本降级成 unknown。
   git -C "$repo" rev-parse --git-dir >/dev/null 2>&1 \
     || die "--syncall 必须从源仓库运行（当前是安装副本，没有 HEAD）"
@@ -511,6 +517,8 @@ else
 fi
 if [ -f "$registry_file" ]; then
   printf '  安装注册表      %s  [%s 条]\n' "$registry_file" "$reg_count"
+elif [ -f "$repo/.skill-sync-paths" ]; then
+  printf '  安装注册表      %s  [缺失；检测到旧 .skill-sync-paths，运行 install.sh 迁移]\n' "$registry_file"
 else
   printf '  安装注册表      %s  [缺失]\n' "$registry_file"
 fi

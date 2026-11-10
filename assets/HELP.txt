@@ -34,10 +34,12 @@ multi-agent-task-handoff — 多 agent 任务交接
   --printpath [--host NAME | --target DIR]
                             路径诊断：表格输出配置目录 / 配置文件 / 工作区根 / 能力表
                             （含更新日期）/ 安装注册表 / 源仓库 / 宿主 / 当前安装副本 /
-                            全部副本的路径与 commit；--host / --target 显式指定
+                            全部副本的路径与 commit；--host / --target 显式指定；
+                            注册表缺失且检测到旧 .skill-sync-paths 时只提示，不迁移
   --gear <key>[=<值>] | --gear list
                             读/写 config.toml 的 [defaults] 挡位
                             <key> 与 [defaults] 键同名；list 列出键、默认值与允许值
+                            读取/写入需要 config.toml；list 不需要配置
                             省略值只读取；值不在白名单时不修改文件
   --workspace <PATH> [--nosave]
                             全局：指定工作区根；默认写回 config.toml；

@@ -145,7 +145,7 @@ flowchart LR
 ### 数据、兼容性与迁移
 
 - 旧布局：由 `--doc` 迁移，只移动、不复制；迁移造成的相对链接与 CONTEXT 文档表同批修正。
-- 旧安装注册表：`install.sh` 把 `<repo>/.skill-sync-paths` 一次性迁到 `$AGENT_CONFIG/sync-paths` 后删除。
+- 旧安装注册表：`install.sh` 在实际安装并登记时把 `<repo>/.skill-sync-paths` 一次性迁到 `$AGENT_CONFIG/sync-paths` 后删除；`--printpath` / `--dryrun` 只提示，不迁移。
 - 配置：模板只播种、不覆盖；不设无消费者的 `version` 字段；`[defaults]` 的键用 `--gear` 读写，非法值不修改。
 - `handoff/PROMPT.md` 默认 gitignore；`--check` 查未忽略/已跟踪，`--fix` 补规则或取消跟踪。
 
@@ -178,6 +178,7 @@ flowchart LR
 - `scripts/handoff.sh --push` 在源仓库环境推源仓库，在安装副本环境推当前目录仓库；只重试网络类错误（TLS / reset / timeout 等）；认证失败、非快进、保护分支立即失败。
 - 换机迁移只带知识，不带本机状态：能力表本身可搬（覆盖模板），`sync-paths` 重建，宿主 memory 不搬，`PROMPT.md` 不带走。
 - 机器级状态只放 `$AGENT_CONFIG`，不放仓库；仓库里不留 `.skill-sync-paths`；状态文件只写有读取方的字段，`.skill-version` 只留 `commit` / `source`。
+- 注册表迁移只在 `install.sh` 实际安装并登记的 `register=1 && is_git=1` 分支执行；只读命令与 `--dryrun` 不写注册表。
 - 已删除钩子；worktree、外部宿主或本地 git 配置都不再影响同步与 push。
 - 模板只播种、不覆盖：缺失的 `AGENT_CAPABILITIES.md` / `AGENTS.md` / `PROJECT_RULES.md` 可确认后从模板创建；已存在的不改写，只报过期。
 - 文档只留单一事实源：协议在 `SKILL.md`、取舍在 `docs/DESIGN.md`、状态在 `handoff/CONTEXT.md`；其他文件用指针，不复制正文。

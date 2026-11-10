@@ -78,7 +78,7 @@ argument-hint: "[--workspace <PATH>] [--nosave] [--gear <key>[=<值>] | --gear l
    - ③「坑与约束」合并同类、删协议复述，≤10 类；④「下一步」「在飞文件」删已完成/失效项；⑤「MEMORY 提炼」只留影响下一家的规则。
 3. 再写本次「现在/下一步/坑/交接记录」；报告 before/after 行数与搬出的条目。
 4. 覆盖写 `handoff/PROMPT.md`；写前查 gitignore：git 仓且 `handoff/PROMPT.md` 未忽略时，确认后追加（拒绝或无交互则只报告，不阻塞写卡）；已跟踪只报告，交 `--fix` 处理。内容：项目目录、读卡顺序、交接文档表、锚点、验证命令、下一步 1–3 条、勿动文件、已决策、参考 ID、规则指针；末行带 `scope=handoff`；文件头注明自动生成。
-5. 默认挡位读 `scripts/handoff.sh --gear suspend`（local / commit / push），显式参数覆盖；local 不操作 git，`--commit` 提交协议管理文档（`handoff/` 下的文件、带标记的文档及其移动/删除），`--push` 隐含 commit 并调 `scripts/handoff.sh --push`（普通项目推当前目录仓库，源仓库环境推源仓库；网络错误 3 次 / 3 秒；Windows 再按 HTTP/1.1 + OpenSSL 回退 3 次），失败留本地并报告。收工末尾，若当前项目是本 skill 的源仓库（仓库根同时有 `.git` 与 `SKILL.md`）跑 `scripts/handoff.sh --syncall` 对齐副本；普通项目不是 skill 源仓库，安装副本没有 `.git`，都跳过并说明（有提交/推送时放在其后；幂等，只补落后）。不装钩子；写卡与指针按实际推送结果记「已推送 / 待推送」，未确认不写已推送；不强制结束会话，可当 checkpoint 用。
+5. 默认挡位读 `scripts/handoff.sh --gear suspend`（local / commit / push；读取失败即配置缺失时停下提示先跑 `install.sh`），显式参数覆盖；local 不操作 git，`--commit` 提交协议管理文档（`handoff/` 下的文件、带标记的文档及其移动/删除），`--push` 隐含 commit 并调 `scripts/handoff.sh --push`（普通项目推当前目录仓库，源仓库环境推源仓库；网络错误 3 次 / 3 秒；Windows 再按 HTTP/1.1 + OpenSSL 回退 3 次），失败留本地并报告。收工末尾，若当前项目是本 skill 的源仓库（仓库根同时有 `.git` 与 `SKILL.md`）跑 `scripts/handoff.sh --syncall` 对齐副本；普通项目不是 skill 源仓库，安装副本没有 `.git`，都跳过并说明（有提交/推送时放在其后；幂等，只补落后）。不装钩子；写卡与指针按实际推送结果记「已推送 / 待推送」，未确认不写已推送；不强制结束会话，可当 checkpoint 用。
 6. memory：按能力表「memory 读取」定位宿主 memory；读 `MEMORY.md` 指针 + 相关条目；只把“会影响下一家”的规则/偏好写入 `CONTEXT.md` 的「MEMORY 提炼」章（无则写「无」）；不复制原文、不写回、不搬运；冲突以 CONTEXT/DESIGN/git 为准。
 
 ## --post <message> [--new | --next <ID | 会话名>]
@@ -117,7 +117,7 @@ argument-hint: "[--workspace <PATH>] [--nosave] [--gear <key>[=<值>] | --gear l
 
 ## --printpath [--host NAME | --target DIR]
 
-只读诊断，不写文件；输出表格，缺项标 ⚠️/❌。`--host NAME` / `--target DIR` 只用于显式指定宿主或安装目录；宿主识别按环境变量粗分，包装版在能力表 Host/版本区分。优先运行 `<skill 目录>/scripts/handoff.sh --printpath`（宿主注入的 base directory；Windows 用 Git Bash 的 sh）；没有 shell 时按 `$AGENT_CONFIG`、`config.toml`、默认值自行解析。
+只读诊断，不写文件；输出表格，缺项标 ⚠️/❌。`--host NAME` / `--target DIR` 只用于显式指定宿主或安装目录；宿主识别按环境变量粗分，包装版在能力表 Host/版本区分；注册表缺失且检测到旧 `.skill-sync-paths` 时只提示，不迁移。优先运行 `<skill 目录>/scripts/handoff.sh --printpath`（宿主注入的 base directory；Windows 用 Git Bash 的 sh）；没有 shell 时按 `$AGENT_CONFIG`、`config.toml`、默认值自行解析。
 
 | 项 | 值 | 状态 |
 |---|---|---|
@@ -133,7 +133,7 @@ argument-hint: "[--workspace <PATH>] [--nosave] [--gear <key>[=<值>] | --gear l
 
 ## --gear <key>[=<值>] | --gear list
 
-- `--gear <key>`：读 `[defaults].<key>`，缺省/非法值按默认值；`--gear <key>=<值>`：校验后写入，值非法报错且不改文件；`--gear list` 列出键、默认值与允许值；读写时配置不存在报错，键不存在时插入 `[defaults]`；键名与 `[defaults]` 一致，新增挡位只改 `scripts/lib.sh` 的 `gear_meta` / `gear_keys`，SKILL/HELP 无需跟随。
+- `--gear <key>` / `--gear <key>=<值>`：读取/写入都需要 `config.toml`，缺失报错；`--gear list` 只列静态映射，不需要配置；值非法报错且不改文件；键不存在时插入 `[defaults]`；键名与 `[defaults]` 一致，新增挡位只改 `scripts/lib.sh` 的 `gear_meta` / `gear_keys`，SKILL/HELP 无需跟随。
 
 ## 边界
 

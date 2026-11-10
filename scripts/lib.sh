@@ -189,14 +189,18 @@ detect_host() {
   return 1
 }
 
-# 安装注册表统一放 $AGENT_CONFIG/sync-paths；旧位置 $repo/.skill-sync-paths 一次性迁移。
-# 依赖调用方已设置 $repo；设置 config_dir、paths_file。
-resolve_paths_file() {
+# 安装注册表统一放 $AGENT_CONFIG/sync-paths；旧位置 $repo/.skill-sync-paths 只在 install.sh 实际登记时迁移。
+# 依赖调用方已设置 $repo；resolve_paths 只算路径，migrate_paths_file 显式执行迁移。
+resolve_paths() {
   config_dir=$(agent_config_dir)
   paths_file=$config_dir/sync-paths
-  if [ ! -f "$paths_file" ] && [ -f "$repo/.skill-sync-paths" ]; then
-    mkdir -p "$config_dir" 2>/dev/null || true
-    cp "$repo/.skill-sync-paths" "$paths_file" 2>/dev/null && rm -f "$repo/.skill-sync-paths" \
-      && echo "迁移: .skill-sync-paths -> $paths_file"
-  fi
+}
+
+migrate_paths_file() {
+  legacy=$repo/.skill-sync-paths
+  [ -f "$paths_file" ] && return 0
+  [ -f "$legacy" ] || return 0
+  mkdir -p "$config_dir" 2>/dev/null || true
+  cp "$legacy" "$paths_file" 2>/dev/null && rm -f "$legacy" \
+    && echo "迁移: .skill-sync-paths -> $paths_file"
 }

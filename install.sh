@@ -72,7 +72,7 @@ repo_real=$(CDPATH= cd -- "$repo" && pwd -P)
 name=$(sed -n 's/^name:[[:space:]]*//p' "$repo/SKILL.md" | head -1 | tr -d '\r')
 [ "$name" = "$skill_id" ] || die "SKILL.md 的 name 应为 $skill_id（实际: ${name:-空}）"
 
-resolve_paths_file
+resolve_paths
 
 target_abs() {
   d=$(dirname -- "$1")
@@ -248,6 +248,7 @@ if [ ! -f "$caps_file" ]; then
 fi
 
 if [ "$register" = 1 ] && [ "$is_git" = 1 ]; then
+  migrate_paths_file
   mkdir -p "$config_dir" 2>/dev/null || true
   [ -f "$paths_file" ] || : > "$paths_file"
   if grep -Fqx "$reg" "$paths_file"; then
