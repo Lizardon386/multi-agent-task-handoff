@@ -116,5 +116,6 @@
 - 2026-11-05 WorkBuddy / Claude：v3.2–v3.10 迭代（入口拆分、`--save` 与挡位、删钩子、归档改名、README 落地页化、压卡/接手清单）；全自动方案不采纳；SKILL 正文审计（`--syncall` 条件、`--printpath` 输出、模板路径、边界措辞）；`--check` 增源仓库正文一致性审计（只报告，不自动改）；按 WorkBuddy 审计修正 `--printpath` 用法串，并写明 `--save` 属脚本层、不在 SKILL/HELP 命令表；`--push` 内置 Windows HTTP/1.1 + OpenSSL 回退；DESIGN/README 与 SKILL 口径对齐；`.gitignore` 自动评估/维护入 `--check` / `--fix` / `--suspend`。详细流水见 [COMPACT_BACKUP.md](COMPACT_BACKUP.md)。
 
 - 2026-11-06 Claude：V4 布局落地——README 在根、设计/方案/指导类入 `docs/`、`--doc` 独占增删迁移、`--post` 热交接、`--suspend` 去 ID；本仓库迁移并同步 5 份副本；`--post --new` 加项目目录校验；HELP 的 post 默认值改 `new / next`，坑合并至 10 类，清理 3 个已合并的 worktree 分支；`--post` 实测：`--next` 主目录会话通过，`--new` 落 worktree 判失败（新 worktree 无 PROMPT.md），能力表更新。
+- 2026-11-06 Claude：V4 完备测试——`--next` 主目录会话通过；`--new` 落 worktree 判失败（新 worktree 无 PROMPT.md）；`ListSessions` 查询命中正文，SKILL 增按 `title` 过滤；`--suspend --local` 写路径验证；`--gear key=value` 写挡位（非法值不改），改为 `[defaults]` 映射驱动（含 post），SKILL/HELP 增命令与独立小节。
 
 <!-- multi-agent-task-handoff: scope=handoff -->
