@@ -14,6 +14,7 @@
 - 工作区根：见 `$AGENT_CONFIG/config.toml` 的 `[paths].workspace`；未设置时 `$HOME/agent_workspace`（存放项目目录的父容器，不是写入目标）
 - 安装注册表：`$AGENT_CONFIG/sync-paths`（一行一个安装目录；`install.sh` 写、`scripts/handoff.sh --syncall` 读，安装副本以它为准）
 - 迁移：整表复制到新机器同一路径（覆盖模板）；`sync-paths` 不带；`config.toml` 只改 workspace
+- 宿主识别：`--printpath` 按环境变量粗分；包装版（如 cc-haha）在能力矩阵 Host/版本列注明
 - OS / Shell：
 - 登录：
 

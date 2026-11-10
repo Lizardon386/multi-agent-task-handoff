@@ -117,7 +117,7 @@ argument-hint: "[--workspace <PATH>] [--nosave] [--gear <key>[=<值>] | --gear l
 
 ## --printpath [--host NAME | --target DIR]
 
-只读诊断，不写文件；输出表格，缺项标 ⚠️/❌。`--host NAME` / `--target DIR` 只用于显式指定宿主或安装目录。优先运行 `<skill 目录>/scripts/handoff.sh --printpath`（宿主注入的 base directory；Windows 用 Git Bash 的 sh）；没有 shell 时按 `$AGENT_CONFIG`、`config.toml`、默认值自行解析。
+只读诊断，不写文件；输出表格，缺项标 ⚠️/❌。`--host NAME` / `--target DIR` 只用于显式指定宿主或安装目录；宿主识别按环境变量粗分，包装版在能力表 Host/版本区分。优先运行 `<skill 目录>/scripts/handoff.sh --printpath`（宿主注入的 base directory；Windows 用 Git Bash 的 sh）；没有 shell 时按 `$AGENT_CONFIG`、`config.toml`、默认值自行解析。
 
 | 项 | 值 | 状态 |
 |---|---|---|
