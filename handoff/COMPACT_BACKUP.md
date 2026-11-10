@@ -1,7 +1,7 @@
 # multi-agent-task-handoff · 压卡备份
 
 > 状态历史、已完成归档与逐条变更，2026-10-28 从 CONTEXT.md 原样搬出；当前状态以 [CONTEXT.md](CONTEXT.md) 为准。
-> 最近更新：2026-11-06
+> 最近更新：2026-11-10
 > V3 起文档迁入 `handoff/`；本文件是历史归档，不复制当前状态。
 
 ## 状态历史
@@ -79,6 +79,13 @@
 - 2026-11-06：`--doc` 不再默认生成 README，仅 GitHub remote 或用户确认发布时生成；CONTEXT 仍必生成；SKILL/README/HELP/DESIGN/模板同步；dsp-hal-eval 实测：非 git 项目跳过 README，旧 README 引用只报告不改。
 - 2026-11-06：`--doc [--guard | --init]`——默认挡位 `[defaults].doc=guard`；`--guard` 只删 `## 文档` 表失效协议行，其余只报告；`--init` 只新增（不还原）；跨会话验证通过（371d87f）。
 
+> 以下 4 条 2026-11-10 自 CONTEXT「现在在哪」搬出，原样保留。
+
+- 2026-11-06：`SKILL.md`、`assets/*.tpl`、`HELP.txt`、`README.md`、`docs/DESIGN.md`、`CONTEXT.md`、工作区根规则全部更新；提交 `4d05229`，5 份副本已同步。
+- 2026-11-09：修正 `docs/DESIGN.md` 5 处图问题（悬空节点 `P`、开工误绑 `--doc`、`PROJECT_RULES` 误归 `$AGENT_CONFIG`、`README / COMMANDS` 标签、带文本箭头缺空格）；全局校验 8 张 Mermaid 图节点引用通过；提交 `9de3a1f`，5 份副本已同步。
+- 2026-11-09：`--push` 支持普通项目（安装副本环境推当前目录仓库，源仓库环境推源仓库）；脚本对 agent 协议命令给出明确提示，HELP/SKILL/COMMANDS/DESIGN/README 标注执行层；提交 `913431d`，5 份副本已同步。
+- 2026-11-09：`--probe` 固定清单（`assets/PROBE.md`）+ 一次性确认 + L1/L2 验收 + 完成定义；能力表模板/HELP/COMMANDS/DESIGN/README 同步；Claude 全项实测：S 全过、L1/L2 5/5、自动新建落 worktree、手动主目录会话 `--next` 可用；测试会话有残留（无法删除），测试 worktree 已清理；提交 `d76add9`，5 份副本已同步。
+
 ## 交接记录（压卡沉降）
 
 > 交接记录超 10 条时先沉降到本节，条目一字未改。
@@ -98,5 +105,6 @@
 - 2026-11-04 Claude：v3.1——迁移语义与 `--syncall` 护栏；能力表路径固定；README 增换机迁移；DESIGN 版本/废弃表收敛。
 - 2026-11-04 Claude：文档重整——README 安装/使用分章、DESIGN 完整历程与图表、交接主体统一为 agent、`--printpath` 全量视图、5 份模板对齐；收窄自动提交记忆，`--suspend` 未给 `--push` 时抑制钩子推送；能力表补 `CreateSession` 的 worktree 落点。
 - 2026-11-05 WorkBuddy：压卡沉降一条旧记录；`--suspend --push` 收工并推送前序提交。
+- 2026-11-05 WorkBuddy / Claude：v3.2–v3.10 迭代（入口拆分、`--save` 与挡位、删钩子、归档改名、README 落地页化、压卡/接手清单）；全自动方案不采纳；SKILL 正文审计（`--syncall` 条件、`--printpath` 输出、模板路径、边界措辞）；`--check` 增源仓库正文一致性审计（只报告，不自动改）；按 WorkBuddy 审计修正 `--printpath` 用法串，并写明 `--save` 属脚本层、不在 SKILL/HELP 命令表；`--push` 内置 Windows HTTP/1.1 + OpenSSL 回退；DESIGN/README 与 SKILL 口径对齐；`.gitignore` 自动评估/维护入 `--check` / `--fix` / `--suspend`。详细流水见 [COMPACT_BACKUP.md](COMPACT_BACKUP.md)。
 
 <!-- multi-agent-task-handoff: scope=handoff -->
