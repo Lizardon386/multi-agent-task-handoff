@@ -128,7 +128,7 @@ flowchart LR
 | 交接卡 | CONTEXT ≤100 行；交接记录 ≤10 条；坑类别 ≤10；MEMORY 提炼只放影响下一家的规则；只记关键动作 |
 | PROMPT | 每次覆盖；带生成时间；默认 gitignore（`--check` 查未忽略/已跟踪，`--fix` 补规则或取消跟踪）；不写真实会话 ID |
 | 命令 | 一次一个；`--workspace` 可搭配一个命令，`--nosave` 只跟 `--workspace`；子参数只跟所属命令 |
-| 投递 | `--post <message> [--new \| --next <ID \| 会话名>]`；不写卡、不动 git；`--new` 必须绑定当前项目目录，落 worktree 视为失败；`--next` 支持会话名，唯一命中才用 |
+| 投递 | `--post <message> [--new \| --next <ID \| 会话名>]`；不写卡、不动 git；`--new` 必须绑定当前项目目录，落 worktree 视为失败；`--next` 支持会话名，唯一命中才用；目标 stopped/completed 且不自动唤醒时给手动卡，不盲目入队 |
 | git | 默认不操作；`--commit` 提交协议管理文档（`handoff/` 与带标记文档及其移动/删除）；`--push` 隐含 commit 并调 `scripts/handoff.sh --push`（普通项目推当前目录仓库，源仓库环境推源仓库；网络错误 3 次 / 3 秒；Windows 再加 HTTP/1.1 + OpenSSL 回退 3 次）；不装钩子；未确认推送成功写「待推送」 |
 | memory | 只读提升；不复制、不写回；项目内 memory 必须 gitignore |
 | GitHub | README 固定在根，首页直接显示；不生成 `.github/README.md`；不用 symlink |

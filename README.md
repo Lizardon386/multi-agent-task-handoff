@@ -181,6 +181,7 @@ agent 会把 skill 安装到当前宿主的 `skills/multi-agent-task-handoff`，
 > 只写用户会遇到、协议不替你解决的事；机制见 DESIGN。
 
 - 不后台捕获 agent 上下文；必须显式触发一次。
+- stopped/completed 会话不会因收到消息自动唤醒；`--post --next` 需先打开/继续目标会话。
 - 不装钩子，不写宿主全局规则，不起后台服务；机械动作由显式命令执行。
 - 一个项目同一时间一个写者；交接后旧 agent 停写。
 - memory 只读提升，不复制、不写回。
