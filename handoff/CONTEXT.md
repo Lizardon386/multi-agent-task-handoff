@@ -34,7 +34,7 @@
   - 2026-11-06：`SKILL.md`、`assets/*.tpl`、`HELP.txt`、`README.md`、`docs/DESIGN.md`、`CONTEXT.md`、工作区根规则全部更新；提交 `4d05229`，5 份副本已同步。
   - 2026-11-09：修正 `docs/DESIGN.md` 5 处图问题（悬空节点 `P`、开工误绑 `--doc`、`PROJECT_RULES` 误归 `$AGENT_CONFIG`、`README / COMMANDS` 标签、带文本箭头缺空格）；全局校验 8 张 Mermaid 图节点引用通过；提交 `9de3a1f`，5 份副本已同步。
   - 2026-11-09：`--push` 支持普通项目（安装副本环境推当前目录仓库，源仓库环境推源仓库）；脚本对 agent 协议命令给出明确提示，HELP/SKILL/COMMANDS/DESIGN/README 标注执行层；提交 `913431d`，5 份副本已同步。
-  - 2026-11-09：`--probe` 固定清单（`assets/PROBE.md`）+ 一次性确认 + L1/L2 验收 + 完成定义；能力表模板/HELP/COMMANDS/DESIGN/README 同步；Claude 实测 L1/L2 5/5（临时项目，测后清理）；提交 `d76add9`，5 份副本已同步。
+  - 2026-11-09：`--probe` 固定清单（`assets/PROBE.md`）+ 一次性确认 + L1/L2 验收 + 完成定义；能力表模板/HELP/COMMANDS/DESIGN/README 同步；Claude 全项实测：S 全过、L1/L2 5/5、自动新建落 worktree、手动主目录会话 `--next` 可用；测试会话有残留（无法删除），测试 worktree 已清理；提交 `d76add9`，5 份副本已同步。
   - 推送状态以 `git status -sb` 为准。
 - 进行中：无。
 - 在飞文件（勿动）：无。
