@@ -4,7 +4,7 @@
 
 - 工作区根：`<AGENT_WORKSPACE 或 $HOME/agent_workspace>`
 - 产物：`<工作区根>/<项目名>/`
-- 跨任务规则：`<AGENT_CONFIG>/PROJECT_RULES.md`
+- 跨任务规则：`<工作区根>/PROJECT_RULES.md`（查找顺序：项目目录 → 父目录 → `$AGENT_CONFIG` 兜底）
 - 能力表：`<AGENT_CONFIG>/AGENT_CAPABILITIES.md`
 - 任务交接卡：`<项目目录>/handoff/CONTEXT.md`
 - 如何开始：接手 / `--resume`；接手 agent 先读 `handoff/PROMPT.md`。

@@ -24,7 +24,7 @@
 | `--resume` | 接手：读 PROMPT → CONTEXT，核锚点、跑验证 | — |
 | `--suspend [--local \| --commit \| --push]` | 收工：压卡、写 CONTEXT、生成 PROMPT、对齐副本 | `[defaults].suspend`，默认 `local` |
 | `--post <message> [--new \| --next <ID \| 会话名>]` | 热交接：把消息投给另一个会话 | `[defaults].post`，默认 `new` |
-| `--doc [--guard \| --init]` | 文档整理：布局、标记、迁移；guard 维护/删失效行，init 只新增 | `[defaults].doc`，默认 `guard` |
+| `--doc [--guard \| --init] [--target DIR]` | 文档整理：布局、标记、迁移；guard 维护/删失效行，init 只新增 | `[defaults].doc`，默认 `guard` |
 | `--check` | 只读体检 | — |
 | `--fix` | 体检 + 修非文档整理项 | — |
 | `--probe [--static \| --live]` | 摸底宿主能力并更新能力表 | `[defaults].probe`，默认 `static` |
@@ -65,10 +65,10 @@
 - 边界：只投消息；不写卡、不改文档、不动 git；报告实际结果，不伪造成功。
 - 常见错误：message 为空、目标会话不存在/不唯一、workDir 不一致、宿主不支持跨会话；停下报告或给替代。
 
-## --doc [--guard | --init]
+## --doc [--guard | --init] [--target DIR]
 > 只说明 guard/init 分工、布局与标记。
 
-- 语法：`--doc`，可选一个挡位。
+- 语法：`--doc [--target DIR]`，可选一个挡位。
 - 默认：`[defaults].doc`；未配置按 `guard`。
 - `--guard`：维护已有文档；检查缺失角色、被引用文档、README 引用、标记和链接；删除 `## 文档` 表中指向缺失协议角色的整行；其余输出 `OK` / `WARN` / `SUGGEST`，只报告；不新增、不还原、不改正文。
 - `--init`：只新增缺失文档，先出清单并确认：

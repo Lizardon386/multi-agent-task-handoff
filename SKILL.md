@@ -2,7 +2,7 @@
 name: multi-agent-task-handoff
 description: 多 agent 任务接力协议：接手/接盘/交接项目、写交接卡、收工/压卡、工程化/补全 handoff 文档、自检/修复/摸底宿主能力；GitHub 项目 README 固定在项目根，交接文件在 handoff/，设计/方案类在 docs/。
 when_to_use: 开始或结束一个任务、接盘别人留下的项目、把工作交接给另一个 agent、或需要检查/修复交接文档与宿主能力时。
-argument-hint: "[--workspace <PATH>] [--nosave] [--gear <key>[=<值>] | --gear list | --help | --resume | --suspend [--local | --commit | --push] | --post <message> [--new | --next <ID | 会话名>] | --doc | --check | --fix | --probe [--static | --live] | --printpath [--host NAME | --target DIR]]"
+argument-hint: "[--workspace <PATH>] [--nosave] [--gear <key>[=<值>] | --gear list | --help | --resume | --suspend [--local | --commit | --push] | --post <message> [--new | --next <ID | 会话名>] | --doc [--guard | --init] [--target DIR] | --check | --fix | --probe [--static | --live] | --printpath [--host NAME | --target DIR]]"
 ---
 
 # 多 agent 任务交接
@@ -31,7 +31,7 @@ argument-hint: "[--workspace <PATH>] [--nosave] [--gear <key>[=<值>] | --gear l
 | 无 / `--resume` | 接盘：读 PROMPT → CONTEXT，核锚点、跑验证 |
 | `--suspend [--local \| --commit \| --push]` | 压卡（按需）+ 收工 + 写 PROMPT + 对齐副本（仅源仓库） |
 | `--post <message> [--new \| --next <ID \| 会话名>]` | 同 agent 热交接：把 message 投给另一个会话；不写卡、不动 git |
-| `--doc [--guard \| --init]` | 默认挡位读 `[defaults].doc`（guard）；`--guard` 维护已有文档（删协议表失效行，其余只报告），`--init` 只新增缺失 CONTEXT（README 仅 GitHub/确认，不还原）；布局/标记/迁移链接由 `--doc` 本身处理 |
+| `--doc [--guard \| --init] [--target DIR]` | 默认挡位读 `[defaults].doc`（guard）；`--guard` 维护已有文档（删协议表失效行，其余只报告），`--init` 只新增缺失 CONTEXT（README 仅 GitHub/确认，不还原）；布局/标记/迁移链接由 `--doc` 本身处理 |
 | `--check` | 只读检查 |
 | `--fix` | 检查 + 修非文档整理项；不碰增删迁移 |
 | `--probe [--static \| --live]` | 检查 + 实测能力；`--live` 实际建会话/发送/读回 |
@@ -40,7 +40,7 @@ argument-hint: "[--workspace <PATH>] [--nosave] [--gear <key>[=<值>] | --gear l
 | `--workspace <PATH> [--nosave]` | 指定工作区根；默认写回 `config.toml` |
 | `--help` | 输出完整帮助 |
 
-中文别名：接盘/接手、压卡/收工/交接、投递/热交接、工程化/工程/建档、自检/更新、修复、摸底/探测、帮助。`--help` 输出同安装目录的 `assets/HELP.txt`；找不到时输出本文件的用法表和边界。
+中文别名：接盘/接手、压卡/收工/交接、投递/热交接、工程化/工程/建档、自检/更新、修复、摸底/探测、路径诊断、帮助。`--help` 输出同安装目录的 `assets/HELP.txt`；找不到时输出本文件的用法表和边界。
 
 ## 路径与配置
 
@@ -90,7 +90,7 @@ argument-hint: "[--workspace <PATH>] [--nosave] [--gear <key>[=<值>] | --gear l
 5. 投递按能力表「投递与读回手段」；不支持跨会话的宿主报 ⛔ 并给替代，不伪造成功。
 6. 可酌情追加项目目录、HEAD、PROMPT 路径，必须可见标注，不混进用户原文；不写 `handoff/`、不改文档、不动 git；报告实际结果（成功 / 失败原因 / 目标会话标识），不写进仓库文件。
 
-## --doc [--guard | --init]
+## --doc [--guard | --init] [--target DIR]
 
 1. 确定项目目录；不带挡位时读 `[defaults].doc`（默认 guard）；先跑 `scripts/handoff.sh --doc --guard [--target <项目目录>]`：guard 删除 `## 文档` 表中指向缺失协议角色的整行，其余 WARN/SUGGEST 只报告；再扫描根 `*.md`、`docs/**`、`handoff/**`、`.github/*.md`，记录标记与角色候选。
 2. 已有标记 → 校验 scope 与目录，不符则移动。

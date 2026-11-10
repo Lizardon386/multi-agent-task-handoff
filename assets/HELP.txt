@@ -1,7 +1,7 @@
 multi-agent-task-handoff — 多 agent 任务交接
 
 用法:
-  multi-agent-task-handoff [--workspace <PATH>] [--nosave] [--gear <key>[=<值>] | --gear list | --help | --resume | --suspend [--local | --commit | --push] | --post <message> [--new | --next <ID | 会话名>] | --doc [--guard | --init] | --check | --fix | --probe [--static | --live] | --printpath [--host NAME | --target DIR]]
+  multi-agent-task-handoff [--workspace <PATH>] [--nosave] [--gear <key>[=<值>] | --gear list | --help | --resume | --suspend [--local | --commit | --push] | --post <message> [--new | --next <ID | 会话名>] | --doc [--guard | --init] [--target DIR] | --check | --fix | --probe [--static | --live] | --printpath [--host NAME | --target DIR]]
 
 命令:
   --resume                  接盘 / 接手：读 handoff/PROMPT.md → handoff/CONTEXT.md，
@@ -19,7 +19,7 @@ multi-agent-task-handoff — 多 agent 任务交接
                               --next <ID | 会话名> 投递到已有会话；
                                         目标 stopped/completed 且不自动唤醒时先手动打开/继续，再投递
                             默认读 config.toml 的 [defaults].post（new / next）
-  --doc [--guard | --init]
+  --doc [--guard | --init] [--target DIR]
                             默认挡位读 config.toml 的 [defaults].doc（guard）
                               --guard   维护已有文档：删 ## 文档 表的失效协议行；其余只报告/建议，不新增/不还原
                               --init    显式创建缺失文档：CONTEXT 必生成；README 仅 GitHub/确认；
@@ -57,7 +57,7 @@ multi-agent-task-handoff — 多 agent 任务交接
   --guard / --init 只能跟 --doc
   --new / --next 只能跟 --post；两者不能同时用；message 必填
   --live 只能跟 --probe
-  --printpath 是独立命令；--host / --target 只能跟 --printpath
+  --printpath 是独立命令；--host 只能跟 --printpath；--target 可跟 --printpath / --doc
   --gear 是独立命令；键与允许值由脚本映射决定，写入值非法时不修改
   --help 单独使用
   无参数等同 --resume

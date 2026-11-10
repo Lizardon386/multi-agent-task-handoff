@@ -33,6 +33,7 @@
   - V4 协议：统一布局（根 README、`docs/` 设计/方案/指导类、`handoff/` 交接文档）；文档增删迁移只由 `--doc`；`--post` 热交接；`--suspend` 去掉 `<ID>`；不再生成 `.github/README.md`。
   - 2026-11-10 WorkBuddy：按 `assets/PROBE.md` 全量跑 `--probe --live`（计划先行、一次确认）；S + L1 + L2 全执行，L101 PONG 逐字回显、L201 真接盘 5/5、L202 哨兵一致；L103 绑定临时项目、L104 会话级切目录记 ⛔（无 workDir / 无切目录工具）；临时项目与会话清理干净；能力表就地更新 6 处，WorkBuddy 必测格无「待测」，投递/读回改记 `✅ L2（5/5）`。
   - 2026-11-10 Qoder：`--check` 通过，报 4 条源仓库一致性问题（修复计划待批准）；`--probe --live` 按 `assets/PROBE.md` 全项实测：L201 真接盘 5/5、L202 哨兵一致、K03 fork 重测通过，L103/L104 记 ⛔（建会话只绑注册 workspaceId，无建工作区/切目录 API）；能力表就地更新至 Qoder Desktop 0.5.7（stable 73fe8d7），Qoder 必测格无「待测」；临时项目已删，4 个测试会话（含 11-05 残留）经用户 UI 删除并复验清零；`--suspend --push` 收工。
+  - 2026-11-10 cc-haha：修复 4 条一致性问题（HELP `--target` 适用范围、SKILL 别名补「路径诊断」、CONTEXT/PROMPT 模板改命令式锚点、examples 跨任务规则改工作区根）并补齐 `--doc [--target DIR]` 签名；`--help`/别名一致，`--doc --target` 实跑通过。
   - 推送状态以 `git status -sb` 为准。
 - 进行中：无。
 - 在飞文件（勿动）：无。
@@ -40,9 +41,8 @@
 ## 下一步
 > 只写可执行的 1–3 条；不写愿望或背景。
 
-1. 修 4 条一致性问题（修复计划已给出、待批准，未批准前不动）：① `assets/HELP.txt:60` `--target` 可跟范围补 `--doc`；② `SKILL.md:43` 中文别名补「路径诊断」（不加行，保持 ≤150 行）；③ `assets/CONTEXT.md.tpl:6` / `assets/PROMPT.md.tpl:29` 锚点改命令式（`git log -1 --oneline`，不写固定 SHA）；④ `assets/examples/AGENTS.md:7` 跨任务规则改 `<工作区根>/PROJECT_RULES.md` 并注查找顺序（项目目录 → 父目录 → `$AGENT_CONFIG` 兜底）。
-2. Ubuntu/Linux 双平台往返（Windows 已通过）：`--doc` → `--resume` → `--suspend`，再跑 `--check`、`--fix`、`--probe`、`--post`；顺带覆盖非 git 项目、空格路径、XDG / `%APPDATA%` 变体。
-3. 现有项目逐个 `--check` → `--doc` 迁移，不默认扫描全盘；dsp-hal-eval README 缺失且被 CONTEXT 引用，`--doc --guard` 会删除文档表 README 行（其余只报告），布局继续；`[defaults].post` 当前为 `new`，如需裸 `--post` 走已有会话可跑 `--gear post=next`（之后会要求目标）。
+1. Ubuntu/Linux 双平台往返（Windows 已通过）：`--doc` → `--resume` → `--suspend`，再跑 `--check`、`--fix`、`--probe`、`--post`；顺带覆盖非 git 项目、空格路径、XDG / `%APPDATA%` 变体。
+2. 现有项目逐个 `--check` → `--doc` 迁移，不默认扫描全盘；dsp-hal-eval README 缺失且被 CONTEXT 引用，`--doc --guard` 会删除文档表 README 行（其余只报告），布局继续；`[defaults].post` 当前为 `new`，如需裸 `--post` 走已有会话可跑 `--gear post=next`（之后会要求目标）。
 
 ## MEMORY 提炼
 
@@ -68,7 +68,7 @@
 - GitHub：README 固定在根，首页直接显示；不生成 `.github/README.md`。旧生成物由 `--doc` 确认后删除。
 - 入口 / 发布：`install.sh` 只安装，诊断/同步用 `scripts/handoff.sh`（Windows `scripts/运行时.bat`），不要再给 install.sh 加运行时子命令；包文件（`SKILL.md`、`scripts/`、`install.sh`、`安装.bat`、`assets/`、`LICENSE`）必须留根。
 - 工作区文档：`AGENTS.md` / `PROJECT_RULES.md` 缺失时 `--check` 报 🟡，`--fix` 确认后从模板播种；已存在的只报过期。
-- 文档：模板不会被 `--check` 校验；改协议或文档结构后手动扫 `assets/*.tpl`，避免模板与正文互相矛盾；命令/挡位文档只写通用机制（键与允许值由 `--gear list` 与 `scripts/lib.sh` 映射给出），新增挡位不用改 SKILL/HELP；PROMPT 锚点用 `git log -1 --oneline`，不写固定 SHA；`--doc` 只处理布局/标记/迁移造成的链接，不改文档原有死链/旧路径/历史内容；不默认生成 README（仅 GitHub remote/用户确认）；非 GitHub 项目 README 缺失时只报告，不因项目自有文档引用而创建或改引用；不从会话记录/历史副本还原缺失文档；`--doc` 先跑 `--doc --guard`（只删 `## 文档` 表失效协议行，其余只报告），内容创建只走 `--doc --init`（只新增）。
+- 文档：模板不会被 `--check` 校验；改协议或文档结构后手动扫 `assets/*.tpl`，避免模板与正文互相矛盾；命令/挡位文档只写通用机制（键与允许值由 `--gear list` 与 `scripts/lib.sh` 映射给出），新增挡位不用改 SKILL/HELP；PROMPT 锚点用 `git log -1 --oneline`，不写固定 SHA；`--doc` 只处理布局/标记/迁移造成的链接，不改文档原有死链/旧路径/历史内容；不默认生成 README（仅 GitHub remote/用户确认）；非 GitHub 项目 README 缺失时只报告，不因项目自有文档引用而创建或改引用；不从会话记录/历史副本还原缺失文档；`--doc` 先跑 `--doc --guard`（只删 `## 文档` 表失效协议行，其余只报告），内容创建只走 `--doc --init`（只新增）；源仓库一致性审计覆盖参数签名、模板与 examples。
 - git：不装钩子；只有 `--push` 会显式推送，`--commit` 提交协议管理文档（`handoff/` 与带标记文档及其移动/删除）；`--push` 在源仓库环境推源仓库、安装副本环境推当前目录仓库，重试 3 次 / 3 秒，只重试网络错误；Windows 再加 HTTP/1.1 + OpenSSL 回退 3 次；未确认推送成功不写「已推送」。
 - `--post`：`--new` 的新会话必须绑定当前项目目录，Claude Code `CreateSession` 即使传项目目录仍落 worktree（2026-11-06 实测），且新 worktree 无 `PROMPT.md`（gitignore），按能力表应拒绝，改走主项目 UI 新建 + `--next`；`--next` 接受会话 ID 或会话名，宿主有会话列表工具（如 `ListSessions`）就直接查，不要让用户手抄 ID，查到的 `workDir` 必须等于项目目录；工具的模糊查询会命中正文（2026-11-06 实测），必须按 `title` 过滤后再判唯一；本机 `[defaults].post = "new"`；Claude 上 `--new` 落 worktree，裸 `--post` 应改 `--next`，或设 `post = "next"` 强制询问目标。
 - 不回到全自动：文件改动无法触发 git（边界禁止常驻服务），没有可靠触发器时全自动=全不自动；与「git 可选」「敏感信息不提交」冲突。`--commit` / `--push` 保留；嫌步骤多只能封成一条显式命令。
@@ -76,6 +76,7 @@
 ## 交接记录（只记关键动作，≤10 条）
 > 超出先压卡到 `COMPACT_BACKUP.md`；不写日常细节。
 
+- 2026-11-10 cc-haha：确认并修复 Qoder 报的 4 条一致性问题 + 补齐 `--doc [--target DIR]` 签名（SKILL/HELP/COMMANDS/README/DESIGN）；模板锚点改命令式、examples 跨任务规则改工作区根；`--help`/别名一致，`--doc --target`、install/syncall 复验通过。
 - 2026-11-10 Qoder：`--check` 报 4 条一致性问题（修复计划待批准）；`--probe --live` 全项实测（L201 5/5、L202 哨兵一致、K03 fork 重测），L103/L104 记 ⛔；能力表更新至 Qoder Desktop 0.5.7、Qoder 必测格无「待测」；临时项目已删，4 个测试会话经用户 UI 删除并复验清零；压卡沉降 4 条已完成流水与 1 条最旧交接记录；`--suspend --push` 收工。
 - 2026-11-10 WorkBuddy：`--probe --live` 按 `assets/PROBE.md` 全项实测（S+L1+L2），L201 5/5、L202 哨兵一致，L103/L104 记 ⛔；临时项目与会话清理干净；能力表更新 6 处、WorkBuddy 必测格无「待测」；PROMPT 锚点改为命令式；`--suspend --push` 收工。
 - 2026-11-09 Claude：`--probe` 固定清单落地（`assets/PROBE.md`）：S/L1/L2/K 分级、一次计划确认、临时项目隔离与清理、完成定义；每次 live 跑 L2；能力表模板/HELP/COMMANDS/DESIGN/README 同步；Claude 实测 L1/L2 5/5（临时项目，测后清理）；提交 `d76add9`，5 份副本同步。
@@ -85,7 +86,7 @@
 - 2026-11-06 Claude：`--gear` 改为 `[defaults]` 映射驱动（含 post）+ `--gear list`，非法值不改；SKILL/HELP/README/DESIGN/模板/工作区规则同步；文档复核去命令计数、修 PROMPT 锚点与本机挡位值；功能改完必须自测；`--doc` 边界明确（只修迁移链接，不改原有内容；不默认生成 README，仅 GitHub 项目）。
 - 2026-11-06 Claude：V4 完备测试——`--next` 主目录会话通过；`--new` 落 worktree 判失败（新 worktree 无 PROMPT.md）；`ListSessions` 查询命中正文，SKILL 增按 `title` 过滤；`--suspend --local` 写路径验证；`--gear key=value` 写挡位（非法值不改），改为 `[defaults]` 映射驱动（含 post），SKILL/HELP 增命令与独立小节。
 - 2026-11-06 Claude：V4 布局落地——README 在根、设计/方案/指导类入 `docs/`、`--doc` 独占增删迁移、`--post` 热交接、`--suspend` 去 ID；本仓库迁移并同步 5 份副本；`--post --new` 加项目目录校验；HELP 的 post 默认值改 `new / next`，坑合并至 10 类，清理 3 个已合并的 worktree 分支；`--post` 实测：`--next` 主目录会话通过，`--new` 落 worktree 判失败（新 worktree 无 PROMPT.md），能力表更新。
-- 2026-11-05 Qoder：`--check` / `--fix` / `--probe --live` 通过；能力表 Qoder 行补 `--dryrun` 与实测方法；CONTEXT 清掉本机副本/探测状态；压卡一条旧记录。
+
 ## 参考 ID
 > 只放可回读的 ID / 路径；不复制历史。
 
