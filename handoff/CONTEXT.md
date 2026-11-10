@@ -1,7 +1,7 @@
 # multi-agent-task-handoff · 上下文与进展
 
 > 多 agent 任务交接：状态写在 `handoff/`，下一个 agent 读卡接手；本卡只记跨机有用的状态与坑。
-> 最近更新：2026-11-09
+> 最近更新：2026-11-10
 > 项目目录：`D:\agent_workspace\multi-agent-task-handoff`
 > 状态锚点：`git log -1 --oneline`；推 GitHub 前 `gh auth status`
 > 验证命令：`git status -sb`；`bash install.sh --dryrun`；`bash scripts/handoff.sh --printpath`；`bash scripts/handoff.sh --syncall --dryrun`
@@ -35,6 +35,7 @@
   - 2026-11-09：修正 `docs/DESIGN.md` 5 处图问题（悬空节点 `P`、开工误绑 `--doc`、`PROJECT_RULES` 误归 `$AGENT_CONFIG`、`README / COMMANDS` 标签、带文本箭头缺空格）；全局校验 8 张 Mermaid 图节点引用通过；提交 `9de3a1f`，5 份副本已同步。
   - 2026-11-09：`--push` 支持普通项目（安装副本环境推当前目录仓库，源仓库环境推源仓库）；脚本对 agent 协议命令给出明确提示，HELP/SKILL/COMMANDS/DESIGN/README 标注执行层；提交 `913431d`，5 份副本已同步。
   - 2026-11-09：`--probe` 固定清单（`assets/PROBE.md`）+ 一次性确认 + L1/L2 验收 + 完成定义；能力表模板/HELP/COMMANDS/DESIGN/README 同步；Claude 全项实测：S 全过、L1/L2 5/5、自动新建落 worktree、手动主目录会话 `--next` 可用；测试会话有残留（无法删除），测试 worktree 已清理；提交 `d76add9`，5 份副本已同步。
+  - 2026-11-10 WorkBuddy：按 `assets/PROBE.md` 全量跑 `--probe --live`（计划先行、一次确认）；S + L1 + L2 全执行，L101 PONG 逐字回显、L201 真接盘 5/5、L202 哨兵一致；L103 绑定临时项目、L104 会话级切目录记 ⛔（无 workDir / 无切目录工具）；临时项目与会话清理干净；能力表就地更新 6 处，WorkBuddy 必测格无「待测」，投递/读回改记 `✅ L2（5/5）`。
   - 推送状态以 `git status -sb` 为准。
 - 进行中：无。
 - 在飞文件（勿动）：无。
@@ -70,7 +71,7 @@
 - GitHub：README 固定在根，首页直接显示；不生成 `.github/README.md`。旧生成物由 `--doc` 确认后删除。
 - 入口 / 发布：`install.sh` 只安装，诊断/同步用 `scripts/handoff.sh`（Windows `scripts/运行时.bat`），不要再给 install.sh 加运行时子命令；包文件（`SKILL.md`、`scripts/`、`install.sh`、`安装.bat`、`assets/`、`LICENSE`）必须留根。
 - 工作区文档：`AGENTS.md` / `PROJECT_RULES.md` 缺失时 `--check` 报 🟡，`--fix` 确认后从模板播种；已存在的只报过期。
-- 文档：模板不会被 `--check` 校验；改协议或文档结构后手动扫 `assets/*.tpl`，避免模板与正文互相矛盾；命令/挡位文档只写通用机制（键与允许值由 `--gear list` 与 `scripts/lib.sh` 映射给出），新增挡位不用改 SKILL/HELP；PROMPT 锚点提交后天然落后一个 commit，按「本次提交在其后」读；`--doc` 只处理布局/标记/迁移造成的链接，不改文档原有死链/旧路径/历史内容；不默认生成 README（仅 GitHub remote/用户确认）；非 GitHub 项目 README 缺失时只报告，不因项目自有文档引用而创建或改引用；不从会话记录/历史副本还原缺失文档；`--doc` 先跑 `--doc --guard`（只删 `## 文档` 表失效协议行，其余只报告），内容创建只走 `--doc --init`（只新增）。
+- 文档：模板不会被 `--check` 校验；改协议或文档结构后手动扫 `assets/*.tpl`，避免模板与正文互相矛盾；命令/挡位文档只写通用机制（键与允许值由 `--gear list` 与 `scripts/lib.sh` 映射给出），新增挡位不用改 SKILL/HELP；PROMPT 锚点用 `git log -1 --oneline`，不写固定 SHA；`--doc` 只处理布局/标记/迁移造成的链接，不改文档原有死链/旧路径/历史内容；不默认生成 README（仅 GitHub remote/用户确认）；非 GitHub 项目 README 缺失时只报告，不因项目自有文档引用而创建或改引用；不从会话记录/历史副本还原缺失文档；`--doc` 先跑 `--doc --guard`（只删 `## 文档` 表失效协议行，其余只报告），内容创建只走 `--doc --init`（只新增）。
 - git：不装钩子；只有 `--push` 会显式推送，`--commit` 提交协议管理文档（`handoff/` 与带标记文档及其移动/删除）；`--push` 在源仓库环境推源仓库、安装副本环境推当前目录仓库，重试 3 次 / 3 秒，只重试网络错误；Windows 再加 HTTP/1.1 + OpenSSL 回退 3 次；未确认推送成功不写「已推送」。
 - `--post`：`--new` 的新会话必须绑定当前项目目录，Claude Code `CreateSession` 即使传项目目录仍落 worktree（2026-11-06 实测），且新 worktree 无 `PROMPT.md`（gitignore），按能力表应拒绝，改走主项目 UI 新建 + `--next`；`--next` 接受会话 ID 或会话名，宿主有会话列表工具（如 `ListSessions`）就直接查，不要让用户手抄 ID，查到的 `workDir` 必须等于项目目录；工具的模糊查询会命中正文（2026-11-06 实测），必须按 `title` 过滤后再判唯一；本机 `[defaults].post = "new"`；Claude 上 `--new` 落 worktree，裸 `--post` 应改 `--next`，或设 `post = "next"` 强制询问目标。
 - 不回到全自动：文件改动无法触发 git（边界禁止常驻服务），没有可靠触发器时全自动=全不自动；与「git 可选」「敏感信息不提交」冲突。`--commit` / `--push` 保留；嫌步骤多只能封成一条显式命令。
@@ -78,6 +79,7 @@
 ## 交接记录（只记关键动作，≤10 条）
 > 超出先压卡到 `COMPACT_BACKUP.md`；不写日常细节。
 
+- 2026-11-10 WorkBuddy：`--probe --live` 按 `assets/PROBE.md` 全项实测（S+L1+L2），L201 5/5、L202 哨兵一致，L103/L104 记 ⛔；临时项目与会话清理干净；能力表更新 6 处、WorkBuddy 必测格无「待测」；PROMPT 锚点改为命令式；`--suspend --push` 收工。
 - 2026-11-09 Claude：`--probe` 固定清单落地（`assets/PROBE.md`）：S/L1/L2/K 分级、一次计划确认、临时项目隔离与清理、完成定义；每次 live 跑 L2；能力表模板/HELP/COMMANDS/DESIGN/README 同步；Claude 实测 L1/L2 5/5（临时项目，测后清理）；提交 `d76add9`，5 份副本同步。
 - 2026-11-09 Claude：修复 `--push` 普通项目支持（安装副本环境推当前目录仓库，源仓库环境推源仓库，保留重试/TLS 回退）；脚本对 `--resume / --suspend / --post / --check / --fix / --probe / --workspace` 提示「由 agent 按 SKILL 执行」；HELP/SKILL/COMMANDS/DESIGN/README 同步执行层分工；临时 bare remote 实测普通项目推送成功、非 git 目录报明确错误、源仓库行为不变；提交 `913431d`，5 份副本同步。
 - 2026-11-09 Claude：修正 DESIGN 5 处图问题（悬空节点 `P`、开工误绑 `--doc`、`PROJECT_RULES` 误归 `$AGENT_CONFIG`、`README / COMMANDS` 标签、带文本箭头缺空格）；8 张 Mermaid 图节点引用全局校验通过；提交 `9de3a1f`，5 份副本同步；决定图表检查/修复不纳入 `--doc` / `--check`，保持 guard 权限面与 SKILL 150 行上限。
@@ -87,7 +89,6 @@
 - 2026-11-06 Claude：V4 布局落地——README 在根、设计/方案/指导类入 `docs/`、`--doc` 独占增删迁移、`--post` 热交接、`--suspend` 去 ID；本仓库迁移并同步 5 份副本；`--post --new` 加项目目录校验；HELP 的 post 默认值改 `new / next`，坑合并至 10 类，清理 3 个已合并的 worktree 分支；`--post` 实测：`--next` 主目录会话通过，`--new` 落 worktree 判失败（新 worktree 无 PROMPT.md），能力表更新。
 - 2026-11-05 Qoder：`--check` / `--fix` / `--probe --live` 通过；能力表 Qoder 行补 `--dryrun` 与实测方法；CONTEXT 清掉本机副本/探测状态；压卡一条旧记录。
 - 2026-11-05 WorkBuddy / Claude：v3.2–v3.10 迭代（入口拆分、`--save` 与挡位、删钩子、归档改名、README 落地页化、压卡/接手清单）；全自动方案不采纳；SKILL 正文审计（`--syncall` 条件、`--printpath` 输出、模板路径、边界措辞）；`--check` 增源仓库正文一致性审计（只报告，不自动改）；按 WorkBuddy 审计修正 `--printpath` 用法串，并写明 `--save` 属脚本层、不在 SKILL/HELP 命令表；`--push` 内置 Windows HTTP/1.1 + OpenSSL 回退；DESIGN/README 与 SKILL 口径对齐；`.gitignore` 自动评估/维护入 `--check` / `--fix` / `--suspend`。详细流水见 [COMPACT_BACKUP.md](COMPACT_BACKUP.md)。
-- 2026-11-05 WorkBuddy：压卡沉降一条旧记录；`--suspend --push` 收工并推送前序提交。
 
 ## 参考 ID
 > 只放可回读的 ID / 路径；不复制历史。

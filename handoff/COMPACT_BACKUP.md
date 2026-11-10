@@ -97,5 +97,6 @@
 - 2026-11-03 Claude：能力表拆「memory 读取」表；DESIGN 版本表补 v2 卸载、v3 评审排在 v3 前。
 - 2026-11-04 Claude：v3.1——迁移语义与 `--syncall` 护栏；能力表路径固定；README 增换机迁移；DESIGN 版本/废弃表收敛。
 - 2026-11-04 Claude：文档重整——README 安装/使用分章、DESIGN 完整历程与图表、交接主体统一为 agent、`--printpath` 全量视图、5 份模板对齐；收窄自动提交记忆，`--suspend` 未给 `--push` 时抑制钩子推送；能力表补 `CreateSession` 的 worktree 落点。
+- 2026-11-05 WorkBuddy：压卡沉降一条旧记录；`--suspend --push` 收工并推送前序提交。
 
 <!-- multi-agent-task-handoff: scope=handoff -->
