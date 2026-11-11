@@ -65,7 +65,7 @@ argument-hint: "[--workspace <PATH>] [--nosave] [--gear <key>[=<值>] | --gear l
 
 1. 读：`handoff/PROMPT.md` → `handoff/CONTEXT.md`（冲突以 CONTEXT 为准）→ 跨任务规则；读「MEMORY 提炼」。产品文档不在读序，任务需要时按 CONTEXT 文档表打开。
 2. 核：cwd 与 PROMPT 项目目录一致；HEAD / 工作树 / 副本状态与锚点一致；不一致先报告并说明取舍，不静默按过期状态开工（fork/worktree 回主项目或注明）。
-3. 跑：PROMPT 的验证命令；失败先诊断，不静默继续。
+3. 跑：必跑 `git status -sb`；按需 `--printpath` / `--syncall --dryrun`（锚点缺失、副本可疑、用户要求）与 `--doc --guard`（文档动过）；失败先诊断，不静默继续。
 4. 接：读「下一步」「在飞文件」「勿动文件」；参考 ID 信息不足时按能力表读回。
 5. 报：向用户汇报当前状态、下一步、验证结果与阻塞。
 6. 布局不符（根有 `CONTEXT.md`、`handoff/README.md` 等）→ 提示 `--check` / `--doc`，不静默迁移。
@@ -77,7 +77,7 @@ argument-hint: "[--workspace <PATH>] [--nosave] [--gear <key>[=<值>] | --gear l
    - ①「已完成」逐版本流水 → 搬入 `COMPACT_BACKUP.md`，只留当前状态；②「交接记录」>10 条 → 最旧搬入。
    - ③「坑与约束」合并同类、删协议复述，≤10 类；④「下一步」「在飞文件」删已完成/失效项；⑤「MEMORY 提炼」只留影响下一家的规则。
 3. 再写本次「现在/下一步/坑/交接记录」；报告 before/after 行数与搬出的条目。
-4. 覆盖写 `handoff/PROMPT.md`；写前查 gitignore：git 仓且 `handoff/PROMPT.md` 未忽略时，确认后追加（拒绝或无交互则只报告，不阻塞写卡）；已跟踪只报告，交 `--fix` 处理。内容：项目目录、读卡顺序、交接文档表、锚点、验证命令、下一步 1–3 条、勿动文件、已决策、参考 ID、规则指针；末行带 `scope=handoff`；文件头注明自动生成。
+4. 覆盖写 `handoff/PROMPT.md`（瘦身指针卡）；写前查 gitignore：git 仓且 `handoff/PROMPT.md` 未忽略时，确认后追加（拒绝或无交互则只报告，不阻塞写卡）；已跟踪只报告，交 `--fix` 处理。内容：项目目录、读卡顺序、交接文档表、锚点、验证分级（必跑 / 按需）、下一步 1–3 条、规则与能力表指针；已决策 / 勿动 / 坑在 CONTEXT，不重复；末行带 `scope=handoff`；文件头注明自动生成。
 5. 默认挡位读 `scripts/handoff.sh --gear suspend`（local / commit / push；读取失败即配置缺失时停下提示先跑 `install.sh`），显式参数覆盖；local 不操作 git，`--commit` 提交协议管理文档（`handoff/` 下的文件、带标记的文档及其移动/删除），`--push` 隐含 commit 并调 `scripts/handoff.sh --push`（普通项目推当前目录仓库，源仓库环境推源仓库；网络错误 3 次 / 3 秒；Windows 再按 HTTP/1.1 + OpenSSL 回退 3 次），失败留本地并报告。收工末尾，若当前项目是本 skill 的源仓库（仓库根同时有 `.git` 与 `SKILL.md`）跑 `scripts/handoff.sh --syncall` 对齐副本；普通项目不是 skill 源仓库，安装副本没有 `.git`，都跳过并说明（有提交/推送时放在其后；幂等，只补落后）。不装钩子；写卡与指针按实际推送结果记「已推送 / 待推送」，未确认不写已推送；不强制结束会话，可当 checkpoint 用。
 6. memory：按能力表「memory 读取」定位宿主 memory；读 `MEMORY.md` 指针 + 相关条目；只把“会影响下一家”的规则/偏好写入 `CONTEXT.md` 的「MEMORY 提炼」章（无则写「无」）；不复制原文、不写回、不搬运；冲突以 CONTEXT/DESIGN/git 为准。
 

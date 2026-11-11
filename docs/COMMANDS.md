@@ -37,7 +37,7 @@
 > 只说明接手的读取顺序、核对项与输出。
 
 - 语法：`--resume`，无参数；不写命令时默认也是它。
-- 行为：读 `handoff/PROMPT.md` → `handoff/CONTEXT.md` → 跨任务规则；核对 cwd 与项目目录、HEAD/工作树/副本锚点；跑 PROMPT 的验证命令；汇报状态、下一步、阻塞。
+- 行为：读 `handoff/PROMPT.md` → `handoff/CONTEXT.md` → 跨任务规则；核对 cwd 与项目目录、HEAD/工作树/副本锚点；验证分级：必跑 `git status -sb`，按需 `--printpath` / `--syncall --dryrun` / `--doc --guard`；汇报状态、下一步、阻塞。
 - 边界：只读；不写卡、不迁移文档、不动 git；冲突以 CONTEXT 为准。
 - 常见错误：cwd 与项目目录不一致、PROMPT 缺失或锚点过期、验证命令失败；先报告，不静默按过期状态开工。
 
@@ -50,7 +50,7 @@
   - `--local`：写 CONTEXT/PROMPT、按需压卡，不操作 git。
   - `--commit`：额外提交协议管理文档（`handoff/` 与带标记文档及其移动/删除）。
   - `--push`：隐含 commit，提交后推送；普通项目在项目目录运行安装副本的 `scripts/handoff.sh --push`（推当前目录仓库），源仓库环境推源仓库；网络错误重试 3 次 / 3 秒，Windows 再加 HTTP/1.1 + OpenSSL 回退 3 次。
-- 行为：必要时压卡；覆盖 `handoff/PROMPT.md`；源仓库收工末尾跑 `scripts/handoff.sh --syncall` 对齐安装副本。
+- 行为：必要时压卡；覆盖 `handoff/PROMPT.md`（瘦身指针卡，已决策 / 勿动 / 坑在 CONTEXT）；源仓库收工末尾跑 `scripts/handoff.sh --syncall` 对齐安装副本。
 - 边界：默认不操作 git；不装钩子；安装副本跳过 syncall；未确认推送成功不写「已推送」。
 - 常见错误：CONTEXT 缺失、推送认证失败/非快进、从安装副本跑 `--syncall`；保留本地提交并报告。
 

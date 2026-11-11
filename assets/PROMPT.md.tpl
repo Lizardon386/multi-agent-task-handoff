@@ -8,14 +8,14 @@
 <绝对路径>
 
 ## 读卡顺序
-> 按顺序读；冲突以 `CONTEXT.md` 为准。产品文档不在读序，任务需要时按 CONTEXT 文档表打开。
+> 按顺序读；冲突以 `CONTEXT.md` 为准。已决策 / 勿动 / 坑都在 CONTEXT，不在这里重复。
 
 1. 本文件
-2. `handoff/CONTEXT.md`
-3. 跨任务规则：<路径>
-4. 能力表：<路径>
+2. `handoff/CONTEXT.md`（含 MEMORY 提炼）
+3. 跨任务规则：<路径>（按需）
+4. 能力表：<路径>（按需）
 
-## 文档
+## 交接文档
 > 只列交接文档；本文件自身不在此表。
 
 | 文档 | 路径 |
@@ -27,36 +27,24 @@
 > 只写可复核的锚点；不写主观判断。
 
 - git HEAD：以 `git log -1 --oneline` 为准（不写固定 SHA）；非 git 项目写哨兵串：
-- 工作树：
+- 工作树 / 副本：以 `git status -sb`、`scripts/handoff.sh --printpath` 现读
 
 ## 验证命令
-> 只写接手时应跑的命令；不写解释。
+> 必跑一条；其余按需（锚点缺失、副本可疑、文档动过时）。
 
--
+- 必跑：`git status -sb`
+- 按需：`bash install.sh --dryrun`；`bash scripts/handoff.sh --printpath`；`bash scripts/handoff.sh --syncall --dryrun`
+- 文档动过：`bash scripts/handoff.sh --doc --guard --target .`
 
 ## 下一步（1–3 条）
 > 只写 1–3 条可执行动作。
 
 1.
 
-## 勿动文件
-> 只列交接期间不应改动的文件 / 目录。
+## 规则与能力表指针
+> 只给路径；不复制正文。
 
--
-
-## 已决策
-> 只写会影响下一家的决定；不写过程。
-
--
-
-## 参考 ID
-> 只放可回读的 ID / 路径；不复制历史。
-
--
-
-## 项目规则指针
-> 只给路径；不复制规则正文。
-
--
+- 跨任务规则：<路径>
+- 能力表：<路径>
 
 <!-- multi-agent-task-handoff: scope=handoff -->

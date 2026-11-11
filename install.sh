@@ -152,44 +152,48 @@ if [ -d "$target" ]; then
   fi
 fi
 
+reg=$(to_reg "$target")
+if [ "$register" != 1 ]; then
+  reg_line="跳过（--noregister）"
+elif [ "$is_git" = 0 ]; then
+  reg_line="跳过（非 git 源）"
+elif [ -f "$paths_file" ] && grep -Fqx "$reg" "$paths_file"; then
+  reg_line="已在 sync-paths"
+else
+  reg_line="会追加到 sync-paths -> $reg"
+fi
+cfg_file=$config_dir/config.toml
+caps_file=$config_dir/AGENT_CAPABILITIES.md
+if [ "$is_git" = 1 ]; then
+  src_line="$commit${dirty:+（工作树有未提交改动，只装 HEAD）}"
+else
+  src_line="unknown（非 git 副本，装工作树）"
+fi
+
+if [ "$dry" = 1 ]; then
+  printf '宿主: %s%s；目标: %s；动作: %s\n' "$host" "${cfg_src:+ ($cfg_src)}" "$target" "$state"
+  printf '源: %s；登记: %s\n' "$src_line" "$reg_line"
+  if [ -f "$cfg_file" ]; then cfg_txt="配置已存在"; else cfg_txt="配置会创建"; fi
+  if [ -f "$caps_file" ]; then caps_txt="能力表已存在"; else caps_txt="能力表会创建"; fi
+  printf '%s；%s\n' "$cfg_txt" "$caps_txt"
+  echo "（dry-run，未写文件）"
+  exit 0
+fi
+
 printf '宿主: %s%s\n' "$host" "${cfg_src:+ ($cfg_src)}"
 printf '目标: %s\n' "$target"
-if [ "$is_git" = 1 ]; then
-  printf '源:   %s%s\n' "$commit" "${dirty:+（工作树有未提交改动，只装 HEAD）}"
-else
-  printf '源:   unknown（非 git 副本，装工作树）\n'
-fi
+printf '源:   %s\n' "$src_line"
 printf '动作: %s\n' "$state"
-
-reg=$(to_reg "$target")
-if [ "$register" = 1 ]; then
-  if [ "$is_git" = 0 ]; then
-    echo "登记: 跳过（非 git 源）"
-  elif [ -f "$paths_file" ] && grep -Fqx "$reg" "$paths_file"; then
-    echo "登记: 已在 sync-paths"
-  else
-    echo "登记: 会追加到 sync-paths -> $reg"
-  fi
-else
-  echo "登记: 跳过（--noregister）"
-fi
-
-cfg_file=$config_dir/config.toml
+printf '登记: %s\n' "$reg_line"
 if [ -f "$cfg_file" ]; then
   echo "配置: 已存在 $cfg_file（不覆盖）"
 else
   echo "配置: 会创建 $cfg_file"
 fi
-caps_file=$config_dir/AGENT_CAPABILITIES.md
 if [ -f "$caps_file" ]; then
   echo "能力表: 已存在 $caps_file（不覆盖）"
 else
   echo "能力表: 会创建 $caps_file（模板，待 --probe 填充）"
-fi
-
-if [ "$dry" = 1 ]; then
-  echo "（dry-run，未写文件）"
-  exit 0
 fi
 
 if [ "$host" != manual ]; then

@@ -427,6 +427,7 @@ if [ "$mode" = syncall ]; then
   head_commit=$(git -C "$repo" rev-parse HEAD 2>/dev/null) || head_commit=unknown
   printf '对齐目标: %s\n' "$head_commit"
   total=0
+  latest=0
   bad=0
   while IFS= read -r line <&3; do
     case "$line" in ''|'#'*) continue ;; esac
@@ -444,7 +445,7 @@ if [ "$mode" = syncall ]; then
       done < "$dest/.skill-version"
     fi
     if [ "$cur" = "$head_commit" ]; then
-      printf '已最新: %s\n' "$dest"
+      latest=$((latest + 1))
       continue
     fi
     if [ "$dry" = 1 ]; then
@@ -459,7 +460,11 @@ if [ "$mode" = syncall ]; then
       bad=$((bad + 1))
     fi
   done 3< "$paths_file"
-  [ "$total" -eq 0 ] && printf '清单里没有可处理的目录\n'
+  if [ "$total" -eq 0 ]; then
+    printf '清单里没有可处理的目录\n'
+  elif [ "$latest" -eq "$total" ]; then
+    printf '已最新: %s 份\n' "$total"
+  fi
   [ "$bad" -gt 0 ] && die "$bad 份同步失败"
   exit 0
 fi
@@ -526,26 +531,48 @@ printf '  源仓库          %s\n' "${src_repo:-$repo}"
 printf '  宿主            %s\n' "$host_label"
 printf '  安装副本        %s\n' "$t"
 if [ -f "$registry_file" ]; then
+  total=0
+  ok=0
   while IFS= read -r line <&3; do
     case "$line" in ''|'#'*) continue ;; esac
     dest=$line
     while :; do case "$dest" in *' '*) dest=${dest% } ;; *) break ;; esac; done
     [ -n "$dest" ] || continue
+    total=$((total + 1))
     cur=
     if [ -f "$dest/.skill-version" ]; then
       while IFS= read -r kv; do
         case "$kv" in commit=*) cur=${kv#commit=}; break ;; esac
       done < "$dest/.skill-version"
     fi
-    if [ ! -d "$dest" ]; then st=缺失
-    elif [ -z "$cur" ]; then st=无版本
-    elif [ -z "$head_full" ]; then st=未知
-    elif [ "$cur" = "$head_full" ]; then st=当前
-    else st=落后
-    fi
-    cur7=$(printf '%.7s' "$cur")
-    printf '  副本            %s  %s  [%s]\n' "$dest" "${cur7:--}" "$st"
+    [ -n "$head_full" ] && [ "$cur" = "$head_full" ] && ok=$((ok + 1))
   done 3< "$registry_file"
+  if [ "$total" -eq 0 ]; then
+    printf '  副本            注册表为空\n'
+  elif [ "$ok" -eq "$total" ]; then
+    printf '  副本            %s 份全部当前\n' "$total"
+  else
+    while IFS= read -r line <&3; do
+      case "$line" in ''|'#'*) continue ;; esac
+      dest=$line
+      while :; do case "$dest" in *' '*) dest=${dest% } ;; *) break ;; esac; done
+      [ -n "$dest" ] || continue
+      cur=
+      if [ -f "$dest/.skill-version" ]; then
+        while IFS= read -r kv; do
+          case "$kv" in commit=*) cur=${kv#commit=}; break ;; esac
+        done < "$dest/.skill-version"
+      fi
+      if [ ! -d "$dest" ]; then st=缺失
+      elif [ -z "$cur" ]; then st=无版本
+      elif [ -z "$head_full" ]; then st=未知
+      elif [ "$cur" = "$head_full" ]; then st=当前
+      else st=落后
+      fi
+      cur7=$(printf '%.7s' "$cur")
+      printf '  副本            %s  %s  [%s]\n' "$dest" "${cur7:--}" "$st"
+    done 3< "$registry_file"
+  fi
 else
   printf '  副本            无注册表\n'
 fi
