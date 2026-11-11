@@ -1,7 +1,7 @@
 # multi-agent-task-handoff · 压卡备份
 
 > 状态历史、已完成归档与逐条变更，2026-10-28 从 CONTEXT.md 原样搬出；当前状态以 [CONTEXT.md](CONTEXT.md) 为准。
-> 最近更新：2026-11-10
+> 最近更新：2026-11-11
 > V3 起文档迁入 `handoff/`；本文件是历史归档，不复制当前状态。
 
 ## 状态历史
@@ -93,6 +93,14 @@
 - 2026-11-10 Qoder：`--check` 通过，报 4 条源仓库一致性问题（修复计划待批准）；`--probe --live` 按 `assets/PROBE.md` 全项实测：L201 真接盘 5/5、L202 哨兵一致、K03 fork 重测通过，L103/L104 记 ⛔（建会话只绑注册 workspaceId，无建工作区/切目录 API）；能力表就地更新至 Qoder Desktop 0.5.7（stable 73fe8d7），Qoder 必测格无「待测」；临时项目已删，4 个测试会话（含 11-05 残留）经用户 UI 删除并复验清零；`--suspend --push` 收工。
 - 2026-11-10 cc-haha：修复 4 条一致性问题（HELP `--target` 适用范围、SKILL 别名补「路径诊断」、CONTEXT/PROMPT 模板改命令式锚点、examples 跨任务规则改工作区根）并补齐 `--doc [--target DIR]` 签名；`--help`/别名一致，`--doc --target` 实跑通过。
 
+## 已完成流水（2026-11-11 自 CONTEXT「现在在哪」搬出）
+
+> 原样保留；当前状态以 [CONTEXT.md](CONTEXT.md) 为准。
+
+- 2026-11-10 OpenCode：`--probe --live` S+L1+L2 全项通过；L101 PONG 逐字、L103 实际 cwd=临时项目、L104 `opencode.session_move` 可搬空闲会话、L105 `cd` 不影响项目、L106 哈希一致、L107 无独立 memory、L201 5/5、L202 哨兵一致、K03 fork 独立；能力表更新至 OpenChamber 2.5.3 + OpenCode 2.2.0（内置 managed；PATH CLI 2.1.2），OpenCode 必测格无「待测」；临时项目与 3 个测试会话已删，残留 1 条 `opencode.db` 项目元数据。
+- 2026-11-10 `--fix`：非文档整理项全部通过，6 份副本对齐，工作树干净；PROMPT 内容过期与两条源仓库一致性问题（`--printpath`/`--dryrun` 可迁移注册表、`--gear` 读缺配置不报错）未修。
+- 2026-11-10 cc-haha：拆分 `resolve_paths` / `migrate_paths_file`，注册表迁移只在 `install.sh` 实际安装并登记时；`--printpath` / `--dryrun` 只提示不写，`--syncall` 缺注册表+旧文件报错；`--gear <key>` 读取缺配置报错，`--gear list` 不需要配置；临时仓库与真实仓库验证通过。
+
 ## 交接记录（压卡沉降）
 
 > 交接记录超 10 条时先沉降到本节，条目一字未改。
@@ -117,5 +125,6 @@
 
 - 2026-11-06 Claude：V4 布局落地——README 在根、设计/方案/指导类入 `docs/`、`--doc` 独占增删迁移、`--post` 热交接、`--suspend` 去 ID；本仓库迁移并同步 5 份副本；`--post --new` 加项目目录校验；HELP 的 post 默认值改 `new / next`，坑合并至 10 类，清理 3 个已合并的 worktree 分支；`--post` 实测：`--next` 主目录会话通过，`--new` 落 worktree 判失败（新 worktree 无 PROMPT.md），能力表更新。
 - 2026-11-06 Claude：V4 完备测试——`--next` 主目录会话通过；`--new` 落 worktree 判失败（新 worktree 无 PROMPT.md）；`ListSessions` 查询命中正文，SKILL 增按 `title` 过滤；`--suspend --local` 写路径验证；`--gear key=value` 写挡位（非法值不改），改为 `[defaults]` 映射驱动（含 post），SKILL/HELP 增命令与独立小节。
+- 2026-11-06 Claude：`--gear` 改为 `[defaults]` 映射驱动（含 post）+ `--gear list`，非法值不改；SKILL/HELP/README/DESIGN/模板/工作区规则同步；文档复核去命令计数、修 PROMPT 锚点与本机挡位值；功能改完必须自测；`--doc` 边界明确（只修迁移链接，不改原有内容；不默认生成 README，仅 GitHub 项目）。
 
 <!-- multi-agent-task-handoff: scope=handoff -->

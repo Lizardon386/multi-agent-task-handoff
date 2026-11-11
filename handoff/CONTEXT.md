@@ -30,9 +30,7 @@
 > 只写当前状态与在飞文件；已完成项压缩为结果，逐版本流水搬入 `COMPACT_BACKUP.md`。
 
 - 已完成：
-  - 2026-11-10 OpenCode：`--probe --live` S+L1+L2 全项通过；L101 PONG 逐字、L103 实际 cwd=临时项目、L104 `opencode.session_move` 可搬空闲会话、L105 `cd` 不影响项目、L106 哈希一致、L107 无独立 memory、L201 5/5、L202 哨兵一致、K03 fork 独立；能力表更新至 OpenChamber 2.5.3 + OpenCode 2.2.0（内置 managed；PATH CLI 2.1.2），OpenCode 必测格无「待测」；临时项目与 3 个测试会话已删，残留 1 条 `opencode.db` 项目元数据。
-  - 2026-11-10 `--fix`：非文档整理项全部通过，6 份副本对齐，工作树干净；PROMPT 内容过期与两条源仓库一致性问题（`--printpath`/`--dryrun` 可迁移注册表、`--gear` 读缺配置不报错）未修。
-  - 2026-11-10 cc-haha：拆分 `resolve_paths` / `migrate_paths_file`，注册表迁移只在 `install.sh` 实际安装并登记时；`--printpath` / `--dryrun` 只提示不写，`--syncall` 缺注册表+旧文件报错；`--gear <key>` 读取缺配置报错，`--gear list` 不需要配置；临时仓库与真实仓库验证通过。
+  - 2026-11-11 ZCode：`--probe --live` S+L1/L2 全项（L101 PONG 逐字、L102 建会话、L105/L106、L108、L201 5/5、L202 一致、K03 fork 独立）；L103/L104 记 ⛔；能力表更新至 ZCode 3.18.0、ZCode 必测格无「待测」；临时项目已删，2 个测试会话归档残留。
   - 推送状态以 `git status -sb` 为准。
 - 进行中：无。
 - 在飞文件（勿动）：无。
@@ -58,14 +56,12 @@
 - `--post --next`：目标 stopped/completed 等非活动状态时不自动唤醒；先给手动卡（打开/继续后重投），不把 queued 当已消费。
 - 宿主识别：`--printpath` 按环境变量粗分；cc-haha 等包装版在能力表 Host/版本区分，协议不写宿主分支。
 
-- 注册表迁移只在 `install.sh` 实际安装并登记时；只读/dryrun 不写；`--gear` 读取/写入需要 `config.toml`，`list` 不需要配置。
-
 ## 坑与约束
 > 只写会踩的坑与约束；协议级边界见 `SKILL.md` / `../docs/DESIGN.md`，本卡不重复；平时可追加，`--suspend` 时归并，≤10 类。
 
 - 安装：`install.sh` 只装 HEAD，工作树未提交时副本仍是上一个 commit；`--syncall` 只从源仓库跑（副本没有 HEAD，硬跑会把副本写成 `commit=unknown`）。
 - 注册表：`$AGENT_CONFIG/sync-paths` 是本机安装注册表，`--syncall` 按它对齐副本；旧 `.skill-sync-paths` 只在 `install.sh` 实际安装并登记时迁移，`--printpath` / `--dryrun` 只提示，`--syncall` 缺注册表+旧文件报错提示先 install；换机不带，新机器重建。
-- 能力表：固定 `$AGENT_CONFIG/AGENT_CAPABILITIES.md`；只在不存在时从模板播种，已存在不覆盖；换机整表复制、只重填「本机环境」块；验证方法里的参数名必须与脚本一致（`--dryrun`、`--syncall`，无中间连字符），`--check` 只报不修。
+- 能力表：固定 `$AGENT_CONFIG/AGENT_CAPABILITIES.md`；只在不存在时从模板播种，已存在不覆盖；换机整表复制、只重填「本机环境」块；验证方法里的参数名必须与脚本一致（`--dryrun`、`--syncall`，无中间连字符），`--check` 只报不修；宿主升级可能改工具集（ZCode 3.16.3→3.18.0 已发生），投递/读回按表复验，不复用旧结论。
 - GitHub：README 固定在根，首页直接显示；不生成 `.github/README.md`。旧生成物由 `--doc` 确认后删除。
 - 入口 / 发布：`install.sh` 只安装，诊断/同步用 `scripts/handoff.sh`（Windows `scripts/运行时.bat`），不要再给 install.sh 加运行时子命令；包文件（`SKILL.md`、`scripts/`、`install.sh`、`安装.bat`、`assets/`、`LICENSE`）必须留根。
 - 工作区文档：`AGENTS.md` / `PROJECT_RULES.md` 缺失时 `--check` 报 🟡，`--fix` 确认后从模板播种；已存在的只报过期。
@@ -77,6 +73,8 @@
 ## 交接记录（只记关键动作，≤10 条）
 > 超出先压卡到 `COMPACT_BACKUP.md`；不写日常细节。
 
+- 2026-11-11 ZCode：`--probe --live` 全项（S+L1/L2，L201 5/5、L202 一致、K03 fork 独立）；宿主 3.18.0 跨会话 `SendToSession` / `ReadSession` / `WaitSessions` 可用，推翻旧结论「⛔ 仅子 agent」；L103/L104 记 ⛔；能力表 ZCode 行刷新、无「待测」；临时项目已删，2 个测试会话归档（无删除 API）；压卡搬出 3 条已完成流水与 1 条最旧记录。
+
 - 2026-11-10 cc-haha：修复注册表迁移边界（拆分 `resolve_paths` / `migrate_paths_file`，迁移只在 `install.sh` 登记分支；`--printpath` / `--dryrun` 不写；`--syncall` 缺注册表+旧文件报错提示 install）与 `--gear` 读取缺配置报错（`--gear list` 不需配置）；临时 git 仓库实测 5 项、真实仓库回归；SKILL/HELP/COMMANDS/DESIGN 同步；提交 `a186de5`。
 - 2026-11-10 OpenCode：`--probe --live` S+L1+L2 全项通过（L201 5/5、L202 哨兵一致、K03 fork 独立；L103 cwd=临时项目、L104 session_move）；能力表更新至 OpenChamber 2.5.3 + OpenCode 2.2.0（内置 managed；PATH CLI 2.1.2），OpenCode 必测格无「待测」；临时项目与 3 个测试会话清理，残留 1 条项目元数据；`--fix` 非文档项通过，两条源仓库一致性问题待修。
 - 2026-11-10 cc-haha：确认并修复 Qoder 报的 4 条一致性问题 + 补齐 `--doc [--target DIR]` 签名（SKILL/HELP/COMMANDS/README/DESIGN）；模板锚点改命令式、examples 跨任务规则改工作区根；`--help`/别名一致，`--doc --target`、install/syncall 复验通过。
@@ -86,7 +84,6 @@
 - 2026-11-09 Claude：修复 `--push` 普通项目支持（安装副本环境推当前目录仓库，源仓库环境推源仓库，保留重试/TLS 回退）；脚本对 `--resume / --suspend / --post / --check / --fix / --probe / --workspace` 提示「由 agent 按 SKILL 执行」；HELP/SKILL/COMMANDS/DESIGN/README 同步执行层分工；临时 bare remote 实测普通项目推送成功、非 git 目录报明确错误、源仓库行为不变；提交 `913431d`，5 份副本同步。
 - 2026-11-09 Claude：修正 DESIGN 5 处图问题（悬空节点 `P`、开工误绑 `--doc`、`PROJECT_RULES` 误归 `$AGENT_CONFIG`、`README / COMMANDS` 标签、带文本箭头缺空格）；8 张 Mermaid 图节点引用全局校验通过；提交 `9de3a1f`，5 份副本同步；决定图表检查/修复不纳入 `--doc` / `--check`，保持 guard 权限面与 SKILL 150 行上限。
 - 2026-11-06 Claude：`--doc` 不再默认生成 README（仅 GitHub remote/用户确认）；dsp-hal-eval 实测非 git 项目零写入，旧 README 引用冲突只报告；发现另一会话从会话日志恢复其 README（5 条旧路径死链），补规则：`--doc` 不重建/还原缺失文档；README/HELP/DESIGN/模板/规则同步；`--doc [--guard | --init]` 拆分，默认 `[defaults].doc=guard`；修 bug 优先结构性根治写入工程约束；跨会话验证通过（371d87f）；guard WARN 汇总修正（根目录多文档/普通死链计入 WARN）；清理死元数据（`.skill-version` date、sync-paths 旧头、config 模板假注释、能力表旧规则）；COMMANDS 作为可选角色，guard 输出 DESIGN/COMMANDS 建议。
-- 2026-11-06 Claude：`--gear` 改为 `[defaults]` 映射驱动（含 post）+ `--gear list`，非法值不改；SKILL/HELP/README/DESIGN/模板/工作区规则同步；文档复核去命令计数、修 PROMPT 锚点与本机挡位值；功能改完必须自测；`--doc` 边界明确（只修迁移链接，不改原有内容；不默认生成 README，仅 GitHub 项目）。
 
 ## 参考 ID
 > 只放可回读的 ID / 路径；不复制历史。
