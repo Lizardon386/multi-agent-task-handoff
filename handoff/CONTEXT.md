@@ -1,7 +1,7 @@
 # multi-agent-task-handoff · 上下文与进展
 
 > 多 agent 任务交接：状态写在 `handoff/`，下一个 agent 读卡接手；本卡只记跨机有用的状态与坑。
-> 最近更新：2026-11-11
+> 最近更新：2026-11-12
 > 项目目录：`D:\agent_workspace\multi-agent-task-handoff`
 > 状态锚点：`git log -1 --oneline`；推 GitHub 前 `gh auth status`
 > 验证命令：`git status -sb`；`bash install.sh --dryrun`；`bash scripts/handoff.sh --printpath`；`bash scripts/handoff.sh --syncall --dryrun`
@@ -65,6 +65,7 @@
 ## 交接记录（只记关键动作，≤10 条）
 > 超出先压卡到 `COMPACT_BACKUP.md`；不写日常细节。
 
+- 2026-11-12 cc-haha：新增 `assets/CHECK.md` 固定检查清单（C01–C12）；`--check`/`--fix` 按清单输出 `[OK]/[WARN]/[SKIP]`；`--save` 一行摘要、`--syncall` 实际同步汇总；PROMPT 45→26、CONTEXT 80→77（记录 10→7）；实测清单 12 项、save 一行、syncall 2 份汇总。
 - 2026-11-11 cc-haha：瘦身交接卡与验证分级——PROMPT 改指针卡（88→45 行）；resume 必跑 `git status`、其余按需；CONTEXT 去重压缩到 80 行；printpath/syncall 全当前时汇总一行、install dryrun 压缩；临时环境测落后/缺失/空注册表，真实仓库回归。
 - 2026-11-11 ZCode：`--probe --live` 全项（S+L1/L2，L201 5/5、L202 一致、K03 fork 独立）；宿主 3.18.0 跨会话 `SendToSession` / `ReadSession` / `WaitSessions` 可用，推翻旧结论「⛔ 仅子 agent」；L103/L104 记 ⛔；能力表 ZCode 行刷新、无「待测」；临时项目已删，2 个测试会话归档（无删除 API）；压卡搬出 3 条已完成流水与 1 条最旧记录。
 
