@@ -65,7 +65,7 @@ argument-hint: "[--workspace <PATH>] [--nosave] [--gear <key>[=<值>] | --gear l
 
 1. 读：`handoff/PROMPT.md` → `handoff/CONTEXT.md`（冲突以 CONTEXT 为准）→ 跨任务规则；读「MEMORY 提炼」。产品文档不在读序，任务需要时按 CONTEXT 文档表打开。
 2. 核：cwd 与 PROMPT 项目目录一致；HEAD / 工作树 / 副本状态与锚点一致；不一致先报告并说明取舍，不静默按过期状态开工（fork/worktree 回主项目或注明）。
-3. 跑：必跑 `git status -sb`；按需 `--printpath` / `--syncall --dryrun`（锚点缺失、副本可疑、用户要求）与 `--doc --guard`（文档动过）；失败先诊断，不静默继续。
+3. 跑：必跑 `git status -sb`；按需——锚点不可核对（非命令式 / 无上次 HEAD / 与当前 HEAD 不符）或副本无法确认（非本次收工、行为异常、点名宿主、超 30 天 / 版本变化）跑 `--printpath` + `--syncall --dryrun`；文档动过（交接记录有 `--doc` / 迁移 / 布局变更）跑 `--doc --guard`；用户明确要求按命令；未跑按需项在汇报中注明；失败先诊断，不静默继续。
 4. 接：读「下一步」「在飞文件」「勿动文件」；参考 ID 信息不足时按能力表读回。
 5. 报：向用户汇报当前状态、下一步、验证结果与阻塞。
 6. 布局不符（根有 `CONTEXT.md`、`handoff/README.md` 等）→ 提示 `--check` / `--doc`，不静默迁移。

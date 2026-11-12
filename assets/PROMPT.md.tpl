@@ -30,11 +30,11 @@
 - 工作树 / 副本：以 `git status -sb`、`scripts/handoff.sh --printpath` 现读
 
 ## 验证命令
-> 必跑一条；其余按需（锚点缺失、副本可疑、文档动过时）。
+> 必跑 `git status -sb`；按需项由可观察信号触发，未跑的在汇报中注明。
 
-- 必跑：`git status -sb`
-- 按需：`bash install.sh --dryrun`；`bash scripts/handoff.sh --printpath`；`bash scripts/handoff.sh --syncall --dryrun`
-- 文档动过：`bash scripts/handoff.sh --doc --guard --target .`
+- 锚点不可核对（非命令式 / 无上次 HEAD / 与当前 HEAD 不符）或副本无法确认（非本次收工、行为异常、点名宿主、超 30 天 / 版本变化）：`bash install.sh --dryrun`；`bash scripts/handoff.sh --printpath`；`bash scripts/handoff.sh --syncall --dryrun`
+- 文档动过（`--doc` / 迁移 / 布局变更）：`bash scripts/handoff.sh --doc --guard --target .`
+- 用户明确要求：按命令执行
 
 ## 下一步（1–3 条）
 > 只写 1–3 条可执行动作。

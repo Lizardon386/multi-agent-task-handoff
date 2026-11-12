@@ -37,7 +37,8 @@
 > 只说明接手的读取顺序、核对项与输出。
 
 - 语法：`--resume`，无参数；不写命令时默认也是它。
-- 行为：读 `handoff/PROMPT.md` → `handoff/CONTEXT.md` → 跨任务规则；核对 cwd 与项目目录、HEAD/工作树/副本锚点；验证分级：必跑 `git status -sb`，按需 `--printpath` / `--syncall --dryrun` / `--doc --guard`；汇报状态、下一步、阻塞。
+- 行为：读 `handoff/PROMPT.md` → `handoff/CONTEXT.md` → 跨任务规则；核对 cwd 与项目目录、HEAD/工作树/副本锚点；验证分级：必跑 `git status -sb`；汇报状态、下一步、阻塞。
+- 按需标准：锚点不可核对（非命令式 / 无上次 HEAD / 与当前 HEAD 不符）或副本无法确认（非本次收工、行为异常、点名宿主、超 30 天 / 版本变化）→ `--printpath` + `--syncall --dryrun`；文档动过（`--doc` / 迁移 / 布局变更）→ `--doc --guard`；用户明确要求 → 对应命令；未跑项在汇报中注明。
 - 边界：只读；不写卡、不迁移文档、不动 git；冲突以 CONTEXT 为准。
 - 常见错误：cwd 与项目目录不一致、PROMPT 缺失或锚点过期、验证命令失败；先报告，不静默按过期状态开工。
 
