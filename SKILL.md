@@ -105,8 +105,8 @@ argument-hint: "[--workspace <PATH>] [--nosave] [--gear <key>[=<值>] | --gear l
 
 ## --check / --fix
 
-- `--check` 只读：安装副本 commit（`.skill-version`）与源仓库 HEAD、文档布局（scope 与目录、角色缺失/重复、V3 残留、CONTEXT 文档表断链）、config/workspace、能力表日期、`sync-paths`、`handoff/PROMPT.md` 是否未忽略或已跟踪、项目内 memory 是否 gitignore、PROMPT 是否过期、工作区文档（AGENTS/PROJECT_RULES 是否存在、是否指向 `$AGENT_CONFIG` 与 `handoff/`、是否残留旧路径）、CONTEXT 行数/记录数/坑类别是否超限；源仓库（根有 `SKILL.md` + `scripts/`）额外核对 SKILL 正文与 scripts/HELP/模板的命令、参数、路径、输出是否一致（只报告）；`--save` 是脚本层维护命令，不进 SKILL/HELP 命令表，缺失不报；当前宿主能力表仍有「待测」时报 🟡 并列出缺失 P 项（不自动跑 probe）；不改文件。缺 README/DESIGN 不算错误，只提示可跑 `--doc`；README 仅 GitHub 项目建议生成。
-- `--fix`：先跑同一套检查，再修非文档整理项：安装副本对齐（只从源仓库跑 `scripts/handoff.sh --syncall`；副本没有 HEAD 会被拒绝；按 commit 只补落后，整体重装会覆盖副本内改动）、`git rm --cached` 取消 PROMPT 跟踪、补 `.gitignore` 规则、配置/能力表缺失项；文档布局、分类、标记、链接、文档表一律只报告「需跑 `--doc`」，不创建、不删除、不移动、不改链；默认不提交，由 `--suspend --commit` 一起提交；无 `handoff/` 且无旧文档 → 提示 `--doc`，不自动建。
+- `--check`：按 `assets/CHECK.md` 固定清单逐项执行（C01–C12），逐项输出 `[OK]/[WARN]/[SKIP]`；只读，不改文件；非源仓库跳过 C11；`--save` 是脚本层命令，不进命令表。
+- `--fix`：先跑同一清单，只修 C01/C04/C07/C10 标记「可修」的项；文档布局、分类、标记、链接、文档表一律只报告「需跑 `--doc`」；默认不提交；无 `handoff/` 且无旧文档 → 提示 `--doc`。
 
 ## --probe [--static | --live]
 

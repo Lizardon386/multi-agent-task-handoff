@@ -348,14 +348,19 @@ if [ "$mode" = save ]; then
     exit 0
   fi
   msg=${message:-"chore: autosave $(date '+%Y-%m-%d %H:%M')"}
-  git -C "$repo" commit -m "$msg" || die "提交失败"
-  printf '已提交: %s\n' "$(git -C "$repo" rev-parse --short HEAD)"
+  git -C "$repo" commit -m "$msg" >/dev/null || die "提交失败"
+  commit=$(git -C "$repo" rev-parse --short HEAD)
   sync_rc=0
   push_rc=0
-  sh "$script_dir/handoff.sh" --syncall || sync_rc=$?
-  sh "$script_dir/handoff.sh" --push --retries "$retries" --delay "$delay" || push_rc=$?
-  [ "$sync_rc" -eq 0 ] && [ "$push_rc" -eq 0 ] || die "保存完成，但同步或推送失败；提交留在本地"
-  exit 0
+  sync_out=$(sh "$script_dir/handoff.sh" --syncall 2>&1) || sync_rc=$?
+  push_out=$(sh "$script_dir/handoff.sh" --push --retries "$retries" --delay "$delay" 2>&1) || push_rc=$?
+  if [ "$sync_rc" -eq 0 ] && [ "$push_rc" -eq 0 ]; then
+    printf '已保存: %s；同步: OK；推送: OK\n' "$commit"
+    exit 0
+  fi
+  [ "$sync_rc" -eq 0 ] || printf '%s\n' "$sync_out" >&2
+  [ "$push_rc" -eq 0 ] || printf '%s\n' "$push_out" >&2
+  die "保存完成，但同步或推送失败；提交留在本地"
 fi
 
 if [ "$mode" = push ]; then
@@ -428,6 +433,7 @@ if [ "$mode" = syncall ]; then
   printf '对齐目标: %s\n' "$head_commit"
   total=0
   latest=0
+  synced=0
   bad=0
   while IFS= read -r line <&3; do
     case "$line" in ''|'#'*) continue ;; esac
@@ -454,7 +460,7 @@ if [ "$mode" = syncall ]; then
     fi
     # 子进程单独跑，stdin 接 /dev/null：循环体读的是 fd 3，不会被吃掉
     if sh "$repo/install.sh" --target "$dest" --noregister </dev/null >/dev/null 2>&1; then
-      printf '已同步: %s\n' "$dest"
+      synced=$((synced + 1))
     else
       printf '同步失败: %s（手动: sh %s/install.sh --target "%s"）\n' "$dest" "$repo" "$dest" >&2
       bad=$((bad + 1))
@@ -464,6 +470,8 @@ if [ "$mode" = syncall ]; then
     printf '清单里没有可处理的目录\n'
   elif [ "$latest" -eq "$total" ]; then
     printf '已最新: %s 份\n' "$total"
+  elif [ "$dry" = 0 ] && [ "$synced" -gt 0 ]; then
+    printf '已同步: %s 份\n' "$synced"
   fi
   [ "$bad" -gt 0 ] && die "$bad 份同步失败"
   exit 0

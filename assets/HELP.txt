@@ -25,8 +25,8 @@ multi-agent-task-handoff — 多 agent 任务交接
                               --init    显式创建缺失文档：CONTEXT 必生成；README 仅 GitHub/确认；
                                         DESIGN 需取舍+确认；COMMANDS 仅用户要求
                             布局/标记/迁移链接由 --doc 本身处理；拿不准给选项
-  --check                   自检 / 更新：只读检查，报告 ✅ / 🟡 / ⛔
-  --fix                     修复：只修安装/配置等非文档整理项，不碰文档增删迁移
+  --check                   自检 / 更新：按 assets/CHECK.md 逐项输出 [OK]/[WARN]/[SKIP]
+  --fix                     修复：先跑同一清单，只修可修项；文档整理交给 --doc
   --probe [--static | --live]  摸底 / 探测：按 assets/PROBE.md 固定清单实测并更新能力表
                               --static 只做零副作用检查
                               --live  先出计划、确认一次后跑完 S+L1+L2（每次 live 跑 L2）
