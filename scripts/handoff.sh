@@ -327,7 +327,7 @@ if [ "$mode" = observe ]; then
   observe_event=$(printf '%s' "$observe_event" | tr '\n' ' ' | tr '|' '/')
   observe_event=$(printf '%.200s' "$observe_event")
   obs_file=$config_dir/OBSERVATIONS.md
-  if [ ! -f "$obs_file" ]; then
+  if [ ! -s "$obs_file" ]; then
     mkdir -p "$config_dir" || die "无法创建配置目录: $config_dir"
     cat > "$obs_file" <<'EOF'
 # multi-agent-task-handoff · 使用观察记录
