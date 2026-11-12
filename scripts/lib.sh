@@ -76,12 +76,13 @@ gear_meta() {
     probe) printf '%s\n' static "static live" ;;
     post) printf '%s\n' new "new next" ;;
     doc) printf '%s\n' guard "guard init" ;;
+    observe) printf '%s\n' on "on off" ;;
     *) return 1 ;;
   esac
 }
 
 gear_keys() {
-  printf '%s\n' suspend probe post doc
+  printf '%s\n' suspend probe post doc observe
 }
 
 resolve_workspace() {

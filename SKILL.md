@@ -24,7 +24,7 @@ argument-hint: "[--workspace <PATH>] [--nosave] [--gear <key>[=<值>] | --gear l
 
 ## 用法
 
-一次只用一个命令；`--workspace` 可与一个命令同用，`--nosave` 只跟 `--workspace`。衍生挡位统一写 `--命令 [--模式 ...]`，默认值放 `[defaults].<命令>`，用 `--gear <命令>=<模式>` 修改；标题与 `--help` 写全签名。脚本层直接支持 `--printpath` / `--doc` / `--syncall` / `--push` / `--save` / `--gear`；`--resume` / `--suspend` / `--post` / `--check` / `--fix` / `--probe` / `--workspace` 由 agent 按本文件执行。普通项目 `--suspend --push` 在项目目录运行安装副本的 `scripts/handoff.sh --push`（推当前目录仓库；源仓库环境推源仓库）。
+一次只用一个命令；`--workspace` 可与一个命令同用，`--nosave` 只跟 `--workspace`。衍生挡位统一写 `--命令 [--模式 ...]`，默认值放 `[defaults].<命令>`，用 `--gear <命令>=<模式>` 修改；标题与 `--help` 写全签名。脚本层直接支持 `--printpath` / `--doc` / `--syncall` / `--push` / `--save` / `--gear` / `--observe`；`--resume` / `--suspend` / `--post` / `--check` / `--fix` / `--probe` / `--workspace` 由 agent 按本文件执行。普通项目 `--suspend --push` 在项目目录运行安装副本的 `scripts/handoff.sh --push`（推当前目录仓库；源仓库环境推源仓库）。
 
 | 参数 | 作用 |
 |---|---|
@@ -48,7 +48,7 @@ argument-hint: "[--workspace <PATH>] [--nosave] [--gear <key>[=<值>] | --gear l
 2. 工作区根：本次 `--workspace` > `AGENT_WORKSPACE` > `config.toml` 的 `[paths].workspace` > `$HOME/agent_workspace`。
 3. `--workspace <PATH>` 默认写回 `[paths].workspace`；`--nosave` 只本次。路径含空格加引号。
 4. 能力表：`$AGENT_CONFIG/AGENT_CAPABILITIES.md`；跨任务规则：项目目录 → 父目录 → `$AGENT_CONFIG/PROJECT_RULES.md`。
-5. 配置只解析简单 `key = "value"`；不 `source`，不依赖 Python。`[defaults].post`（new / next）只由 `--post` 读取；`[defaults].doc`（guard / init）由 `--doc` 读取，默认 guard；`--gear` 读写 `[defaults]` 的键，键/默认值/允许值由 `scripts/lib.sh` 映射驱动，非法值不修改。
+5. 配置只解析简单 `key = "value"`；不 `source`，不依赖 Python。`[defaults].post`（new / next）只由 `--post` 读取；`[defaults].doc`（guard / init）由 `--doc` 读取，默认 guard；`[defaults].observe`（on / off，默认 on）由 `--observe` 读取；`--gear` 读写 `[defaults]` 的键，键/默认值/允许值由 `scripts/lib.sh` 映射驱动，非法值不修改。
 
 ## 确定项目目录
 
@@ -147,3 +147,4 @@ argument-hint: "[--workspace <PATH>] [--nosave] [--gear <key>[=<值>] | --gear l
 - 宿主差异进能力表；SKILL 只举例，不写宿主专属规则。
 - `--doc` 是唯一做文档增删迁移的命令；其他命令只修改已有文档。
 - 自动化失效时先只读探测；分四类：✅ 能自动（做完验证）/ 🟡 需确认（给清单）/ 🔴 只能手动（手动卡：卡点、步骤、验证）/ ⛔ 不支持（给替代）。不伪造成功；用户完成后复验再继续。修协议/脚本 bug 优先结构性根治（脚本守卫、收敛动作/权限面），不靠记忆或追加规则。
+- 观察记录：协议命令（`--resume` / `--suspend` / `--check` / `--fix` / `--post` / `--probe`）出现 L2/L3 异常且 `[defaults].observe` 未关闭时，跑 `scripts/handoff.sh --observe <L2|L3> "<事件>"`；只记 skill 自身缺陷/异常，不记环境故障、宿主限制或用户操作错误。

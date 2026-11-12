@@ -131,6 +131,7 @@ flowchart LR
 | 投递 | `--post <message> [--new \| --next <ID \| 会话名>]`；不写卡、不动 git；`--new` 必须绑定当前项目目录，落 worktree 视为失败；`--next` 支持会话名，唯一命中才用；目标 stopped/completed 且不自动唤醒时给手动卡，不盲目入队 |
 | git | 默认不操作；`--commit` 提交协议管理文档（`handoff/` 与带标记文档及其移动/删除）；`--push` 隐含 commit 并调 `scripts/handoff.sh --push`（普通项目推当前目录仓库，源仓库环境推源仓库；网络错误 3 次 / 3 秒；Windows 再加 HTTP/1.1 + OpenSSL 回退 3 次）；不装钩子；未确认推送成功写「待推送」 |
 | memory | 只读提升；不复制、不写回；项目内 memory 必须 gitignore |
+| 观察记录 | `[defaults].observe` 默认 `on`；协议命令出现 L2/L3 异常时由 agent 调用 `scripts/handoff.sh --observe <L2\|L3> "<事件>"` 追加到 `$AGENT_CONFIG/OBSERVATIONS.md`；只记 skill 自身缺陷/异常，不记环境故障、宿主限制、用户操作错误；不装钩子、不自动采集 |
 | GitHub | README 固定在根，首页直接显示；不生成 `.github/README.md`；不用 symlink |
 | 一个写者 | 同一项目同一时间一个 agent 写；交接后旧 agent 停写 |
 | 跨任务规则 | 项目目录 → 父目录 → `$AGENT_CONFIG/PROJECT_RULES.md` |
@@ -179,6 +180,7 @@ flowchart LR
 - `scripts/handoff.sh --push` 在源仓库环境推源仓库，在安装副本环境推当前目录仓库；只重试网络类错误（TLS / reset / timeout 等）；认证失败、非快进、保护分支立即失败。
 - 换机迁移只带知识，不带本机状态：能力表本身可搬（覆盖模板），`sync-paths` 重建，宿主 memory 不搬，`PROMPT.md` 不带走。
 - 机器级状态只放 `$AGENT_CONFIG`，不放仓库；仓库里不留 `.skill-sync-paths`；状态文件只写有读取方的字段，`.skill-version` 只留 `commit` / `source`。
+- 观察记录是机器级状态：`$AGENT_CONFIG/OBSERVATIONS.md`，本机使用数据，不随项目仓库、不随换机迁移；开关 `[defaults].observe` 默认 on，`--gear observe=off` 关闭。
 - 注册表迁移只在 `install.sh` 实际安装并登记的 `register=1 && is_git=1` 分支执行；只读命令与 `--dryrun` 不写注册表。
 - 已删除钩子；worktree、外部宿主或本地 git 配置都不再影响同步与 push。
 - 模板只播种、不覆盖：缺失的 `AGENT_CAPABILITIES.md` / `AGENTS.md` / `PROJECT_RULES.md` 可确认后从模板创建；已存在的不改写，只报过期。

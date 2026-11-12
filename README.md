@@ -151,6 +151,7 @@ agent 会把 skill 安装到当前宿主的 `skills/multi-agent-task-handoff`，
 | 能力缓存 | `$AGENT_CONFIG/AGENT_CAPABILITIES.md` | 宿主差异与实测结论 |
 | 机器配置 | `$AGENT_CONFIG/config.toml` | 工作区根等偏好 |
 | 安装注册表 | `$AGENT_CONFIG/sync-paths` | 本机已安装的宿主副本；从源仓库收工时同步，安装副本跳过 |
+| 观察记录 | `$AGENT_CONFIG/OBSERVATIONS.md` | 本机 skill 异常，供维护评估；默认开启 |
 
 统一布局：GitHub 项目 README 固定在根（非 GitHub 项目按需），设计/方案/指导类在 `docs/`，交接文档在 `handoff/`。旧布局由 `--doc` 迁移，只移动、不复制。
 
@@ -165,6 +166,7 @@ agent 会把 skill 安装到当前宿主的 `skills/multi-agent-task-handoff`，
 | 工作区规则 | `<工作区根>/AGENTS.md`、`PROJECT_RULES.md` | ✅ 复制过去；「本机环境」小节重填 |
 | 机器偏好 | `$AGENT_CONFIG/config.toml` | 🟡 改掉 `[paths].workspace` 再带 |
 | 安装注册表 | `$AGENT_CONFIG/sync-paths` | ❌ 不带，新机器 `install.sh` 自动重建 |
+| 观察记录 | `$AGENT_CONFIG/OBSERVATIONS.md` | ❌ 不带，本机使用数据 |
 | 宿主 memory | 宿主自己的目录 | ❌ 不搬；有价值的事实已在 `handoff/` |
 | 任务状态 | 项目内 `handoff/` | 随项目仓库 clone 即带 |
 
@@ -183,6 +185,7 @@ agent 会把 skill 安装到当前宿主的 `skills/multi-agent-task-handoff`，
 - 不后台捕获 agent 上下文；必须显式触发一次。
 - stopped/completed 会话不会因收到消息自动唤醒；`--post --next` 需先打开/继续目标会话。
 - 不装钩子，不写宿主全局规则，不起后台服务；机械动作由显式命令执行。
+- 观察记录默认开启：协议命令出现 L2/L3 异常时自动追加到 `$AGENT_CONFIG/OBSERVATIONS.md`；`--gear observe=off` 关闭，不装钩子、不自动采集。
 - 一个项目同一时间一个写者；交接后旧 agent 停写。
 - memory 只读提升，不复制、不写回。
 - `PROMPT.md` 含本机路径；由 `--doc` 加入项目 `.gitignore`，`--check` 报未忽略/已跟踪，`--fix` 确认后补规则或取消跟踪；敏感信息不提交。

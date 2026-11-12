@@ -1,7 +1,7 @@
 multi-agent-task-handoff — 多 agent 任务交接
 
 用法:
-  multi-agent-task-handoff [--workspace <PATH>] [--nosave] [--gear <key>[=<值>] | --gear list | --help | --resume | --suspend [--local | --commit | --push] | --post <message> [--new | --next <ID | 会话名>] | --doc [--guard | --init] [--target DIR] | --check | --fix | --probe [--static | --live] | --printpath [--host NAME | --target DIR]]
+  multi-agent-task-handoff [--workspace <PATH>] [--nosave] [--gear <key>[=<值>] | --gear list | --help | --resume | --suspend [--local | --commit | --push] | --post <message> [--new | --next <ID | 会话名>] | --doc [--guard | --init] [--target DIR] | --observe <L2|L3> <事件> | --check | --fix | --probe [--static | --live] | --printpath [--host NAME | --target DIR]]
 
 命令:
   --resume                  接盘 / 接手：读 handoff/PROMPT.md → handoff/CONTEXT.md，
@@ -25,6 +25,9 @@ multi-agent-task-handoff — 多 agent 任务交接
                               --init    显式创建缺失文档：CONTEXT 必生成；README 仅 GitHub/确认；
                                         DESIGN 需取舍+确认；COMMANDS 仅用户要求
                             布局/标记/迁移链接由 --doc 本身处理；拿不准给选项
+  --observe <L2|L3> <事件>
+                            记录一条使用观察（自动记录；[defaults].observe=off 关闭）
+                            写入 $AGENT_CONFIG/OBSERVATIONS.md；只记 skill 自身缺陷/异常
   --check                   自检 / 更新：按 assets/CHECK.md 逐项输出 [OK]/[WARN]/[SKIP]
   --fix                     修复：先跑同一清单，只修可修项；文档整理交给 --doc
   --probe [--static | --live]  摸底 / 探测：按 assets/PROBE.md 固定清单实测并更新能力表
@@ -48,7 +51,7 @@ multi-agent-task-handoff — 多 agent 任务交接
 
 执行层:
   agent 协议命令（--resume / --suspend / --post / --check / --fix / --probe / --workspace）
-  由 agent 按 SKILL 执行；脚本直接支持 --printpath / --doc / --syncall / --push / --save / --gear。
+  由 agent 按 SKILL 执行；脚本直接支持 --printpath / --doc / --syncall / --push / --save / --gear / --observe。
   普通项目的 --suspend --push 在项目目录运行安装副本的 --push（推当前目录仓库；源仓库环境推源仓库）。
   --probe 的固定清单见 skill 安装目录的 assets/PROBE.md。
 
@@ -60,6 +63,7 @@ multi-agent-task-handoff — 多 agent 任务交接
   --new / --next 只能跟 --post；两者不能同时用；message 必填
   --live 只能跟 --probe
   --printpath 是独立命令；--host 只能跟 --printpath；--target 可跟 --printpath / --doc
+  --observe 是独立命令；等级只支持 L2 / L3
   --gear 是独立命令；键与允许值由脚本映射决定，写入值非法时不修改
   --help 单独使用
   无参数等同 --resume

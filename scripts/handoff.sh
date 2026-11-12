@@ -21,6 +21,8 @@ all=0
 message=
 gear_arg=
 doc_arg=
+observe_level=
+observe_event=
 
 usage() {
   cat <<'EOF'
@@ -44,9 +46,12 @@ usage() {
                    默认挡位读 config.toml 的 [defaults].doc（guard）
                    --guard 维护已有文档：只删 ## 文档 表中的失效协议行，其余只报告
                    --init 由 agent 显式创建，脚本不写内容
+  --observe <L2|L3> <事件>
+                   记录一条使用观察；[defaults].observe=off 时跳过
+                   写入 $AGENT_CONFIG/OBSERVATIONS.md（不存在则建表头）
   -h, --help       显示本表
 
-脚本层命令：--printpath / --doc / --syncall / --push / --save / --gear
+脚本层命令：--printpath / --doc / --syncall / --push / --save / --gear / --observe
 --resume / --suspend / --post / --check / --fix / --probe / --workspace
 由 agent 按 SKILL 执行，不是脚本参数。
 完整协议帮助见 assets/HELP.txt。
@@ -69,6 +74,7 @@ while [ $# -gt 0 ]; do
     --save) [ -z "$mode" ] || usage_die "一次只用一个命令"; mode=save ;;
     --gear) [ -z "$mode" ] || usage_die "一次只用一个命令"; [ $# -ge 2 ] || usage_die "--gear 需要一个值"; gear_arg=$2; mode=gear; shift ;;
     --gear=*) [ -z "$mode" ] || usage_die "一次只用一个命令"; gear_arg=${1#*=}; mode=gear ;;
+    --observe) [ -z "$mode" ] || usage_die "一次只用一个命令"; [ $# -ge 3 ] || usage_die "--observe 需要 <L2|L3> 和 <事件>"; observe_level=$2; observe_event=$3; mode=observe; shift 2 ;;
     --all) all=1 ;;
     -m|--message) [ $# -ge 2 ] || usage_die "-m/--message 需要一个值"; message=$2; shift ;;
     --message=*) message=${1#*=} ;;
@@ -83,7 +89,7 @@ while [ $# -gt 0 ]; do
     --target=*) target_arg=${1#*=} ;;
     -h|--help) usage; exit 0 ;;
     --resume|--suspend|--post|--check|--fix|--probe|--workspace)
-      usage_die "$1 由 agent 按 SKILL 执行，不是脚本参数（脚本支持 --printpath / --doc / --syncall / --push / --save / --gear）" ;;
+      usage_die "$1 由 agent 按 SKILL 执行，不是脚本参数（脚本支持 --printpath / --doc / --syncall / --push / --save / --gear / --observe）" ;;
     *) usage_die "未知参数 $1" ;;
   esac
   shift
@@ -92,7 +98,7 @@ done
 if [ -n "$doc_arg" ] && [ "$mode" != doc ]; then
   usage_die "--guard / --init 只能跟 --doc"
 fi
-[ -n "$mode" ] || usage_die "需要 --printpath / --doc / --syncall / --push / --save / --gear"
+[ -n "$mode" ] || usage_die "需要 --printpath / --doc / --syncall / --push / --save / --gear / --observe"
 if [ -n "$target_arg" ] && [ -n "$host_arg" ]; then
   usage_die "--host 与 --target 只能用一个"
 fi
@@ -297,6 +303,60 @@ if [ "$mode" = doc ]; then
   else
     printf 'result: OK（协议表已检查）\n'
   fi
+  exit 0
+fi
+
+if [ "$mode" = observe ]; then
+  case "$observe_level" in
+    L2|L3) ;;
+    *) usage_die "--observe 等级只支持 L2 / L3" ;;
+  esac
+  [ -n "$observe_event" ] || usage_die "--observe 事件不能为空"
+  config_dir=$(agent_config_dir)
+  cfg_file=$config_dir/config.toml
+  observe_on=$(config_get observe "$cfg_file" 2>/dev/null || true)
+  [ -n "$observe_on" ] || observe_on=on
+  if [ "$observe_on" = off ]; then
+    printf '观察记录已关闭（[defaults].observe = off）\n'
+    exit 0
+  fi
+  project=$(basename "$(pwd -P)" 2>/dev/null || true)
+  [ -n "$project" ] || project=unknown
+  host_label=unknown
+  if detect_host; then host_label=$host; fi
+  observe_event=$(printf '%s' "$observe_event" | tr '\n' ' ' | tr '|' '/')
+  observe_event=$(printf '%.200s' "$observe_event")
+  obs_file=$config_dir/OBSERVATIONS.md
+  if [ ! -f "$obs_file" ]; then
+    mkdir -p "$config_dir" || die "无法创建配置目录: $config_dir"
+    cat > "$obs_file" <<'EOF'
+# multi-agent-task-handoff · 使用观察记录
+
+> 用途：记录本机各项目使用该 skill 时的真实异常，供维护会话评估优化计划。
+> 写入：协议命令出现 L2/L3 异常且 `[defaults].observe` 未关闭时由 agent 调用 `--observe` 追加。
+> 读取：维护会话（skill 源仓库）在评估计划时读取；本文件不随项目仓库、不随换机迁移。
+> 隐私：只记项目目录名 / 宿主 / 事件，不记完整路径、会话 ID、凭据。
+
+## 等级
+
+- **L2**：实际使用事件（交接 / 检查中出现异常，未造成返工）；同类累计 2 次触发计划评估。
+- **L3**：造成返工或损失；直接触发计划评估。
+- L1（静态代码 / 文档演进）不记入本文件，留在项目 memory。
+
+## 记录
+
+| 日期 | 项目 | 宿主 | 等级 | 事件 | 证据 / 后续 |
+|---|---|---|---|---|---|
+EOF
+  fi
+  if [ -s "$obs_file" ]; then
+    last=$(tail -c 1 "$obs_file" 2>/dev/null || true)
+    [ -n "$last" ] && printf '\n' >> "$obs_file"
+  fi
+  printf '| %s | %s | %s | %s | %s | — |\n' \
+    "$(date '+%Y-%m-%d')" "$project" "$host_label" "$observe_level" "$observe_event" >> "$obs_file" \
+    || die "写入失败: $obs_file"
+  printf '已记录: %s %s %s\n' "$observe_level" "$project" "$observe_event"
   exit 0
 fi
 

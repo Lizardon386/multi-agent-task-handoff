@@ -14,5 +14,7 @@ probe = "static"
 doc = "guard"
 # --post 目标：new = 新建会话后投递；next = 投递到已有会话（必须给 --next，可填会话 ID 或会话名）
 post = "new"
+# 观察记录：on = 协议命令出现 L2/L3 异常时自动记录到同目录 OBSERVATIONS.md；off = 关闭
+observe = "on"
 
 # 不设 github 开关：README 固定在项目根目录，GitHub 首页直接显示；不生成 .github/README.md

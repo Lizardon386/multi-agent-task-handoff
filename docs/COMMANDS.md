@@ -17,7 +17,7 @@
 
 ## 命令索引
 > 只列命令、用途与默认挡位；详细说明见下文章节。
-> 脚本层直接支持 `--printpath` / `--doc` / `--syncall` / `--push` / `--save` / `--gear`；`--resume` / `--suspend` / `--post` / `--check` / `--fix` / `--probe` / `--workspace` 由 agent 按 SKILL 执行；`--probe` 的固定清单见 `assets/PROBE.md`。
+> 脚本层直接支持 `--printpath` / `--doc` / `--syncall` / `--push` / `--save` / `--gear` / `--observe`；`--resume` / `--suspend` / `--post` / `--check` / `--fix` / `--probe` / `--workspace` 由 agent 按 SKILL 执行；`--probe` 的固定清单见 `assets/PROBE.md`。
 
 | 命令 | 用途 | 默认值 / 挡位 |
 |---|---|---|
@@ -25,6 +25,7 @@
 | `--suspend [--local \| --commit \| --push]` | 收工：压卡、写 CONTEXT、生成 PROMPT、对齐副本 | `[defaults].suspend`，默认 `local` |
 | `--post <message> [--new \| --next <ID \| 会话名>]` | 热交接：把消息投给另一个会话 | `[defaults].post`，默认 `new` |
 | `--doc [--guard \| --init] [--target DIR]` | 文档整理：布局、标记、迁移；guard 维护/删失效行，init 只新增 | `[defaults].doc`，默认 `guard` |
+| `--observe <L2\|L3> <事件>` | 记录一条 skill 使用观察（脚本层） | `[defaults].observe`，默认 `on` |
 | `--check` | 按 `assets/CHECK.md` C01–C13 只读体检 | — |
 | `--fix` | 同一清单 + 修可修项 | — |
 | `--probe [--static \| --live]` | 摸底宿主能力并更新能力表 | `[defaults].probe`，默认 `static` |
@@ -123,11 +124,20 @@
 > 只说明键、允许值与非法值处理。
 
 - 语法：`--gear suspend` / `--gear probe` / `--gear post` / `--gear doc` 读取；`--gear <key>=<值>` 写入；`--gear list` 列出键、默认值与允许值。
-- 允许值：`suspend=local|commit|push`、`probe=static|live`、`post=new|next`、`doc=guard|init`。
+- 允许值：`suspend=local|commit|push`、`probe=static|live`、`post=new|next`、`doc=guard|init`、`observe=on|off`。
 - 行为：只改 `config.toml` 的 `[defaults]`；键不存在时插在 `[defaults]` 后。
 - 配置：读取/写入需要 `config.toml`，缺失报错；`--gear list` 不需要配置。
 - 边界：值/键不在白名单时报错且不修改文件；配置文件不存在时报错，不自动创建。
 - 常见错误：拼错键/值、在未安装配置的机器上直接写；先跑 `install.sh` 或 `--gear list`。
+
+## --observe <L2|L3> <事件>
+> 只说明自动观察记录的写入与开关。
+
+- 语法：`--observe L2 "<事件>"`，等级只支持 `L2` / `L3`。
+- 行为：读取 `[defaults].observe`（缺省 `on`）；`on` 时追加一行到 `$AGENT_CONFIG/OBSERVATIONS.md`（不存在则建表头）；`off` 时跳过。
+- 触发：协议命令（`--resume` / `--suspend` / `--check` / `--fix` / `--post` / `--probe`）出现 L2/L3 异常时由 agent 调用；不装钩子、不自动采集。
+- 边界：只记 skill 自身缺陷/异常，不记环境故障、宿主限制或用户操作错误；不记完整路径、会话 ID、凭据。
+- 常见错误：等级写成 L1/L4、事件为空、把普通 WARN 当 L2；按 SKILL 的等级定义判断。
 
 ## --workspace <PATH> [--nosave]
 > 只说明工作区根来源与写回规则。
@@ -154,6 +164,7 @@
 | `[defaults].probe` | `static` | `static` / `live` | `--probe` 默认挡位 |
 | `[defaults].post` | `new` | `new` / `next` | `--post` 默认目标模式 |
 | `[defaults].doc` | `guard` | `guard` / `init` | `--doc` 默认挡位 |
+| `[defaults].observe` | `on` | `on` / `off` | 观察记录开关 |
 
 配置只解析简单 `key = "value"`；不 `source`，不依赖 Python。
 

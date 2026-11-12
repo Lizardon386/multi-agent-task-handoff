@@ -50,6 +50,7 @@
 - `--post --next`：目标 stopped/completed 不自动唤醒；先给手动卡（打开/继续后重投），不把 queued 当已消费。
 - 宿主识别：`--printpath` 按环境变量粗分；cc-haha 等包装版在能力表 Host/版本区分，协议不写宿主分支。
 - 注册表迁移只在 `install.sh` 实际安装并登记时；只读/dryrun 不写；`--gear` 读取/写入需要 `config.toml`，`list` 不需要配置。
+- 观察记录：协议命令出现 L2/L3 异常且 `[defaults].observe` 未关闭时，跑 `scripts/handoff.sh --observe <L2|L3> "<事件>"`；只记 skill 自身缺陷，不记环境故障/宿主限制/用户操作错误；开关默认 on。
 
 ## 坑与约束
 > 只写会踩的坑与约束；协议级边界见 `SKILL.md` / `../docs/DESIGN.md`，本卡不重复；平时可追加，`--suspend` 时归并，≤10 类。
@@ -65,6 +66,7 @@
 ## 交接记录（只记关键动作，≤10 条）
 > 超出先压卡到 `COMPACT_BACKUP.md`；不写日常细节。
 
+- 2026-11-12 cc-haha：新增 `--observe` 自动观察记录（`[defaults].observe` 默认 on，`--gear observe=off` 关闭）；写 `$AGENT_CONFIG/OBSERVATIONS.md`；SKILL/HELP/COMMANDS/DESIGN/README/配置模板同步；实测正常/开关/非法/空格事件，副本待提交后回归。
 - 2026-11-12 cc-haha：修复文档过时项（README/COMMANDS/DESIGN 日期、README 体检行、DESIGN CHECK.md 资产/完成定义/维护自检）与 `--doc` 措辞；项目文档模板去 skill 专属命令，CHECK 增加 C13 模板通用性；实测 13 项与模板扫描通过。
 - 2026-11-12 cc-haha：能力表/工作区规则/AGENTS/模板记录 PowerShell 优先 pwsh 7（绝对路径，不每次探测，5.1 兜底）；实测绝对路径调用返回 7.7.0。
 - 2026-11-12 cc-haha：新增 `assets/CHECK.md` 固定检查清单（C01–C12）；`--check`/`--fix` 按清单输出 `[OK]/[WARN]/[SKIP]`；`--save` 一行摘要、`--syncall` 实际同步汇总；PROMPT 45→26、CONTEXT 80→77（记录 10→7）；实测清单 12 项、save 一行、syncall 2 份汇总。
@@ -75,6 +77,4 @@
 - 2026-11-10 OpenCode：`--probe --live` S+L1+L2 全项通过（L201 5/5、L202 哨兵一致、K03 fork 独立；L103 cwd=临时项目、L104 session_move）；能力表更新至 OpenChamber 2.5.3 + OpenCode 2.2.0（内置 managed；PATH CLI 2.1.2），OpenCode 必测格无「待测」；临时项目与 3 个测试会话清理，残留 1 条项目元数据；`--fix` 非文档项通过，两条源仓库一致性问题待修。
 - 2026-11-10 cc-haha：确认并修复 Qoder 报的 4 条一致性问题 + 补齐 `--doc [--target DIR]` 签名（SKILL/HELP/COMMANDS/README/DESIGN）；模板锚点改命令式、examples 跨任务规则改工作区根；`--help`/别名一致，`--doc --target`、install/syncall 复验通过。
 - 2026-11-10 Qoder：`--check` 报 4 条一致性问题（修复计划待批准）；`--probe --live` 全项实测（L201 5/5、L202 哨兵一致、K03 fork 重测），L103/L104 记 ⛔；能力表更新至 Qoder Desktop 0.5.7、Qoder 必测格无「待测」；临时项目已删，4 个测试会话经用户 UI 删除并复验清零；压卡沉降 4 条已完成流水与 1 条最旧交接记录；`--suspend --push` 收工。
-- 2026-11-10 WorkBuddy：`--probe --live` 按 `assets/PROBE.md` 全项实测（S+L1+L2），L201 5/5、L202 哨兵一致，L103/L104 记 ⛔；临时项目与会话清理干净；能力表更新 6 处、WorkBuddy 必测格无「待测」；PROMPT 锚点改为命令式；`--suspend --push` 收工。
-
 <!-- multi-agent-task-handoff: scope=handoff -->

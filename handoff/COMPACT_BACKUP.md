@@ -1,7 +1,7 @@
 # multi-agent-task-handoff · 压卡备份
 
 > 状态历史、已完成归档与逐条变更，2026-10-28 从 CONTEXT.md 原样搬出；当前状态以 [CONTEXT.md](CONTEXT.md) 为准。
-> 最近更新：2026-11-11
+> 最近更新：2026-11-12
 > V3 起文档迁入 `handoff/`；本文件是历史归档，不复制当前状态。
 
 ## 状态历史
@@ -130,5 +130,7 @@
 - 2026-11-09 Claude：`--probe` 固定清单落地（`assets/PROBE.md`）：S/L1/L2/K 分级、一次计划确认、临时项目隔离与清理、完成定义；每次 live 跑 L2；能力表模板/HELP/COMMANDS/DESIGN/README 同步；Claude 实测 L1/L2 5/5（临时项目，测后清理）；提交 `d76add9`，5 份副本同步。
 - 2026-11-09 Claude：修复 `--push` 普通项目支持（安装副本环境推当前目录仓库，源仓库环境推源仓库，保留重试/TLS 回退）；脚本对 `--resume / --suspend / --post / --check / --fix / --probe / --workspace` 提示「由 agent 按 SKILL 执行」；HELP/SKILL/COMMANDS/DESIGN/README 同步执行层分工；临时 bare remote 实测普通项目推送成功、非 git 目录报明确错误、源仓库行为不变；提交 `913431d`，5 份副本同步。
 - 2026-11-09 Claude：修正 DESIGN 5 处图问题（悬空节点 `P`、开工误绑 `--doc`、`PROJECT_RULES` 误归 `$AGENT_CONFIG`、`README / COMMANDS` 标签、带文本箭头缺空格）；8 张 Mermaid 图节点引用全局校验通过；提交 `9de3a1f`，5 份副本同步；决定图表检查/修复不纳入 `--doc` / `--check`，保持 guard 权限面与 SKILL 150 行上限。
+
+- 2026-11-10 WorkBuddy：`--probe --live` 按 `assets/PROBE.md` 全项实测（S+L1+L2），L201 5/5、L202 哨兵一致，L103/L104 记 ⛔；临时项目与会话清理干净；能力表更新 6 处、WorkBuddy 必测格无「待测」；PROMPT 锚点改为命令式；`--suspend --push` 收工。
 
 <!-- multi-agent-task-handoff: scope=handoff -->
