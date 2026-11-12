@@ -28,6 +28,7 @@
 > 只写当前状态与在飞文件；已完成项压缩为结果，逐版本流水搬入 `COMPACT_BACKUP.md`；推送状态以 `git status -sb` 为准。
 
 - 已完成：
+  - 2026-11-12：新增 `--observe` 自动观察记录（开关 `[defaults].observe` 默认 on）；AGENTS 收敛为纯指针、补 `assets/AGENTS.md.tpl`、C10 修正；补测修复空文件/CRLF 边界；提交 `d5c1d57` / `62fc12c` / `f6fa360` / `b6885d6`，6 份副本已同步。
   - 2026-11-11 ZCode：`--probe --live` S+L1/L2 全项（L101 PONG 逐字、L102 建会话、L105/L106、L108、L201 5/5、L202 一致、K03 fork 独立）；L103/L104 记 ⛔；能力表更新至 ZCode 3.18.0、ZCode 必测格无「待测」；临时项目已删，2 个测试会话归档残留。
 - 进行中：无。
 - 在飞文件（勿动）：无。
