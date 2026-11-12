@@ -2,6 +2,7 @@
 
 <!-- 本文件是项目根 README.md；项目已有 README 时不要用本模板覆盖。 -->
 <!-- 只答“是什么 / 怎么用”；协议见 SKILL.md，取舍见 docs/DESIGN.md，当前状态见 handoff/CONTEXT.md。 -->
+<!-- 项目文档模板：只放通用骨架；不写 skill 专属命令、脚本路径、宿主名；专属内容用 <占位符>。 -->
 
 > GitHub 首页直接显示根 README.md；不生成 `.github/README.md` 副本。
 > 指 `docs/` 文件用 `docs/…`，指 `handoff/` 文件用 `handoff/…`。
@@ -19,7 +20,7 @@
 | [handoff/CONTEXT.md](handoff/CONTEXT.md) | 接手 agent | 完整文档表、当前状态、下一步、记忆提炼、坑 |
 
 完整文档表见 [handoff/CONTEXT.md](handoff/CONTEXT.md)。
-<!-- 命令参考可选：docs/COMMANDS.md；用户要求时由 --doc --init 生成，生成后在上表加行。 -->
+<!-- 命令参考可选：docs/COMMANDS.md；用户要求时由建档流程生成，生成后在上表加行。 -->
 
 <!-- 有其他交付文档时，在 CONTEXT 的文档表里加行，不在这里重复。 -->
 

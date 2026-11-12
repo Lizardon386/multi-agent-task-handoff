@@ -65,6 +65,7 @@
 ## 交接记录（只记关键动作，≤10 条）
 > 超出先压卡到 `COMPACT_BACKUP.md`；不写日常细节。
 
+- 2026-11-12 cc-haha：修复文档过时项（README/COMMANDS/DESIGN 日期、README 体检行、DESIGN CHECK.md 资产/完成定义/维护自检）与 `--doc` 措辞；项目文档模板去 skill 专属命令，CHECK 增加 C13 模板通用性；实测 13 项与模板扫描通过。
 - 2026-11-12 cc-haha：能力表/工作区规则/AGENTS/模板记录 PowerShell 优先 pwsh 7（绝对路径，不每次探测，5.1 兜底）；实测绝对路径调用返回 7.7.0。
 - 2026-11-12 cc-haha：新增 `assets/CHECK.md` 固定检查清单（C01–C12）；`--check`/`--fix` 按清单输出 `[OK]/[WARN]/[SKIP]`；`--save` 一行摘要、`--syncall` 实际同步汇总；PROMPT 45→26、CONTEXT 80→77（记录 10→7）；实测清单 12 项、save 一行、syncall 2 份汇总。
 - 2026-11-11 cc-haha：瘦身交接卡与验证分级——PROMPT 改指针卡（88→45 行）；resume 必跑 `git status`、其余按需；CONTEXT 去重压缩到 80 行；printpath/syncall 全当前时汇总一行、install dryrun 压缩；临时环境测落后/缺失/空注册表，真实仓库回归。

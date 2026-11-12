@@ -2,7 +2,7 @@
 
 > 面向改这套协议的人：为什么交接文档固定在 `handoff/`、GitHub 项目 README 固定在根（非 GitHub 按需）、设计/方案类在 `docs/`，以及项目与工作区根怎么分、命令如何收敛、宿主差异如何驱动自动化。
 > 状态：已采纳（v4）
-> 最近更新：2026-11-06
+> 最近更新：2026-11-12
 
 ## 文档
 > 只列主要文档与阅读对象；完整索引见 CONTEXT；不复制正文。
@@ -140,7 +140,7 @@ flowchart LR
 | 换机迁移 | 能力表整表带走，只重填「本机环境」块；`AGENTS.md` / `PROJECT_RULES.md` 复制；`sync-paths` 与宿主 memory 不带；`config.toml` 只改 workspace |
 | 迁移范围 | 所有项目级文档按角色迁移：README（若存在）留根；设计/方案/指导类进 `docs/`；交接类进 `handoff/`；客制化名同样按类迁移，不留在根 |
 | 迁移判定 | V1/V2/V3 三档特征两条同时满足：文件名符合模板（含旧名 压卡备份.md、COMPACTION_BACKUP.md），标题含项目目录名（含义一致即可，如 color-duel 的「变色对决」）；不命中的设计/方案类按角色判定，判不准问用户 |
-| 完成定义 | 文档与安装副本一致；`--help` 与命令表一致；`--check` 无 ⛔；当前宿主 probe 必测格无「待测」；卡 ≤100 行；根目录若存在项目文档 `.md`，只能是 `README.md`（包文件 `SKILL.md` 除外） |
+| 完成定义 | 文档与安装副本一致；`--help` 与命令表一致；`--check` 按 `assets/CHECK.md` 的 C01–C13 每项有状态且无 WARN；当前宿主 probe 必测格无「待测」；卡 ≤100 行；根目录若存在项目文档 `.md`，只能是 `README.md`（包文件 `SKILL.md` 除外） |
 
 ### 数据、兼容性与迁移
 
@@ -168,9 +168,10 @@ flowchart LR
 - 宿主差异只进 `$AGENT_CONFIG/AGENT_CAPABILITIES.md`；`SKILL.md` 只举例，不写宿主专属规则。
 - 宿主识别只做粗分（环境变量）；包装版（cc-haha 等）的差异进能力表 Host/版本与备注，协议不写宿主分支。
 - `--probe` 固定清单放 `assets/PROBE.md`；`SKILL.md` 只留指针、确认粒度与完成定义；live 先出计划，确认一次后跑完全部适用项，仅计划外副作用停。
+- `--check` / `--fix` 固定清单放 `assets/CHECK.md`（C01–C13）；`--check` 只读逐项输出，`--fix` 只修 C01/C04/C07/C10；内容过时走普通编辑，不归 `--doc`。
 - 旧仓迁移是逐项目人工动作，不默认扫描全盘；先 `--check` 出清单，再由 `--doc` 迁移。
 - 迁移按角色处理所有项目级文档：README（若存在）留根，设计/方案/指导类进 `docs/`，交接类进 `handoff/`；客制化名同样迁移，不留在根。判不准时给选项，不自行决定。
-- 文档增删迁移只在 `--doc`；先跑 `scripts/handoff.sh --doc --guard`，只删 `## 文档` 表中的失效协议行，其余 WARN/SUGGEST 只报告；只修迁移造成的链接/标记问题，不改正文/历史/项目内容的死链、旧路径或历史内容；内容创建只走 `--doc --init`，只新增、不重建/还原；`--fix` 不搬、不建、不删文档。
+- 文档增删迁移只在 `--doc`；先跑 `scripts/handoff.sh --doc --guard`，只删 `## 文档` 表中的失效协议行，其余 WARN/SUGGEST 只报告；只做结构层增删移动、标记、文档表与迁移链接；不改正文内容语义（原有死链/旧路径/历史内容只报告）；内容创建只走 `--doc --init`，只新增、不重建/还原；`--fix` 不搬、不建、不删文档。
 - README 若存在必须在根目录；不生成 `.github/README.md` 或 `docs/README.md`。
 - 安装只装 HEAD；工作树未提交时只装上一个 commit。
 - 状态以 git 为准：未确认推送成功，不写「已推送」；卡与指针记「已提交，待推送」或实际结果。
@@ -253,7 +254,7 @@ guard 只写 `## 文档` 表；init 只从模板新增；两者都不恢复正�
 | 项目目录是唯一写入根 | 多仓/AOSP 场景下不会把卡写到工作区根 | 无项目时要先建目录 |
 | 工作区根只做容器 | 与“产物根”区分，避免把 `handoff/` 写到容器 | 用户要理解两个概念的区别 |
 | 命令一次只用一个 | 组合过长、顺序和冲突难维护 | 需要多步时分开跑 |
-| `--doc` 独占文档增删迁移 | 结构操作集中，其他命令不会意外搬文件；只修迁移造成的链接，不改正文/历史内容；内容创建拆到 `--doc --init`，默认挡位 `[defaults].doc=guard` | 迁移必须显式跑 `--doc`；判不准时要问用户；缺失被引用文档由 `--doc --guard` 删文档表失效行、其余只报告 |
+| `--doc` 独占文档增删迁移 | 结构操作集中，其他命令不会意外搬文件；只做结构层增删移动与迁移链接，不改正文内容语义；内容创建拆到 `--doc --init`，默认挡位 `[defaults].doc=guard` | 迁移必须显式跑 `--doc`；判不准时要问用户；缺失被引用文档由 `--doc --guard` 删文档表失效行、其余只报告 |
 | `--post` 与 `--suspend` 分离 | 热交接只传消息，冷交接才落盘；两者可单独使用 | 需要用户提供 message 与目标会话 |
 | 交接只发指针 | 跨 agent 不复制聊天历史；PROMPT 可复用 | 目标读不到文件时要附全文 |
 | `PROMPT.md` 自动生成并 gitignore | 含会话 ID/本机路径，默认不提交 | 跨机交接要另发内容 |
@@ -280,7 +281,7 @@ multi-agent-task-handoff/
 │  ├─ lib.sh                # 共享：配置 / 宿主 / 路径函数
 │  └─ 运行时.bat             # Windows 运行时入口
 ├─ LICENSE
-├─ assets/                  # HELP / 模板（含 COMMANDS.md.tpl）/ PROBE.md / 示例
+├─ assets/                  # HELP / 模板（含 COMMANDS.md.tpl）/ PROBE.md / CHECK.md / 示例
 ├─ .gitignore
 ├─ README.md                # 项目说明；scope=root
 ├─ docs/
@@ -331,7 +332,7 @@ multi-agent-task-handoff/
 ### 日常改动流程
 
 1. 改文件；涉及协议/脚本/文档时同步改 `SKILL.md`、`README.md`、`docs/DESIGN.md`、模板，以及各文档头块与章节标题。
-2. 自检：`sh -n scripts/lib.sh scripts/handoff.sh install.sh`；`bash install.sh --dryrun`。
+2. 自检：`sh -n scripts/lib.sh scripts/handoff.sh install.sh`；`bash install.sh --dryrun`；按 `assets/CHECK.md` 跑 `--check`（agent 执行）。
 3. 诊断：`bash scripts/handoff.sh --printpath`；`bash scripts/handoff.sh --syncall --dryrun`。
 4. 保存：`bash scripts/handoff.sh --save`（默认已跟踪文件，新文件 `--all`，消息 `-m`）。
 5. 核对：`git status -sb` 无 ahead；`scripts/handoff.sh --printpath` 副本全部「当前」。

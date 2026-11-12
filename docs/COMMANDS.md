@@ -1,7 +1,7 @@
 # multi-agent-task-handoff · 命令参考
 
 > 面向使用者和 agent：逐命令说明语法、默认值、行为边界和常见错误。
-> 最近更新：2026-11-06
+> 最近更新：2026-11-12
 
 ## 文档
 > 只列主要文档与阅读对象；完整索引见 CONTEXT；不复制正文。
@@ -25,8 +25,8 @@
 | `--suspend [--local \| --commit \| --push]` | 收工：压卡、写 CONTEXT、生成 PROMPT、对齐副本 | `[defaults].suspend`，默认 `local` |
 | `--post <message> [--new \| --next <ID \| 会话名>]` | 热交接：把消息投给另一个会话 | `[defaults].post`，默认 `new` |
 | `--doc [--guard \| --init] [--target DIR]` | 文档整理：布局、标记、迁移；guard 维护/删失效行，init 只新增 | `[defaults].doc`，默认 `guard` |
-| `--check` | 只读体检 | — |
-| `--fix` | 体检 + 修非文档整理项 | — |
+| `--check` | 按 `assets/CHECK.md` C01–C13 只读体检 | — |
+| `--fix` | 同一清单 + 修可修项 | — |
 | `--probe [--static \| --live]` | 摸底宿主能力并更新能力表 | `[defaults].probe`，默认 `static` |
 | `--printpath [--host NAME \| --target DIR]` | 只读路径诊断 | — |
 | `--gear <key>[=<值>] \| --gear list` | 读写 `config.toml` 的 `[defaults]` 挡位 | 见下文 |
