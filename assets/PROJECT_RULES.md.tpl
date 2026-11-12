@@ -32,10 +32,11 @@
 
 ## 工作区与产物
 
-- 产物落在 `<工作区根>/<项目名>/`；纯问答可留临时目录；不搬 agent 应用内部缓存。
+- 工作区根 = `$AGENT_WORKSPACE`；未设置时 `$HOME/agent_workspace`（Windows `%USERPROFILE%\agent_workspace`）；本机自定义写在 `$AGENT_CONFIG/config.toml`。工作区根只存放项目目录，不直接写 `handoff/`。
+- 产物落在 `<工作区根>/<项目名>/`；纯问答可留临时目录；不要把产物散落到其他盘符、用户目录或会话临时目录；不搬 agent 应用内部缓存。
+- 同主题项目用不同子目录区分，不覆盖既有产物。
 - 换机/交接：复制本文件和 `AGENTS.md` 到新工作区根；能力表整表复制到 `$AGENT_CONFIG/AGENT_CAPABILITIES.md`（覆盖模板；`install.sh` 只在文件不存在时播种），只重填「本机环境」块；`sync-paths` 不带，由新机器 `install.sh` 重建；改 `config.toml` 的 workspace 后按其低成本项复验。
-- 工作区根只存放项目目录，不直接写 `handoff/`。
-- 机器级状态（`config.toml`、`AGENT_CAPABILITIES.md`、`sync-paths`）只在 `$AGENT_CONFIG`，不进工作区根或仓库。
+- 机器级状态（`config.toml`、`AGENT_CAPABILITIES.md`、`sync-paths`）只在 `$AGENT_CONFIG`（Linux/macOS `${XDG_CONFIG_HOME:-$HOME/.config}/multi-agent-task-handoff`；Windows `%APPDATA%\multi-agent-task-handoff`），不进工作区根或仓库。
 
 ## 维护
 

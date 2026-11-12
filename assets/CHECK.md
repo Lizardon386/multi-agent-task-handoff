@@ -26,7 +26,7 @@
 | C07 | PROMPT 忽略/跟踪 | `git check-ignore` 命中；`git ls-files` 为空 | 可修：补 `.gitignore` / `git rm --cached` |
 | C08 | 项目内 memory | 项目内 memory 已 gitignore | 只报告 |
 | C09 | CONTEXT 限额 | ≤100 行、记录 ≤10、坑 ≤10 | 只报告：`--suspend` 压卡 |
-| C10 | 工作区文档 | `AGENTS.md` / `PROJECT_RULES.md` 存在，指向 `$AGENT_CONFIG` 与 `handoff/` | 可修：确认后从模板播种 |
+| C10 | 工作区文档 | `AGENTS.md` / `PROJECT_RULES.md` 存在；AGENTS 只做入口指针并指向 PROJECT_RULES；PROJECT_RULES 指向 `$AGENT_CONFIG` 与 `handoff/` | 可修：确认后从 `assets/AGENTS.md.tpl` / `assets/PROJECT_RULES.md.tpl` 播种 |
 | C11 | 源仓库一致性 | SKILL / HELP / COMMANDS / 模板 / examples 的命令、签名、路径一致 | 只报告（非源仓库 SKIP） |
 | C12 | probe 完成度 | 当前宿主能力表必测格无「待测」；缺失/策略阻止有 ⛔/🟡 + 证据 | 只报告：跑 `--probe` |
 | C13 | 模板通用性 | README / DESIGN / COMMANDS / CONTEXT / PROMPT 模板不含本 skill 专属命令、脚本路径、宿主名；专属内容用 `<占位符>`；允许 `handoff/`、`docs/`、scope 标记与 `--suspend` | 只报告 |
