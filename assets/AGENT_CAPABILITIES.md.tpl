@@ -17,6 +17,7 @@
 - 迁移：整表复制到新机器同一路径（覆盖模板）；`sync-paths` 不带；`config.toml` 只改 workspace
 - 宿主识别：`--printpath` 按环境变量粗分；包装版（如 cc-haha）在能力矩阵 Host/版本列注明
 - OS / Shell：
+- PowerShell：若有 pwsh 7 优先，换机时确认一次；否则用 powershell.exe 5.1
 - 登录：
 
 ## 能力矩阵
