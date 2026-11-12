@@ -3,7 +3,7 @@
 > 用途：固定 `--probe` 的测试矩阵，保证不同 agent 覆盖一致、不反复确认、未测项显式化。
 > 读取方：agent；`--probe` 默认挡位读 `config.toml` 的 `[defaults].probe`（static / live）。
 > 规则：static 只填 S 项；live 跑 S + L1 + L2。K 项只核对版本/日期，不重复破坏性操作。
-> 最近更新：2026-11-09
+> 最近更新：2026-11-12
 
 ## 运行信息
 
@@ -64,6 +64,7 @@
 | L106 | 项目目录操作 · 文件迁移 | L2 | 临时项目内移动/复制一个临时文件 | 文件位置正确 | 删临时文件 |
 | L107 | memory 读取 · suspend 读取 | L2 | 只读读取 memory 索引 | 读到内容或确认为空 | 无 |
 | L108 | 能力矩阵 · 读 AGENTS/CONTEXT | L2 | 目标会话读临时 `PROMPT.md` / `CONTEXT.md` | 能读出内容 | 删会话 |
+| L109 | 观察记录 · 写入与开关（不写能力表） | L2 | 临时 `AGENT_CONFIG` 下跑 `--observe L2 "probe"`；再设 `observe=off` 确认跳过 | 文件含表头 + 1 行；off 时无新增；真实 `OBSERVATIONS.md` 未变 | 删临时 `AGENT_CONFIG` |
 | L201 | 投递与读回 · 读回状态（真接盘） | L2 | 投临时 PROMPT 指针；目标读 PROMPT → CONTEXT，回报项目目录 / 锚点 / 下一步 / 勿动 / MEMORY 提炼 | 5/5 逐字一致 | 删会话 |
 | L202 | 项目目录操作 · 绑定证据 | L2 | 目标读临时哨兵文件 | 内容一致 | 删会话 |
 

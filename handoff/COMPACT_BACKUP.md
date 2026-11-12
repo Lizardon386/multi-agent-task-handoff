@@ -135,4 +135,6 @@
 
 - 2026-11-10 Qoder：`--check` 报 4 条一致性问题（修复计划待批准）；`--probe --live` 全项实测（L201 5/5、L202 哨兵一致、K03 fork 重测），L103/L104 记 ⛔；能力表更新至 Qoder Desktop 0.5.7、Qoder 必测格无「待测」；临时项目已删，4 个测试会话经用户 UI 删除并复验清零；压卡沉降 4 条已完成流水与 1 条最旧交接记录；`--suspend --push` 收工。
 
+- 2026-11-10 cc-haha：确认并修复 Qoder 报的 4 条一致性问题 + 补齐 `--doc [--target DIR]` 签名（SKILL/HELP/COMMANDS/README/DESIGN）；模板锚点改命令式、examples 跨任务规则改工作区根；`--help`/别名一致，`--doc --target`、install/syncall 复验通过。
+
 <!-- multi-agent-task-handoff: scope=handoff -->

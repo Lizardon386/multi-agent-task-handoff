@@ -28,6 +28,7 @@
 > 只写当前状态与在飞文件；已完成项压缩为结果，逐版本流水搬入 `COMPACT_BACKUP.md`；推送状态以 `git status -sb` 为准。
 
 - 已完成：
+  - 2026-11-12：`--probe` 清单增 L109（临时 `AGENT_CONFIG` 验证 `--observe` 写入/开关/清理，不写能力表）；删除已完成的「现有项目逐个迁移」下一步。
   - 2026-11-12：新增 `--observe` 自动观察记录（开关 `[defaults].observe` 默认 on）；AGENTS 收敛为纯指针、补 `assets/AGENTS.md.tpl`、C10 修正；补测修复空文件/CRLF 边界；提交 `d5c1d57` / `62fc12c` / `f6fa360` / `b6885d6`，6 份副本已同步。
   - 2026-11-11 ZCode：`--probe --live` S+L1/L2 全项（L101 PONG 逐字、L102 建会话、L105/L106、L108、L201 5/5、L202 一致、K03 fork 独立）；L103/L104 记 ⛔；能力表更新至 ZCode 3.18.0、ZCode 必测格无「待测」；临时项目已删，2 个测试会话归档残留。
 - 进行中：无。
@@ -36,8 +37,7 @@
 ## 下一步
 > 只写可执行的 1–3 条；不写愿望或背景。
 
-1. Ubuntu/Linux 双平台往返（Windows 已通过）：`--doc` → `--resume` → `--suspend`，再跑 `--check`、`--fix`、`--probe`、`--post`；覆盖非 git 项目、空格路径、XDG / `%APPDATA%` 变体。
-2. 现有项目逐个 `--check` → `--doc` 迁移，不默认扫描全盘；dsp-hal-eval README 缺失且被 CONTEXT 引用，`--doc --guard` 会删除文档表 README 行（其余只报告）；`[defaults].post` 当前为 `new`，如需裸 `--post` 走已有会话可跑 `--gear post=next`。
+1. Ubuntu/Linux 双平台往返（Windows 已通过）：`--doc` → `--resume` → `--suspend`，再跑 `--check`、`--fix`、`--probe`（含 L109 观察记录）、`--post`；覆盖非 git 项目、空格路径、XDG / `%APPDATA%` 变体。
 
 ## MEMORY 提炼
 
@@ -67,6 +67,7 @@
 ## 交接记录（只记关键动作，≤10 条）
 > 超出先压卡到 `COMPACT_BACKUP.md`；不写日常细节。
 
+- 2026-11-12 cc-haha：`--probe` 清单增 L109（临时 `AGENT_CONFIG` 验证 `--observe` 写入/开关/清理，不写能力表）；下一步删除已完成的「现有项目逐个迁移」条。
 - 2026-11-12 cc-haha：AGENTS 收敛为纯入口指针（16→9 行）、PROJECT_RULES 承接工作区根/产物/同主题分目录/$AGENT_CONFIG 路径；新增 `assets/AGENTS.md.tpl`，CHECK C10 改为按模板播种；模板扫描无本机/宿主专属。
 - 2026-11-12 cc-haha：新增 `--observe` 自动观察记录（`[defaults].observe` 默认 on，`--gear observe=off` 关闭）；写 `$AGENT_CONFIG/OBSERVATIONS.md`；SKILL/HELP/COMMANDS/DESIGN/README/配置模板同步；补测空文件/多行/CRLF/截断/空格路径/非法值与组合参数，修复空文件不建表头与 CRLF/tab 归一化；安装副本回归通过。
 - 2026-11-12 cc-haha：修复文档过时项（README/COMMANDS/DESIGN 日期、README 体检行、DESIGN CHECK.md 资产/完成定义/维护自检）与 `--doc` 措辞；项目文档模板去 skill 专属命令，CHECK 增加 C13 模板通用性；实测 13 项与模板扫描通过。
@@ -77,4 +78,5 @@
 
 - 2026-11-10 cc-haha：修复注册表迁移边界（拆分 `resolve_paths` / `migrate_paths_file`，迁移只在 `install.sh` 登记分支；`--printpath` / `--dryrun` 不写；`--syncall` 缺注册表+旧文件报错提示 install）与 `--gear` 读取缺配置报错（`--gear list` 不需配置）；临时 git 仓库实测 5 项、真实仓库回归；SKILL/HELP/COMMANDS/DESIGN 同步；提交 `a186de5`。
 - 2026-11-10 OpenCode：`--probe --live` S+L1+L2 全项通过（L201 5/5、L202 哨兵一致、K03 fork 独立；L103 cwd=临时项目、L104 session_move）；能力表更新至 OpenChamber 2.5.3 + OpenCode 2.2.0（内置 managed；PATH CLI 2.1.2），OpenCode 必测格无「待测」；临时项目与 3 个测试会话清理，残留 1 条项目元数据；`--fix` 非文档项通过，两条源仓库一致性问题待修。
-- 2026-11-10 cc-haha：确认并修复 Qoder 报的 4 条一致性问题 + 补齐 `--doc [--target DIR]` 签名（SKILL/HELP/COMMANDS/README/DESIGN）；模板锚点改命令式、examples 跨任务规则改工作区根；`--help`/别名一致，`--doc --target`、install/syncall 复验通过。<!-- multi-agent-task-handoff: scope=handoff -->
+
+<!-- multi-agent-task-handoff: scope=handoff -->
