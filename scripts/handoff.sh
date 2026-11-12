@@ -324,7 +324,7 @@ if [ "$mode" = observe ]; then
   [ -n "$project" ] || project=unknown
   host_label=unknown
   if detect_host; then host_label=$host; fi
-  observe_event=$(printf '%s' "$observe_event" | tr '\n' ' ' | tr '|' '/')
+  observe_event=$(printf '%s' "$observe_event" | tr '\r\n\t' '   ' | tr '|' '/')
   observe_event=$(printf '%.200s' "$observe_event")
   obs_file=$config_dir/OBSERVATIONS.md
   if [ ! -s "$obs_file" ]; then
