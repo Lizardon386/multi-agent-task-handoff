@@ -1,7 +1,7 @@
 # multi-agent-task-handoff · 上下文与进展
 
 > 多 agent 任务交接：状态写在 `handoff/`，下一个 agent 读卡接手；本卡只记跨机有用的状态与坑。
-> 最近更新：2026-11-12
+> 最近更新：2026-11-13
 > 项目目录：`D:\agent_workspace\multi-agent-task-handoff`
 > 状态锚点：`git log -1 --oneline`；推 GitHub 前 `gh auth status`
 > 验证命令：`git status -sb`；`bash install.sh --dryrun`；`bash scripts/handoff.sh --printpath`；`bash scripts/handoff.sh --syncall --dryrun`
@@ -28,6 +28,7 @@
 > 只写当前状态与在飞文件；已完成项压缩为结果，逐版本流水搬入 `COMPACT_BACKUP.md`；推送状态以 `git status -sb` 为准。
 
 - 已完成：
+  - 2026-11-13：在 3178 / uno-online / uno-webgame / color-duel / dsp-hal-eval 上执行 `--doc` / `--suspend` 验证；uno-online 完成 V4 迁移并与平台项目双向解耦后推送 `a95095f`；uno-webgame 删除过时 AGENTS.md 并按最新模板重排；3178 侧引用已清理；协议代码未改。
   - 2026-11-12：`--probe` 清单增 L109（临时 `AGENT_CONFIG` 验证 `--observe` 写入/开关/清理，不写能力表）；删除已完成的「现有项目逐个迁移」下一步。
   - 2026-11-12：新增 `--observe` 自动观察记录（开关 `[defaults].observe` 默认 on）；AGENTS 收敛为纯指针、补 `assets/AGENTS.md.tpl`、C10 修正；补测修复空文件/CRLF 边界；提交 `d5c1d57` / `62fc12c` / `f6fa360` / `b6885d6`，6 份副本已同步。
   - 2026-11-11 ZCode：`--probe --live` S+L1/L2 全项（L101 PONG 逐字、L102 建会话、L105/L106、L108、L201 5/5、L202 一致、K03 fork 独立）；L103/L104 记 ⛔；能力表更新至 ZCode 3.18.0、ZCode 必测格无「待测」；临时项目已删，2 个测试会话归档残留。
@@ -60,6 +61,7 @@
 - 能力表/工作区文档：`$AGENT_CONFIG/AGENT_CAPABILITIES.md` 只在不存在时播种；`AGENTS.md` / `PROJECT_RULES.md` 缺失时 `--check` 报 🟡、`--fix` 确认后播种；宿主升级可能改工具集（ZCode 3.16.3→3.18.0），投递/读回按表复验，不复用旧结论。
 - 入口/发布：`install.sh` 只安装，诊断/同步用 `scripts/handoff.sh`（Windows `scripts/运行时.bat`），不加运行时子命令；包文件（`SKILL.md`、`scripts/`、`install.sh`、`安装.bat`、`assets/`、`LICENSE`）必须留根；GitHub README 固定在根，不生成 `.github/README.md`。
 - 文档：改协议或结构后手动扫 `assets/*.tpl`；命令/挡位文档只写通用机制（键与允许值由 `--gear list` 与 `scripts/lib.sh` 给出）；PROMPT 锚点用 `git log -1 --oneline`；`--doc` 边界与 README 规则见 MEMORY 提炼；审计覆盖参数签名、模板与 examples。
+- 跨项目引用：`--doc` 只修本仓链接；其他项目指向被迁移文档的链接会失效（本次 3178→uno-online 已手工同步）。迁移后需手工扫描同工作区引用。
 - git：不装钩子；`--commit` 提交协议管理文档；`--push` 在源仓库环境推源仓库、安装副本环境推当前目录仓库，重试 3 次 / 3 秒，只重试网络错误；Windows 再加 HTTP/1.1 + OpenSSL 回退 3 次；未确认推送成功不写「已推送」。
 - `--post`：`--new` 的新会话必须绑定当前项目目录，Claude `CreateSession` 落 worktree（2026-11-06 实测）应拒绝，改走主项目 UI 新建 + `--next`；`--next` 先 ID 后 title，按 `title` 过滤唯一命中；`workDir` 必须等于项目目录；工具模糊查询会命中正文。
 - 不回到全自动：文件改动无法触发 git（禁止常驻服务）；`--commit` / `--push` 保留；嫌步骤多只能封成一条显式命令。
@@ -67,6 +69,7 @@
 ## 交接记录（只记关键动作，≤10 条）
 > 超出先压卡到 `COMPACT_BACKUP.md`；不写日常细节。
 
+- 2026-11-13 cc-haha：多项目执行 `--doc` / `--suspend`（3178 引用清理、uno-online 迁移与解耦并推送 `a95095f`、uno-webgame 标准迁移并删 AGENTS.md、color-duel / dsp-hal-eval 补标记）；发现跨项目链接随迁移失效并手工同步；协议代码未改。
 - 2026-11-12 cc-haha：`--probe` 清单增 L109（临时 `AGENT_CONFIG` 验证 `--observe` 写入/开关/清理，不写能力表）；下一步删除已完成的「现有项目逐个迁移」条。
 - 2026-11-12 cc-haha：AGENTS 收敛为纯入口指针（16→9 行）、PROJECT_RULES 承接工作区根/产物/同主题分目录/$AGENT_CONFIG 路径；新增 `assets/AGENTS.md.tpl`，CHECK C10 改为按模板播种；模板扫描无本机/宿主专属。
 - 2026-11-12 cc-haha：新增 `--observe` 自动观察记录（`[defaults].observe` 默认 on，`--gear observe=off` 关闭）；写 `$AGENT_CONFIG/OBSERVATIONS.md`；SKILL/HELP/COMMANDS/DESIGN/README/配置模板同步；补测空文件/多行/CRLF/截断/空格路径/非法值与组合参数，修复空文件不建表头与 CRLF/tab 归一化；安装副本回归通过。
@@ -75,8 +78,6 @@
 - 2026-11-12 cc-haha：新增 `assets/CHECK.md` 固定检查清单（C01–C12）；`--check`/`--fix` 按清单输出 `[OK]/[WARN]/[SKIP]`；`--save` 一行摘要、`--syncall` 实际同步汇总；PROMPT 45→26、CONTEXT 80→77（记录 10→7）；实测清单 12 项、save 一行、syncall 2 份汇总。
 - 2026-11-11 cc-haha：瘦身交接卡与验证分级——PROMPT 改指针卡（88→45 行）；resume 必跑 `git status`、其余按需；CONTEXT 去重压缩到 80 行；printpath/syncall 全当前时汇总一行、install dryrun 压缩；临时环境测落后/缺失/空注册表，真实仓库回归。
 - 2026-11-11 ZCode：`--probe --live` 全项（S+L1/L2，L201 5/5、L202 一致、K03 fork 独立）；宿主 3.18.0 跨会话 `SendToSession` / `ReadSession` / `WaitSessions` 可用，推翻旧结论「⛔ 仅子 agent」；L103/L104 记 ⛔；能力表 ZCode 行刷新、无「待测」；临时项目已删，2 个测试会话归档（无删除 API）；压卡搬出 3 条已完成流水与 1 条最旧记录。
-
 - 2026-11-10 cc-haha：修复注册表迁移边界（拆分 `resolve_paths` / `migrate_paths_file`，迁移只在 `install.sh` 登记分支；`--printpath` / `--dryrun` 不写；`--syncall` 缺注册表+旧文件报错提示 install）与 `--gear` 读取缺配置报错（`--gear list` 不需配置）；临时 git 仓库实测 5 项、真实仓库回归；SKILL/HELP/COMMANDS/DESIGN 同步；提交 `a186de5`。
-- 2026-11-10 OpenCode：`--probe --live` S+L1+L2 全项通过（L201 5/5、L202 哨兵一致、K03 fork 独立；L103 cwd=临时项目、L104 session_move）；能力表更新至 OpenChamber 2.5.3 + OpenCode 2.2.0（内置 managed；PATH CLI 2.1.2），OpenCode 必测格无「待测」；临时项目与 3 个测试会话清理，残留 1 条项目元数据；`--fix` 非文档项通过，两条源仓库一致性问题待修。
 
 <!-- multi-agent-task-handoff: scope=handoff -->

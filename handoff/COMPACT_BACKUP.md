@@ -137,4 +137,6 @@
 
 - 2026-11-10 cc-haha：确认并修复 Qoder 报的 4 条一致性问题 + 补齐 `--doc [--target DIR]` 签名（SKILL/HELP/COMMANDS/README/DESIGN）；模板锚点改命令式、examples 跨任务规则改工作区根；`--help`/别名一致，`--doc --target`、install/syncall 复验通过。
 
+- 2026-11-10 OpenCode：`--probe --live` S+L1+L2 全项通过（L201 5/5、L202 哨兵一致、K03 fork 独立；L103 cwd=临时项目、L104 session_move）；能力表更新至 OpenChamber 2.5.3 + OpenCode 2.2.0（内置 managed；PATH CLI 2.1.2），OpenCode 必测格无「待测」；临时项目与 3 个测试会话清理，残留 1 条项目元数据；`--fix` 非文档项通过，两条源仓库一致性问题待修。
+
 <!-- multi-agent-task-handoff: scope=handoff -->
