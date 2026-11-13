@@ -124,6 +124,7 @@ agent 会把 skill 安装到当前宿主的 `skills/multi-agent-task-handoff`，
 ├─ README.md          # 项目说明（本文）；scope=root
 ├─ docs/              # 设计/方案/指导类；scope=docs
 │  └─ DESIGN.md       # 设计取舍（需要时）
+├─ plan/              # 计划产出；scope=plan（宿主 plan mode / agent 手写）
 └─ handoff/           # 交接文档；scope=handoff
    ├─ CONTEXT.md      # 交接卡：状态、下一步、记忆提炼、坑、记录
    ├─ PROMPT.md       # 交接指针，自动生成，默认 gitignore
@@ -148,12 +149,13 @@ agent 会把 skill 安装到当前宿主的 `skills/multi-agent-task-handoff`，
 | 交接卡 | `handoff/CONTEXT.md` | 下一位 agent 的入口 |
 | 交接指针 | `handoff/PROMPT.md` | 发送给接手 agent 的短消息源 |
 | 历史归档 | `handoff/COMPACT_BACKUP.md` | 卡超限时把日志搬出 |
+| 计划产出 | `plan/` | 宿主计划模式或 agent 手写的可执行计划；受 `--doc` 布局/标记/迁移约束（scope=plan） |
 | 能力缓存 | `$AGENT_CONFIG/AGENT_CAPABILITIES.md` | 宿主差异与实测结论 |
 | 机器配置 | `$AGENT_CONFIG/config.toml` | 工作区根等偏好 |
 | 安装注册表 | `$AGENT_CONFIG/sync-paths` | 本机已安装的宿主副本；从源仓库收工时同步，安装副本跳过 |
 | 观察记录 | `$AGENT_CONFIG/OBSERVATIONS.md` | 本机 skill 异常，供维护评估；默认开启 |
 
-统一布局：GitHub 项目 README 固定在根（非 GitHub 项目按需），设计/方案/指导类在 `docs/`，交接文档在 `handoff/`。旧布局由 `--doc` 迁移，只移动、不复制。
+统一布局：GitHub 项目 README 固定在根（非 GitHub 项目按需），设计/方案/指导类在 `docs/`，计划产出在 `plan/`（scope=plan，与 `docs/` 同等受 `--doc` 的布局、标记与迁移约束），交接文档在 `handoff/`。旧布局由 `--doc` 迁移，只移动、不复制。宿主默认计划库中能归属本项目的计划文件也由 `--doc` 迁入 `plan/`，跳过最近 10 分钟修改的文件，目标同名冲突停。
 
 ## 换机迁移
 > 只写带什么 / 不带什么；细节见 PROJECT_RULES。

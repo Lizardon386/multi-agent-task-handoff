@@ -18,7 +18,7 @@
 | ID | 检查 | 命令 / 判定 | --fix |
 |---|---|---|---|
 | C01 | 安装副本 | `--printpath`；所有副本 commit = HEAD | 可修：源仓库跑 `--syncall` |
-| C02 | 文档布局与 scope | 根 README、`docs/`、`handoff/` 标记与目录一致；无 `.github/README.md`、`docs/README.md` | 只报告：跑 `--doc` |
+| C02 | 文档布局与 scope | 根 README、`docs/`、`handoff/`、`plan/` 标记与目录一致；无 `.github/README.md`、`docs/README.md` | 只报告：跑 `--doc` |
 | C03 | 链接 | 文档表与章节链接可达；迁移链接无断 | 只报告 |
 | C04 | config / workspace | `--printpath` 配置存在、workspace 来源明确 | 可修：缺失时从模板创建/补键 |
 | C05 | 能力表 | 存在、日期、当前宿主待测格 | 只报告：跑 `--probe` |
@@ -30,10 +30,11 @@
 | C11 | 源仓库一致性 | SKILL / HELP / COMMANDS / 模板 / examples 的命令、签名、路径一致 | 只报告（非源仓库 SKIP） |
 | C12 | probe 完成度 | 当前宿主能力表必测格无「待测」；缺失/策略阻止有 ⛔/🟡 + 证据 | 只报告：跑 `--probe` |
 | C13 | 模板通用性 | README / DESIGN / COMMANDS / CONTEXT / PROMPT 模板不含本 skill 专属命令、脚本路径、宿主名；专属内容用 `<占位符>`；允许 `handoff/`、`docs/`、scope 标记与 `--suspend` | 只报告 |
+| C14 | 计划落点与宿主库残留 | 能力表「计划产出」：当前宿主可配置的，配置键指向 `plan`；`plan/` 存在时无协议外命名（宿主随机名除外）；宿主默认计划库中可归属本项目的文件已迁入或列在报告 | 只报告：按能力表配置 / 跑 `--probe` / `--doc` 迁移 |
 
 ## 完成
 
-- 每项必须有 `[OK]` / `[WARN]` / `[SKIP]` 之一，不能省略（C01–C13）。
+- 每项必须有 `[OK]` / `[WARN]` / `[SKIP]` 之一，不能省略（C01–C14）。
 - `[WARN]` 写触发项与下一步命令；`[SKIP]` 写原因。
 - `--fix` 只执行 C01 / C04 / C07 / C10 的「可修」动作；其余只报告。
 - 非源仓库跳过 C11；文档整理项一律只报告「需跑 `--doc`」；内容过时走普通编辑，不归 `--doc`。

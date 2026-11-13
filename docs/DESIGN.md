@@ -192,6 +192,7 @@ flowchart LR
 - `--printpath` 是视图不是存储：现读环境变量、`.skill-version`、`git config`，不生成缓存文件。
 - 批量循环只用 POSIX sh 内建（`while read`、`printf '%.7s'`）：Git Bash 每个外部进程约 0.9 秒，副本多时会把同步拖慢。
 - 版本表只列主版本，小版本进 `CONTEXT.md` 记录与 `COMPACT_BACKUP.md`；废弃表按阶段追加；`CONTEXT.md` 的坑平时可追加，`--suspend` 时归并成 ≤10 类；`--check` 只报行数/记录数/类别超限，不自动改写。
+- `--save` 提交前跑 `scripts/selftest.sh`，FAIL 不提交；同步失败不推送。`--syncall` 在第一次遇到落后副本时跑同一自测，`--dryrun` 不跑。
 
 ### --doc 的 guard / init
 

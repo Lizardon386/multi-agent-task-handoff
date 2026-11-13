@@ -28,6 +28,9 @@ multi-agent-task-handoff — 多 agent 任务交接
   --observe <L2|L3> <事件>
                             记录一条使用观察（自动记录；[defaults].observe=off 关闭）
                             写入 $AGENT_CONFIG/OBSERVATIONS.md；只记 skill 自身缺陷/异常
+  --save [--all] [-m MSG] [--retries N] [--delay S]
+                            提交前跑 scripts/selftest.sh（FAIL 不提交）；提交后同步副本再推送
+                            同步失败不推送；--all 含新文件
   --check                   自检 / 更新：按 assets/CHECK.md 逐项输出 [OK]/[WARN]/[SKIP]
   --fix                     修复：先跑同一清单，只修可修项；文档整理交给 --doc
   --probe [--static | --live]  摸底 / 探测：按 assets/PROBE.md 固定清单实测并更新能力表

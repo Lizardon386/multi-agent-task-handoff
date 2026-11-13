@@ -26,7 +26,7 @@
 | `--post <message> [--new \| --next <ID \| 会话名>]` | 热交接：把消息投给另一个会话 | `[defaults].post`，默认 `new` |
 | `--doc [--guard \| --init] [--target DIR]` | 文档整理：布局、标记、迁移；guard 维护/删失效行，init 只新增 | `[defaults].doc`，默认 `guard` |
 | `--observe <L2\|L3> <事件>` | 记录一条 skill 使用观察（脚本层） | `[defaults].observe`，默认 `on` |
-| `--check` | 按 `assets/CHECK.md` C01–C13 只读体检 | — |
+| `--check` | 按 `assets/CHECK.md` C01–C14 只读体检 | — |
 | `--fix` | 同一清单 + 修可修项 | — |
 | `--probe [--static \| --live]` | 摸底宿主能力并更新能力表 | `[defaults].probe`，默认 `static` |
 | `--printpath [--host NAME \| --target DIR]` | 只读路径诊断 | — |
@@ -72,14 +72,16 @@
 
 - 语法：`--doc [--target DIR]`，可选一个挡位。
 - 默认：`[defaults].doc`；未配置按 `guard`。
-- `--guard`：维护已有文档；检查缺失角色、被引用文档、README 引用、标记和链接；删除 `## 文档` 表中指向缺失协议角色的整行；其余输出 `OK` / `WARN` / `SUGGEST`，只报告；不新增、不还原、不改正文。
+- `--guard`：维护已有文档；检查缺失角色、被引用文档、README 引用、标记、`docs/` / `handoff/` / `plan/` 的布局和链接；删除 `## 文档` 表中指向缺失协议角色的整行；其余输出 `OK` / `WARN` / `SUGGEST`，只报告；不新增、不还原、不改正文。
 - `--init`：只新增缺失文档，先出清单并确认：
   - `CONTEXT.md`：必生成。
   - `README.md`：仅 GitHub 项目（`git remote -v` 指向 GitHub）或用户明确要发布到 GitHub 时生成。
   - `DESIGN.md`：仅在有设计取舍且用户确认时生成；`--guard` 检出设计/方案类文档时会建议。
   - `COMMANDS.md`：仅在用户明确要求时生成；`--guard` 检出 CLI/多命令迹象时会建议。
+  - `PLAN.md` 等计划文件：不生成；计划由宿主计划模式或 agent 按 `plan/` 约定产出，`--doc` 只负责归位与补标记。
   - 一律从模板创建；不从会话记录、历史副本或备份还原。
 - 行为：布局整理、角色迁移、补标记、只修迁移造成的链接；内容增删迁移只由 `--doc` 执行。
+- 宿主计划库迁移：`--guard` 挡位同样执行；按能力表定位默认计划库，能归属本项目的计划文件列候选，确认后移入 `plan/` 并补 `scope=plan`；跳过最近 10 分钟修改的文件，目标同名冲突停，不迁移当前会话正在使用的计划。
 - 边界：`--guard` 只改 `## 文档` 表（删失效协议行）；正文/历史/项目内容死链只报告；冲突停，不覆盖、不改名、不合并。
 - 常见错误：目标已存在且非本协议生成、角色有多份候选、判不准分类；出选择题，未选不动。
 
@@ -138,6 +140,13 @@
 - 触发：协议命令（`--resume` / `--suspend` / `--check` / `--fix` / `--post` / `--probe`）出现 L2/L3 异常时由 agent 调用；不装钩子、不自动采集。
 - 边界：只记 skill 自身缺陷/异常，不记环境故障、宿主限制或用户操作错误；不记完整路径、会话 ID、凭据。
 - 常见错误：等级写成 L1/L4、事件为空、把普通 WARN 当 L2；按 SKILL 的等级定义判断。
+
+## --save [--all] [-m MSG] [--retries N] [--delay S]
+> 只说明提交前自测、同步与推送顺序。
+
+- 行为：有改动时先跑 `scripts/selftest.sh`；FAIL 不暂存、不提交。通过后提交、同步副本、推送（网络错误重试 3 次 / 3 秒）。
+- 边界：同步失败不推送，提交留在本地；默认只提交已跟踪修改，`--all` 含新文件；`--syncall` 在第一次遇到落后副本时跑同一自测，`--dryrun` 不跑。
+- 常见错误：selftest FAIL（先修）、`sync-paths` 缺失、无上游分支。
 
 ## --workspace <PATH> [--nosave]
 > 只说明工作区根来源与写回规则。

@@ -28,6 +28,7 @@
 > 只写当前状态与在飞文件；已完成项压缩为结果，逐版本流水搬入 `COMPACT_BACKUP.md`；推送状态以 `git status -sb` 为准。
 
 - 已完成：
+  - 2026-11-13：plan/ 计划产出落地（SKILL 压回 150 行、C14/S08/L110/K05）；新增 `scripts/selftest.sh` 机械回归（40 PASS）并接入 `--save` / `--syncall` 门禁；`--save` 同步失败不再推送；阻断路径实测通过。
   - 2026-11-13：在 3178 / uno-online / uno-webgame / color-duel / dsp-hal-eval 上执行 `--doc` / `--suspend` 验证；uno-online 完成 V4 迁移并与平台项目双向解耦后推送 `a95095f`；uno-webgame 删除过时 AGENTS.md 并按最新模板重排；3178 侧引用已清理；协议代码未改。
   - 2026-11-12：`--probe` 清单增 L109（临时 `AGENT_CONFIG` 验证 `--observe` 写入/开关/清理，不写能力表）；删除已完成的「现有项目逐个迁移」下一步。
   - 2026-11-12：新增 `--observe` 自动观察记录（开关 `[defaults].observe` 默认 on）；AGENTS 收敛为纯指针、补 `assets/AGENTS.md.tpl`、C10 修正；补测修复空文件/CRLF 边界；提交 `d5c1d57` / `62fc12c` / `f6fa360` / `b6885d6`，6 份副本已同步。
@@ -39,6 +40,7 @@
 > 只写可执行的 1–3 条；不写愿望或背景。
 
 1. Ubuntu/Linux 双平台往返（Windows 已通过）：`--doc` → `--resume` → `--suspend`，再跑 `--check`、`--fix`、`--probe`（含 L109 观察记录）、`--post`；覆盖非 git 项目、空格路径、XDG / `%APPDATA%` 变体。
+2. 跨宿主验证 selftest 与门禁：Qoder / ZCode / OpenCode / WorkBuddy 跑 `--save`（含 FAIL 阻断）与 `--syncall`。
 
 ## MEMORY 提炼
 
@@ -46,6 +48,7 @@
 
 - 直接维护：改完跑 `scripts/handoff.sh --save`（提交 + 同步 + 推送重试）；任务收工按 `--suspend` 挡位；衍生挡位统一 `--命令 [--模式 ...]`，默认值放 `[defaults].<命令>`，`--gear` 可改，标题/HELP 写全签名。
 - 功能改动必须实跑测试（正常/非法/边界/安装副本）；修 skill bug 优先结构性根治（脚本守卫、收敛动作/权限面），不靠记忆或追加规则；不加无谓检查。
+- 功能改完跑 `sh scripts/selftest.sh`；`--save` 提交前自动跑，FAIL 不提交；`--syncall` 在首次落后时自测，`--dryrun` 不跑。
 - `--doc` 边界：只处理布局/标记/迁移造成的链接；`--guard` 只删 `## 文档` 表失效协议行，其余只报告；不重建/还原缺失文档；默认 `[defaults].doc=guard`；内容创建只走 `--doc --init`（只新增）；不默认生成 README（仅 GitHub remote/用户确认）。
 - 图表检查/修复不纳入协议：Mermaid 图按一次性人工修复（语义判断 + SKILL 已满 150 行）。
 - `--probe --live`：按 `assets/PROBE.md` 固定清单，先出计划、确认一次后跑完 S+L1+L2；L2 未过投递/读回不记 ✅；完成时当前宿主必测格无「待测」。
@@ -69,6 +72,7 @@
 ## 交接记录（只记关键动作，≤10 条）
 > 超出先压卡到 `COMPACT_BACKUP.md`；不写日常细节。
 
+- 2026-11-13 cc-haha：plan/ 计划产出落地（SKILL 压回 150 行、C14/S08/L110/K05）；新增 `scripts/selftest.sh` 机械回归（40 PASS）并接入 `--save` / `--syncall` 门禁；`--save` 同步失败不再推送；阻断路径（save 无提交、syncall 无副本）实测通过。
 - 2026-11-13 cc-haha：借鉴 agents-md：PROJECT_RULES/模板增「同一问题两次纠正即停」；OBSERVATIONS 表头增「写具体、同类合并、问题消失删除」；脚本内置表头同步。
 - 2026-11-13 cc-haha：多项目执行 `--doc` / `--suspend`（3178 引用清理、uno-online 迁移与解耦并推送 `a95095f`、uno-webgame 标准迁移并删 AGENTS.md、color-duel / dsp-hal-eval 补标记）；发现跨项目链接随迁移失效并手工同步；协议代码未改。
 - 2026-11-12 cc-haha：`--probe` 清单增 L109（临时 `AGENT_CONFIG` 验证 `--observe` 写入/开关/清理，不写能力表）；下一步删除已完成的「现有项目逐个迁移」条。
@@ -78,5 +82,5 @@
 - 2026-11-12 cc-haha：能力表/工作区规则/AGENTS/模板记录 PowerShell 优先 pwsh 7（绝对路径，不每次探测，5.1 兜底）；实测绝对路径调用返回 7.7.0。
 - 2026-11-12 cc-haha：新增 `assets/CHECK.md` 固定检查清单（C01–C12）；`--check`/`--fix` 按清单输出 `[OK]/[WARN]/[SKIP]`；`--save` 一行摘要、`--syncall` 实际同步汇总；PROMPT 45→26、CONTEXT 80→77（记录 10→7）；实测清单 12 项、save 一行、syncall 2 份汇总。
 - 2026-11-11 cc-haha：瘦身交接卡与验证分级——PROMPT 改指针卡（88→45 行）；resume 必跑 `git status`、其余按需；CONTEXT 去重压缩到 80 行；printpath/syncall 全当前时汇总一行、install dryrun 压缩；临时环境测落后/缺失/空注册表，真实仓库回归。
-- 2026-11-11 ZCode：`--probe --live` 全项（S+L1/L2，L201 5/5、L202 一致、K03 fork 独立）；宿主 3.18.0 跨会话 `SendToSession` / `ReadSession` / `WaitSessions` 可用，推翻旧结论「⛔ 仅子 agent」；L103/L104 记 ⛔；能力表 ZCode 行刷新、无「待测」；临时项目已删，2 个测试会话归档（无删除 API）；压卡搬出 3 条已完成流水与 1 条最旧记录。
+
 <!-- multi-agent-task-handoff: scope=handoff -->

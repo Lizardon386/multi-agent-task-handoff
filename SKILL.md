@@ -1,6 +1,6 @@
 ---
 name: multi-agent-task-handoff
-description: 多 agent 任务接力协议：接手/接盘/交接项目、写交接卡、收工/压卡、工程化/补全 handoff 文档、自检/修复/摸底宿主能力；GitHub 项目 README 固定在项目根，交接文件在 handoff/，设计/方案类在 docs/。
+description: 多 agent 任务接力协议：接手/接盘/交接项目、写交接卡、收工/压卡、工程化/补全 handoff 文档、自检/修复/摸底宿主能力；GitHub 项目 README 固定在项目根，交接文件在 handoff/，设计/方案类在 docs/，计划产出在 plan/。
 when_to_use: 开始或结束一个任务、接盘别人留下的项目、把工作交接给另一个 agent、或需要检查/修复交接文档与宿主能力时。
 argument-hint: "[--workspace <PATH>] [--nosave] [--gear <key>[=<值>] | --gear list | --help | --resume | --suspend [--local | --commit | --push] | --post <message> [--new | --next <ID | 会话名>] | --doc [--guard | --init] [--target DIR] | --check | --fix | --probe [--static | --live] | --printpath [--host NAME | --target DIR]]"
 ---
@@ -10,17 +10,23 @@ argument-hint: "[--workspace <PATH>] [--nosave] [--gear <key>[=<值>] | --gear l
 ## 术语
 
 - **项目 / 项目目录**：宿主打开的那个目录/仓库（Claude 项目、Qoder 工作区、WorkBuddy 空间、OpenCode/ZCode/Codex 项目）；项目目录指其绝对路径，**唯一写入根**，来自宿主已打开的目录，或无项目时新建的目录。
-- **工作区根**：`AGENT_WORKSPACE` 容器；只用来新建项目目录，**不是写入目标**。
-- **当前目录**：`pwd`；可 `cd`，不改变项目。
+- **工作区根**：`AGENT_WORKSPACE` 容器；只用来新建项目目录，**不是写入目标**。**当前目录**：`pwd`；可 `cd`，不改变项目。
 - 交接文档只在 `<项目目录>/handoff/`；GitHub 项目 README 固定在项目根，非 GitHub 项目按需，设计/方案/指导类在 `docs/`。宿主差异与项目目录来源查 `$AGENT_CONFIG/AGENT_CAPABILITIES.md`，SKILL 只举例，不写宿主专属规则。
 
 ## 文档布局与标记
 
-统一布局：根 `README.md`（GitHub 项目必需；非 GitHub 项目按需，`scope=root`，GitHub 首页直接显示）；`docs/`（设计/方案/指导类，以及任何 `scope=docs` 的自定义文档）；`handoff/`（`CONTEXT.md` 必需，`PROMPT.md`、`COMPACT_BACKUP.md` 及交接附件）。
+统一布局：根 `README.md`（GitHub 项目必需；非 GitHub 项目按需，`scope=root`，GitHub 首页直接显示）；`docs/`（设计/方案/指导类，以及任何 `scope=docs` 的自定义文档）；`handoff/`（`CONTEXT.md` 必需，`PROMPT.md`、`COMPACT_BACKUP.md` 及交接附件）；`plan/`（计划产出，`scope=plan`，见「计划产出」）。
 
-- 标记写在文件末行：`<!-- multi-agent-task-handoff: scope=root|docs|handoff -->`；无标记 = 项目自有，协议只读；`--check` 校验 scope 与所在目录一致。
+- 标记写在文件末行：`<!-- multi-agent-task-handoff: scope=root|docs|handoff|plan -->`；无标记 = 项目自有，协议只读；`--check` 校验 scope 与所在目录一致。
 - 不生成 `.github/README.md` 或 `docs/README.md`；GitHub 项目根 README 就是首页。
 - 包文件（`SKILL.md`、`scripts/`、`install.sh`、`安装.bat`、`assets/`、`LICENSE`）必须在根，不受布局影响。
+
+## 计划产出
+
+1. 统一落点 `<项目目录>/plan/`：放可执行计划（任务分解、步骤、验证）；`docs/` 放设计/方案/长期文档。宿主原生计划模式且能力表「计划产出」记为 ✅ 可配置目录的，配置必须指向 `plan`（相对项目根，写正斜杠；Windows 也用 `plan`）；未记 ✅ 的不假设已生效。
+2. 无原生计划机制或不可配置的宿主，由 agent 写 `plan/YYYY-MM-DD-<主题>.md`；不写 `handoff/` 或根目录。宿主自动生成的随机名不强制改；`--suspend` 时在 CONTEXT「下一步」引用最新计划；是否 gitignore 由用户决定，协议不改 `.gitignore`。
+3. `plan/` 与 `docs/` 同等受 `--doc` 约束：`--doc` 扫描 `plan/**`、校验并补 `scope=plan`；根目录或 `docs/` 下的计划类文档迁入 `plan/`；**宿主默认计划库中能归属本项目的计划文件也迁入 `plan/`**（规则见 `--doc` 第 11 条）；`plan/` 内不改名、不改正文、不删除。宿主自动生成的随机名计划不强制改名，缺标记时 `--doc --guard` 只报告，确认后补 `scope=plan`。`--check` C02 校验标记与目录一致，C14 检查落点与宿主库残留。
+4. worktree 会话的项目根是 worktree，计划会落 worktree 的 `plan/`；要沉淀到主项目，用主目录会话，或在计划批准后归档。宿主差异查能力表，不写进 SKILL。
 
 ## 用法
 
@@ -45,30 +51,27 @@ argument-hint: "[--workspace <PATH>] [--nosave] [--gear <key>[=<值>] | --gear l
 ## 路径与配置
 
 1. `$AGENT_CONFIG`：Linux/macOS `${XDG_CONFIG_HOME:-$HOME/.config}/multi-agent-task-handoff`；Windows `%APPDATA%\multi-agent-task-handoff`；可用 `AGENT_CONFIG` 覆盖。
-2. 工作区根：本次 `--workspace` > `AGENT_WORKSPACE` > `config.toml` 的 `[paths].workspace` > `$HOME/agent_workspace`。
-3. `--workspace <PATH>` 默认写回 `[paths].workspace`；`--nosave` 只本次。路径含空格加引号。
-4. 能力表：`$AGENT_CONFIG/AGENT_CAPABILITIES.md`；跨任务规则：项目目录 → 父目录 → `$AGENT_CONFIG/PROJECT_RULES.md`。
-5. 配置只解析简单 `key = "value"`；不 `source`，不依赖 Python。`[defaults].post`（new / next）只由 `--post` 读取；`[defaults].doc`（guard / init）由 `--doc` 读取，默认 guard；`[defaults].observe`（on / off，默认 on）由 `--observe` 读取；`--gear` 读写 `[defaults]` 的键，键/默认值/允许值由 `scripts/lib.sh` 映射驱动，非法值不修改。
+2. 工作区根：本次 `--workspace` > `AGENT_WORKSPACE` > `config.toml` 的 `[paths].workspace` > `$HOME/agent_workspace`；`--workspace <PATH>` 默认写回 `[paths].workspace`，`--nosave` 只本次；路径含空格加引号。
+3. 能力表：`$AGENT_CONFIG/AGENT_CAPABILITIES.md`；跨任务规则：项目目录 → 父目录 → `$AGENT_CONFIG/PROJECT_RULES.md`。
+4. 配置只解析简单 `key = "value"`；不 `source`，不依赖 Python。`[defaults].post`（new / next）只由 `--post` 读取；`[defaults].doc`（guard / init）由 `--doc` 读取，默认 guard；`[defaults].observe`（on / off，默认 on）由 `--observe` 读取；`--gear` 读写 `[defaults]` 的键，键/默认值/允许值由 `scripts/lib.sh` 映射驱动，非法值不修改。
 
 ## 确定项目目录
 
-1. 宿主给出打开目录（Claude `workDir` / OpenChamber checkout 等）→ 用它。
-2. 否则用会话启动时的 `pwd`。
-3. 打开的目录等于工作区根 / `$HOME` / 盘根 / 临时目录 → 不算项目：
+1. 宿主给出打开目录（Claude `workDir` / OpenChamber checkout 等）→ 用它；否则用会话启动时的 `pwd`。
+2. 打开的目录等于工作区根 / `$HOME` / 盘根 / 临时目录 → 不算项目：
    - 报默认/配置的工作区根与来源，问是否修改；
    - 确认后建 `<工作区根>/<项目名>/`，项目名默认取 cwd 名或 `task-YYYYMMDD-HHMM`；
    - 未确认前不建目录、不写文件。
-4. 不按 git 根自动上溯；要子仓级文档，就在子仓打开会话。
-5. 不搬运活会话；建会话/打开目录按能力表，能自动则确认后做，否则给手动卡。
+3. 不按 git 根自动上溯；要子仓级文档，就在子仓打开会话。
+4. 不搬运活会话；建会话/打开目录按能力表，能自动则确认后做，否则给手动卡。
 
 ## --resume
 
-1. 读：`handoff/PROMPT.md` → `handoff/CONTEXT.md`（冲突以 CONTEXT 为准）→ 跨任务规则；读「MEMORY 提炼」。产品文档不在读序，任务需要时按 CONTEXT 文档表打开。
+1. 读：`handoff/PROMPT.md` → `handoff/CONTEXT.md`（冲突以 CONTEXT 为准）→ 跨任务规则；读「MEMORY 提炼」。产品文档与 `plan/` 不在默认读序，CONTEXT「下一步」引用时按需打开。
 2. 核：cwd 与 PROMPT 项目目录一致；HEAD / 工作树 / 副本状态与锚点一致；不一致先报告并说明取舍，不静默按过期状态开工（fork/worktree 回主项目或注明）。
 3. 跑：必跑 `git status -sb`；按需——锚点不可核对（非命令式 / 无上次 HEAD / 与当前 HEAD 不符）或副本无法确认（非本次收工、行为异常、点名宿主、超 30 天 / 版本变化）跑 `--printpath` + `--syncall --dryrun`；文档动过（交接记录有 `--doc` / 迁移 / 布局变更）跑 `--doc --guard`；用户明确要求按命令；未跑按需项在汇报中注明；失败先诊断，不静默继续。
-4. 接：读「下一步」「在飞文件」「勿动文件」；参考 ID 信息不足时按能力表读回。
-5. 报：向用户汇报当前状态、下一步、验证结果与阻塞。
-6. 布局不符（根有 `CONTEXT.md`、`handoff/README.md` 等）→ 提示 `--check` / `--doc`，不静默迁移。
+4. 接并报：读「下一步」「在飞文件」「勿动文件」；参考 ID 信息不足时按能力表读回；向用户汇报状态、下一步、验证结果与阻塞。
+5. 布局不符（根有 `CONTEXT.md`、`handoff/README.md` 等）→ 提示 `--check` / `--doc`，不静默迁移。
 
 ## --suspend [--local | --commit | --push]
 
@@ -76,7 +79,7 @@ argument-hint: "[--workspace <PATH>] [--nosave] [--gear <key>[=<值>] | --gear l
 2. 压卡顺序：
    - ①「已完成」逐版本流水 → 搬入 `COMPACT_BACKUP.md`，只留当前状态；②「交接记录」>10 条 → 最旧搬入。
    - ③「坑与约束」合并同类、删协议复述，≤10 类；④「下一步」「在飞文件」删已完成/失效项；⑤「MEMORY 提炼」只留影响下一家的规则。
-3. 再写本次「现在/下一步/坑/交接记录」；报告 before/after 行数与搬出的条目。
+3. 再写本次「现在/下一步/坑/交接记录」；若 `plan/` 有未完成计划，「下一步」引用其相对路径；报告 before/after 行数与搬出的条目。
 4. 覆盖写 `handoff/PROMPT.md`（瘦身指针卡）；写前查 gitignore：git 仓且 `handoff/PROMPT.md` 未忽略时，确认后追加（拒绝或无交互则只报告，不阻塞写卡）；已跟踪只报告，交 `--fix` 处理。内容：项目目录、读卡顺序、交接文档表、锚点、验证分级（必跑 / 按需）、下一步 1–3 条、规则与能力表指针；已决策 / 勿动 / 坑在 CONTEXT，不重复；末行带 `scope=handoff`；文件头注明自动生成。
 5. 默认挡位读 `scripts/handoff.sh --gear suspend`（local / commit / push；读取失败即配置缺失时停下提示先跑 `install.sh`），显式参数覆盖；local 不操作 git，`--commit` 提交协议管理文档（`handoff/` 下的文件、带标记的文档及其移动/删除），`--push` 隐含 commit 并调 `scripts/handoff.sh --push`（普通项目推当前目录仓库，源仓库环境推源仓库；网络错误 3 次 / 3 秒；Windows 再按 HTTP/1.1 + OpenSSL 回退 3 次），失败留本地并报告。收工末尾，若当前项目是本 skill 的源仓库（仓库根同时有 `.git` 与 `SKILL.md`）跑 `scripts/handoff.sh --syncall` 对齐副本；普通项目不是 skill 源仓库，安装副本没有 `.git`，都跳过并说明（有提交/推送时放在其后；幂等，只补落后）。不装钩子；写卡与指针按实际推送结果记「已推送 / 待推送」，未确认不写已推送；不强制结束会话，可当 checkpoint 用。
 6. memory：按能力表「memory 读取」定位宿主 memory；读 `MEMORY.md` 指针 + 相关条目；只把“会影响下一家”的规则/偏好写入 `CONTEXT.md` 的「MEMORY 提炼」章（无则写「无」）；不复制原文、不写回、不搬运；冲突以 CONTEXT/DESIGN/git 为准。
@@ -87,33 +90,31 @@ argument-hint: "[--workspace <PATH>] [--nosave] [--gear <key>[=<值>] | --gear l
 2. 目标：`--new` 或 `--next <ID | 会话名>` 二选一；都不给时读 `config.toml` 的 `[defaults].post`。配成 `next` 却没有目标时停下问。
 3. 解析 `--next`：先按 ID 精确匹配；不中再按会话标题匹配（唯一命中才用，多个命中列出让用户选）。宿主提供会话列表工具（如 `ListSessions`）就直接查，不要让用户手抄 ID；工具的模糊查询可能命中正文，必须按返回项的 `title` 过滤后再判唯一；查到的 `workDir` 必须等于项目目录，不一致就停；查到后先看状态：stopped/completed 且宿主不自动唤醒时给手动卡（打开/继续后重投），不盲目入队。
 4. `--new` 必须绑定当前项目目录：目录取自 `handoff/PROMPT.md` / `CONTEXT.md`，**不用 `pwd` 推导**（当前会话可能在 worktree）。建会话前查能力表「新建会话并绑定目录」（含实际 cwd 是否落 worktree）；已知落 worktree 的宿主不走 `--new`，改给手动卡（主项目 UI 新建 → agent 用会话列表工具找到它 → `--next`）。建后核对目录，不合格就停：不投递、报告残留。
-5. 投递按能力表「投递与读回手段」；不支持跨会话的宿主报 ⛔ 并给替代，不伪造成功。
-6. 可酌情追加项目目录、HEAD、PROMPT 路径，必须可见标注，不混进用户原文；不写 `handoff/`、不改文档、不动 git；报告实际结果（成功 / 失败原因 / 目标会话标识），不写进仓库文件。
+5. 投递按能力表「投递与读回手段」；不支持跨会话的宿主报 ⛔ 并给替代，不伪造成功。可酌情追加项目目录、HEAD、PROMPT 路径，必须可见标注，不混进用户原文；不写 `handoff/`、不改文档、不动 git；报告实际结果，不写进仓库文件。
 
 ## --doc [--guard | --init] [--target DIR]
 
-1. 确定项目目录；不带挡位时读 `[defaults].doc`（默认 guard）；先跑 `scripts/handoff.sh --doc --guard [--target <项目目录>]`：guard 删除 `## 文档` 表中指向缺失协议角色的整行，其余 WARN/SUGGEST 只报告；再扫描根 `*.md`、`docs/**`、`handoff/**`、`.github/*.md`，记录标记与角色候选。
+1. 确定项目目录；不带挡位时读 `[defaults].doc`（默认 guard）；先跑 `scripts/handoff.sh --doc --guard [--target <项目目录>]`：guard 删除 `## 文档` 表中指向缺失协议角色的整行，其余 WARN/SUGGEST 只报告；再扫描根 `*.md`、`docs/**`、`handoff/**`、`plan/**`、`.github/*.md`，记录标记与角色候选。
 2. 已有标记 → 校验 scope 与目录，不符则移动。
-3. 无标记但已在角色固定位置（根 `README.md`、`handoff/CONTEXT.md`）或已在 `docs/` → 确认归属后补对应 scope。
-4. 无标记但有 V1/V2/V3 三档特征 → 补标记并迁移。特征两条同时满足：①文件名符合模板（CONTEXT / README / DESIGN / COMPACT_BACKUP，含旧名 压卡备份.md、COMPACTION_BACKUP.md）；②标题含项目目录名，含义一致即可（如 color-duel 的「变色对决」）。
+3. 无标记但已在角色固定位置（根 `README.md`、`handoff/CONTEXT.md`）或已在 `docs/`、`plan/` → 确认归属后补对应 scope。
+4. 无标记但有 V1/V2/V3 三档特征 → 补标记并迁移。特征两条同时满足：①文件名符合模板（CONTEXT / README / DESIGN / PLAN / COMPACT_BACKUP，含旧名 压卡备份.md、COMPACTION_BACKUP.md）；②标题含项目目录名，含义一致即可（如 color-duel 的「变色对决」）。
 5. `--doc` 不生成缺失角色；报告后由用户决定是否 `--doc --init`（先出清单并确认）：CONTEXT 必生成，README 仅在判定为 GitHub 项目（`git remote -v` 指向 GitHub）或用户明确要发布到 GitHub 时生成，DESIGN 仅在有设计取舍且用户确认时生成，COMMANDS 仅在用户明确要求时生成；`--guard` 负责删/修，`--init` 只新增；guard 的 SUGGEST 只作为建议，不自动创建；一律从模板创建，不从会话记录、历史副本或备份还原。
-6. 角色映射：README → 根 `README.md`；COMMANDS → `docs/COMMANDS.md`；方案设计类（DESIGN、架构设计、实施方案等）与指导类（INTEGRATION_GUIDE、接入/开发指南等）→ `docs/<原名>.md`；CONTEXT 与其他交接 → `handoff/`。
-7. 根目录其他 `.md`：判为方案设计类或指导类的一律列入迁移；判不准的列出候选让用户选，不自行决定；用户不选就跳过。非文档产物不动。
+6. 角色映射：README → 根 `README.md`；COMMANDS → `docs/COMMANDS.md`；方案设计类（DESIGN、架构设计、实施方案等）与指导类（INTEGRATION_GUIDE、接入/开发指南等）→ `docs/<原名>.md`；计划类（PLAN、计划、实施计划、任务分解等）→ `plan/<原名>.md`；CONTEXT 与其他交接 → `handoff/`。
+7. 根目录其他 `.md`：判为方案设计类、指导类或计划类的一律列入迁移；判不准的列出候选让用户选，不自行决定；用户不选就跳过。非文档产物不动。
 8. 冲突停：目标已存在且不是同一份、根 README 与 `docs/README` 同时存在、某角色有多份候选 → 出选择题，未获选择前不覆盖、不改名、不合并。
 9. 迁移用 `git mv`（git 仓）或 `mv`（非 git），只移动不复制；同批修正相对链接、CONTEXT 文档表与跨目录引用（从根进 `docs/` 加 `../`，仓库内绝对 GitHub URL 同步改）；只修迁移造成的链接问题；`## 文档` 表中指向缺失协议角色的行由 `--guard` 删除，正文/历史段落中的原有死链、旧路径与历史内容不改，另列报告。
 10. 只补标记、日期与文档表，不改正文内容语义，不重建/还原缺失文档（包括从会话记录恢复）；git 仓且未忽略时确认后把 `handoff/PROMPT.md` 加入 `.gitignore`；先输出动作清单（源 → 目标、新建、删除、改链、待选项），确认后执行，结束输出 before/after 与未处理项；guard 已删的 stale-role-ref 行只报告，不重复动作。
+11. 宿主计划库迁移（`--guard` 挡位同样执行）：读能力表「计划产出」的默认计划库路径；其中 `*.md` 满足任一条件列为候选——正文含项目目录名或项目绝对路径、文件名/正文含项目名；跳过最近 10 分钟修改的文件（可能正在生成）；判不准的列入待选项由用户勾选，不自行决定。输出候选清单与目标路径，确认后 `mv` 到 `plan/`（跨文件系统用 `cp` + 校验后删源），迁后补 `scope=plan`；目标同名冲突停，不覆盖；不迁移当前会话正在使用的计划文件；源文件不做内容改写。
 
 ## --check / --fix
 
-- `--check`：按 `assets/CHECK.md` 固定清单逐项执行（C01–C13），逐项输出 `[OK]/[WARN]/[SKIP]`；只读，不改文件；非源仓库跳过 C11；`--save` 是脚本层命令，不进命令表。
-- `--fix`：先跑同一清单，只修 C01/C04/C07/C10 标记「可修」的项；文档布局、分类、标记、链接、文档表一律只报告「需跑 `--doc`」；默认不提交；无 `handoff/` 且无旧文档 → 提示 `--doc`。
+- `--check`：按 `assets/CHECK.md` 固定清单逐项执行（C01–C14），逐项输出 `[OK]/[WARN]/[SKIP]`；只读，不改文件；非源仓库跳过 C11；`--save` 是脚本层命令，不进命令表。`--fix`：先跑同一清单，只修 C01/C04/C07/C10 标记「可修」的项；文档布局、分类、标记、链接、文档表只报告「需跑 `--doc`」；默认不提交；无 `handoff/` 且无旧文档 → 提示 `--doc`。
 
 ## --probe [--static | --live]
 
-- `--probe`：默认挡位读 `scripts/handoff.sh --gear probe`；static 只做零副作用检查，按 `assets/PROBE.md` 填静态格。
-- `--probe --live`：读 `assets/PROBE.md` 固定清单；先输出完整计划（P 项、副作用、清理、将写的能力表格），确认一次后跑完全部适用项，仅计划外副作用停下。
+- `--probe`：默认挡位读 `scripts/handoff.sh --gear probe`；static 只做零副作用检查，按 `assets/PROBE.md` 填静态格。`--probe --live`：读固定清单；先输出完整计划（P 项、副作用、清理、将写的能力表格），确认一次后跑完全部适用项，仅计划外副作用停下。
 - L1 只证通道可达；L2 用临时项目真实投递指针，目标读 PROMPT/CONTEXT 后回报项目目录、锚点、下一步、勿动、MEMORY 提炼 5 项并核对；每次 live 都跑 L2，L2 未过投递/读回不得记 ✅；测后清理并报告残留，不写会话 ID。
-- 完成：当前宿主必测格无「待测」，缺失/策略阻止记 ⛔/🟡 + 证据；未安装宿主整行可留「待测」。
+- 完成：当前宿主必测格无「待测」，缺失/策略阻止记 ⛔/🟡 + 证据；未安装宿主整行可留「待测」。计划落点按 S08 / L110 探测并写能力表「计划产出」。
 
 ## --printpath [--host NAME | --target DIR]
 
@@ -137,11 +138,10 @@ argument-hint: "[--workspace <PATH>] [--nosave] [--gear <key>[=<值>] | --gear l
 
 ## 边界
 
-- 一个项目一个写者；交接后旧 agent 停写。
-- 冲突停，不覆盖、不换路径。
+- 一个项目一个写者；交接后旧 agent 停写；冲突停，不覆盖、不换路径。
 - 文件迁移默认不做；用户明确要求才复制顶层非隐藏文件。
 - 活会话不搬运；换 agent 用新会话 + PROMPT 指针；同 agent 热交接用 `--post`。
-- 不装钩子、不写宿主全局规则、不起后台服务、不内嵌模型调用；`--probe --live` 只经宿主会话实测。
+- 不装钩子、不写宿主全局规则、不起后台服务、不内嵌模型调用；`--probe --live` 只经宿主会话实测。计划目录的宿主配置由用户按能力表设置，协议只检测/报告，不自动改 `settings.json` 或等价配置。
 - 工作区 `AGENTS.md` 只做入口指针；不承载协议正文，不触发机械动作。
 - 敏感信息不提交；PROMPT 默认 gitignore。
 - 宿主差异进能力表；SKILL 只举例，不写宿主专属规则。

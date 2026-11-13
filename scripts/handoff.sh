@@ -400,6 +400,16 @@ fi
 if [ "$mode" = save ]; then
   git -C "$repo" rev-parse --git-dir >/dev/null 2>&1 || die "--save 必须在源仓库运行"
   if [ "$all" = 1 ]; then
+    changes=$(git -C "$repo" status --porcelain)
+  else
+    changes=$(git -C "$repo" status --porcelain -uno)
+  fi
+  if [ -z "$changes" ]; then
+    echo "无改动，跳过"
+    exit 0
+  fi
+  sh "$script_dir/selftest.sh" || die "自测失败，未暂存、未提交"
+  if [ "$all" = 1 ]; then
     git -C "$repo" add -A || die "git add -A 失败"
   else
     git -C "$repo" add -u || die "git add -u 失败"
@@ -411,17 +421,16 @@ if [ "$mode" = save ]; then
   msg=${message:-"chore: autosave $(date '+%Y-%m-%d %H:%M')"}
   git -C "$repo" commit -m "$msg" >/dev/null || die "提交失败"
   commit=$(git -C "$repo" rev-parse --short HEAD)
-  sync_rc=0
-  push_rc=0
-  sync_out=$(sh "$script_dir/handoff.sh" --syncall 2>&1) || sync_rc=$?
-  push_out=$(sh "$script_dir/handoff.sh" --push --retries "$retries" --delay "$delay" 2>&1) || push_rc=$?
-  if [ "$sync_rc" -eq 0 ] && [ "$push_rc" -eq 0 ]; then
-    printf '已保存: %s；同步: OK；推送: OK\n' "$commit"
-    exit 0
+  if ! sync_out=$(HANDOFF_SELFTEST_DONE=1 sh "$script_dir/handoff.sh" --syncall 2>&1); then
+    printf '%s\n' "$sync_out" >&2
+    die "保存完成，但同步失败；提交留在本地，未推送"
   fi
-  [ "$sync_rc" -eq 0 ] || printf '%s\n' "$sync_out" >&2
-  [ "$push_rc" -eq 0 ] || printf '%s\n' "$push_out" >&2
-  die "保存完成，但同步或推送失败；提交留在本地"
+  if ! push_out=$(sh "$script_dir/handoff.sh" --push --retries "$retries" --delay "$delay" 2>&1); then
+    printf '%s\n' "$push_out" >&2
+    die "保存完成，但推送失败；提交留在本地"
+  fi
+  printf '已保存: %s；同步: OK；推送: OK\n' "$commit"
+  exit 0
 fi
 
 if [ "$mode" = push ]; then
@@ -495,6 +504,7 @@ if [ "$mode" = syncall ]; then
   total=0
   latest=0
   synced=0
+  selftest_done=0
   bad=0
   while IFS= read -r line <&3; do
     case "$line" in ''|'#'*) continue ;; esac
@@ -518,6 +528,10 @@ if [ "$mode" = syncall ]; then
     if [ "$dry" = 1 ]; then
       printf '需更新: %s（%s -> %s）\n' "$dest" "${cur:-未知}" "$head_commit"
       continue
+    fi
+    if [ "${HANDOFF_SELFTEST_DONE:-}" != 1 ] && [ "$selftest_done" = 0 ]; then
+      sh "$script_dir/selftest.sh" || die "自测失败，未同步"
+      selftest_done=1
     fi
     # 子进程单独跑，stdin 接 /dev/null：循环体读的是 fd 3，不会被吃掉
     if sh "$repo/install.sh" --target "$dest" --noregister </dev/null >/dev/null 2>&1; then
