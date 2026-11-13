@@ -69,6 +69,7 @@
 ## 交接记录（只记关键动作，≤10 条）
 > 超出先压卡到 `COMPACT_BACKUP.md`；不写日常细节。
 
+- 2026-11-13 cc-haha：借鉴 agents-md：PROJECT_RULES/模板增「同一问题两次纠正即停」；OBSERVATIONS 表头增「写具体、同类合并、问题消失删除」；脚本内置表头同步。
 - 2026-11-13 cc-haha：多项目执行 `--doc` / `--suspend`（3178 引用清理、uno-online 迁移与解耦并推送 `a95095f`、uno-webgame 标准迁移并删 AGENTS.md、color-duel / dsp-hal-eval 补标记）；发现跨项目链接随迁移失效并手工同步；协议代码未改。
 - 2026-11-12 cc-haha：`--probe` 清单增 L109（临时 `AGENT_CONFIG` 验证 `--observe` 写入/开关/清理，不写能力表）；下一步删除已完成的「现有项目逐个迁移」条。
 - 2026-11-12 cc-haha：AGENTS 收敛为纯入口指针（16→9 行）、PROJECT_RULES 承接工作区根/产物/同主题分目录/$AGENT_CONFIG 路径；新增 `assets/AGENTS.md.tpl`，CHECK C10 改为按模板播种；模板扫描无本机/宿主专属。
@@ -78,6 +79,4 @@
 - 2026-11-12 cc-haha：新增 `assets/CHECK.md` 固定检查清单（C01–C12）；`--check`/`--fix` 按清单输出 `[OK]/[WARN]/[SKIP]`；`--save` 一行摘要、`--syncall` 实际同步汇总；PROMPT 45→26、CONTEXT 80→77（记录 10→7）；实测清单 12 项、save 一行、syncall 2 份汇总。
 - 2026-11-11 cc-haha：瘦身交接卡与验证分级——PROMPT 改指针卡（88→45 行）；resume 必跑 `git status`、其余按需；CONTEXT 去重压缩到 80 行；printpath/syncall 全当前时汇总一行、install dryrun 压缩；临时环境测落后/缺失/空注册表，真实仓库回归。
 - 2026-11-11 ZCode：`--probe --live` 全项（S+L1/L2，L201 5/5、L202 一致、K03 fork 独立）；宿主 3.18.0 跨会话 `SendToSession` / `ReadSession` / `WaitSessions` 可用，推翻旧结论「⛔ 仅子 agent」；L103/L104 记 ⛔；能力表 ZCode 行刷新、无「待测」；临时项目已删，2 个测试会话归档（无删除 API）；压卡搬出 3 条已完成流水与 1 条最旧记录。
-- 2026-11-10 cc-haha：修复注册表迁移边界（拆分 `resolve_paths` / `migrate_paths_file`，迁移只在 `install.sh` 登记分支；`--printpath` / `--dryrun` 不写；`--syncall` 缺注册表+旧文件报错提示 install）与 `--gear` 读取缺配置报错（`--gear list` 不需配置）；临时 git 仓库实测 5 项、真实仓库回归；SKILL/HELP/COMMANDS/DESIGN 同步；提交 `a186de5`。
-
 <!-- multi-agent-task-handoff: scope=handoff -->
