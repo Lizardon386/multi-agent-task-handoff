@@ -148,6 +148,11 @@ if [ "$n" -le 10 ] && grep -q '同一问题连续两次' "$tmp/ws/PROJECT_RULES.
 else
   bad "模板: 播种结果不符合预期"
 fi
+if grep -qx 'plan/' .gitignore 2>/dev/null; then
+  ok "配置: plan/ 已忽略"
+else
+  bad "配置: plan/ 未忽略"
+fi
 
 # 9. 安装副本（从工作树拷贝，避免 install.sh 只装 HEAD）
 if command -v tar >/dev/null 2>&1; then
