@@ -114,7 +114,7 @@ argument-hint: "[--workspace <PATH>] [--nosave] [--gear <key>[=<值>] | --gear l
 
 - `--probe`：默认挡位读 `scripts/handoff.sh --gear probe`；static 只做零副作用检查，按 `assets/PROBE.md` 填静态格。`--probe --live`：读固定清单；先输出完整计划（P 项、副作用、清理、将写的能力表格），确认一次后跑完全部适用项，仅计划外副作用停下。
 - L1 只证通道可达；L2 用临时项目真实投递指针，目标读 PROMPT/CONTEXT 后回报项目目录、锚点、下一步、勿动、MEMORY 提炼 5 项并核对；每次 live 都跑 L2，L2 未过投递/读回不得记 ✅；测后清理并报告残留，不写会话 ID。
-- 完成：当前宿主必测格无「待测」，缺失/策略阻止记 ⛔/🟡 + 证据；未安装宿主整行可留「待测」。计划落点按 S08 / L110 探测并写能力表「计划产出」。
+- 完成：当前宿主必测格无「待测」，缺失/策略阻止记 ⛔/🟡 + 证据；未安装宿主整行可留「待测」。计划落点按 S08 / L110 探测并写能力表「计划产出」；写表按 `assets/AGENT_CAPABILITIES.md.tpl` 的填表规则。
 
 ## --printpath [--host NAME | --target DIR]
 

@@ -73,6 +73,7 @@
 ## 交接记录（只记关键动作，≤10 条）
 > 超出先压卡到 `COMPACT_BACKUP.md`；不写日常细节。
 
+- 2026-11-17 cc-haha：能力表填表规则接入 `--probe` §5 / CHECK C05 / SKILL `--probe` 完成定义；均指向 `assets/AGENT_CAPABILITIES.md.tpl` 的归属/写法/时效/行规则。
 - 2026-11-16 cc-haha：`plan/` 默认不提交；5 个 git 项目 `.gitignore` 加 `plan/`；PROJECT_RULES / 模板 / CHECK C14 / selftest 增加「plan/ 已忽略」检查。
 - 2026-11-13 cc-haha：plan/ 计划产出落地（SKILL 压回 150 行、C14/S08/L110/K05）；新增 `scripts/selftest.sh` 机械回归（40 PASS）并接入 `--save` / `--syncall` 门禁；`--save` 同步失败不再推送；阻断路径（save 无提交、syncall 无副本）实测通过。
 - 2026-11-13 cc-haha：借鉴 agents-md：PROJECT_RULES/模板增「同一问题两次纠正即停」；OBSERVATIONS 表头增「写具体、同类合并、问题消失删除」；脚本内置表头同步。
@@ -82,5 +83,5 @@
 - 2026-11-12 cc-haha：新增 `--observe` 自动观察记录（`[defaults].observe` 默认 on，`--gear observe=off` 关闭）；写 `$AGENT_CONFIG/OBSERVATIONS.md`；SKILL/HELP/COMMANDS/DESIGN/README/配置模板同步；补测空文件/多行/CRLF/截断/空格路径/非法值与组合参数，修复空文件不建表头与 CRLF/tab 归一化；安装副本回归通过。
 - 2026-11-12 cc-haha：修复文档过时项（README/COMMANDS/DESIGN 日期、README 体检行、DESIGN CHECK.md 资产/完成定义/维护自检）与 `--doc` 措辞；项目文档模板去 skill 专属命令，CHECK 增加 C13 模板通用性；实测 13 项与模板扫描通过。
 - 2026-11-12 cc-haha：能力表/工作区规则/AGENTS/模板记录 PowerShell 优先 pwsh 7（绝对路径，不每次探测，5.1 兜底）；实测绝对路径调用返回 7.7.0。
-- 2026-11-12 cc-haha：新增 `assets/CHECK.md` 固定检查清单（C01–C12）；`--check`/`--fix` 按清单输出 `[OK]/[WARN]/[SKIP]`；`--save` 一行摘要、`--syncall` 实际同步汇总；PROMPT 45→26、CONTEXT 80→77（记录 10→7）；实测清单 12 项、save 一行、syncall 2 份汇总。
+
 <!-- multi-agent-task-handoff: scope=handoff -->

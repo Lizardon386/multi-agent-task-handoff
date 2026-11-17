@@ -21,7 +21,7 @@
 | C02 | 文档布局与 scope | 根 README、`docs/`、`handoff/`、`plan/` 标记与目录一致；无 `.github/README.md`、`docs/README.md` | 只报告：跑 `--doc` |
 | C03 | 链接 | 文档表与章节链接可达；迁移链接无断 | 只报告 |
 | C04 | config / workspace | `--printpath` 配置存在、workspace 来源明确 | 可修：缺失时从模板创建/补键 |
-| C05 | 能力表 | 存在、日期、当前宿主待测格 | 只报告：跑 `--probe` |
+| C05 | 能力表 | 存在、日期、当前宿主待测格；按 `assets/AGENT_CAPABILITIES.md.tpl` 填表规则（单事实单主表、P ID + 日期、无运行时排障） | 只报告：跑 `--probe` |
 | C06 | sync-paths | 注册表存在、条数可读 | 只报告：跑 `install.sh` |
 | C07 | PROMPT 忽略/跟踪 | `git check-ignore` 命中；`git ls-files` 为空 | 可修：补 `.gitignore` / `git rm --cached` |
 | C08 | 项目内 memory | 项目内 memory 已 gitignore | 只报告 |
