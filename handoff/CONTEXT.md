@@ -42,6 +42,7 @@
 
 1. Ubuntu/Linux 双平台往返（Windows 已通过）：`--doc` → `--resume` → `--suspend`，再跑 `--check`、`--fix`、`--probe`（含 L109 观察记录）、`--post`；覆盖非 git 项目、空格路径、XDG / `%APPDATA%` 变体。
 2. 跨宿主验证 selftest 与门禁：Qoder / ZCode / OpenCode / WorkBuddy 跑 `--save`（含 FAIL 阻断）与 `--syncall`。
+3. cc-haha 计划落点 L110：在临时项目触发计划模式，确认落 `<临时项目>/plan/` 并清理；主目录新会话已实测落 `plan/`（2026-11-17）。
 
 ## MEMORY 提炼
 
