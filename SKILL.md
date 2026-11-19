@@ -108,7 +108,7 @@ argument-hint: "[--workspace <PATH>] [--nosave] [--gear <key>[=<值>] | --gear l
 
 ## --check / --fix
 
-- `--check`：按 `assets/CHECK.md` 固定清单逐项执行（C01–C14），逐项输出 `[OK]/[WARN]/[SKIP]`；只读，不改文件；非源仓库跳过 C11；`--save` 是脚本层命令，不进命令表。`--fix`：先跑同一清单，只修 C01/C04/C07/C10 标记「可修」的项；文档布局、分类、标记、链接、文档表只报告「需跑 `--doc`」；默认不提交；无 `handoff/` 且无旧文档 → 提示 `--doc`。
+- `--check`：按 `assets/CHECK.md` 固定清单逐项执行（C01–C15），逐项输出 `[OK]/[WARN]/[SKIP]`；只读，不改文件；非源仓库跳过 C11；`--save` 是脚本层命令，不进命令表。`--fix`：先跑同一清单，只修 C01/C04/C07/C10 标记「可修」的项；文档布局、分类、标记、链接、文档表只报告「需跑 `--doc`」；默认不提交；无 `handoff/` 且无旧文档 → 提示 `--doc`。
 
 ## --probe [--static | --live]
 

@@ -26,7 +26,7 @@
 | `--post <message> [--new \| --next <ID \| 会话名>]` | 热交接：把消息投给另一个会话 | `[defaults].post`，默认 `new` |
 | `--doc [--guard \| --init] [--target DIR]` | 文档整理：布局、标记、迁移；guard 维护/删失效行，init 只新增 | `[defaults].doc`，默认 `guard` |
 | `--observe <L2\|L3> <事件>` | 记录一条 skill 使用观察（脚本层） | `[defaults].observe`，默认 `on` |
-| `--check` | 按 `assets/CHECK.md` C01–C14 只读体检 | — |
+| `--check` | 按 `assets/CHECK.md` C01–C15 只读体检 | — |
 | `--fix` | 同一清单 + 修可修项 | — |
 | `--probe [--static \| --live]` | 摸底宿主能力并更新能力表 | `[defaults].probe`，默认 `static` |
 | `--printpath [--host NAME \| --target DIR]` | 只读路径诊断 | — |
@@ -144,7 +144,7 @@
 ## --save [--all] [-m MSG] [--retries N] [--delay S]
 > 只说明提交前自测、同步与推送顺序。
 
-- 行为：有改动时先跑 `scripts/selftest.sh`；FAIL 不暂存、不提交。通过后提交、同步副本、推送（网络错误重试 3 次 / 3 秒）。
+- 行为：有改动时先扫描 `handoff/*.md` 密钥，再跑 `scripts/selftest.sh`；任一 FAIL 不暂存、不提交。通过后提交、同步副本、推送（网络错误重试 3 次 / 3 秒）。
 - 边界：同步失败不推送，提交留在本地；默认只提交已跟踪修改，`--all` 含新文件；`--syncall` 在第一次遇到落后副本时跑同一自测，`--dryrun` 不跑。
 - 常见错误：selftest FAIL（先修）、`sync-paths` 缺失、无上游分支。
 

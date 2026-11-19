@@ -180,6 +180,39 @@ repair_doc_tables() {
   done
 }
 
+# 密钥扫描：只扫 handoff/*.md；命中只报文件:行:类型，不打印内容。
+# 返回 0 干净 / 1 命中。
+check_secrets() {
+  scan_dir=$1
+  found=0
+  for f in "$scan_dir"/handoff/*.md; do
+    [ -f "$f" ] || continue
+    rel=${f#"$scan_dir"/}
+    hits=$(grep -nE 'sk-[A-Za-z0-9_-]{20,}|ghp_[A-Za-z0-9]{36}|github_pat_[A-Za-z0-9_]{20,}|AKIA[0-9A-Z]{16}|-----BEGIN [A-Z ]*PRIVATE KEY-----|(password|passwd|secret|token|api[_-]?key|access[_-]?key)[[:space:]]*[:=][[:space:]]*["'\'']?[^[:space:]"'\'']{8,}' "$f" 2>/dev/null || true)
+    [ -n "$hits" ] || continue
+    while IFS= read -r hit; do
+      [ -n "$hit" ] || continue
+      case "$hit" in
+        *'${'*|*'<'*'>'*|*YOUR_*|*xxx*|*example*|*dummy*|*changeme*|*REDACTED*|*'***'*|*'commit:'*|*'file:'*) continue ;;
+      esac
+      ln=${hit%%:*}
+      kind=credential
+      case "$hit" in
+        *sk-*) kind=api_key ;;
+        *ghp_*) kind=github_token ;;
+        *github_pat_*) kind=github_pat ;;
+        *AKIA*) kind=aws_key ;;
+        *'PRIVATE KEY'*) kind=private_key ;;
+      esac
+      printf 'FAIL  %s:%s secret:%s\n' "$rel" "$ln" "$kind"
+      found=1
+    done <<EOF
+$hits
+EOF
+  done
+  return "$found"
+}
+
 if [ "$mode" = doc ]; then
   config_dir=$(agent_config_dir)
   cfg_file=$config_dir/config.toml
@@ -408,6 +441,7 @@ if [ "$mode" = save ]; then
     echo "无改动，跳过"
     exit 0
   fi
+  check_secrets "$repo" || die "密钥扫描未通过，未暂存、未提交"
   sh "$script_dir/selftest.sh" || die "自测失败，未暂存、未提交"
   if [ "$all" = 1 ]; then
     git -C "$repo" add -A || die "git add -A 失败"
@@ -444,6 +478,7 @@ if [ "$mode" = push ]; then
   fi
   git -C "$push_dir" rev-parse --abbrev-ref --symbolic-full-name '@{u}' >/dev/null 2>&1 \
     || die "当前分支没有上游；先 git push -u origin <branch>"
+  check_secrets "$push_dir" || die "密钥扫描未通过，未推送"
   printf '推送目标: %s\n' "$push_dir"
   case "$(uname -s 2>/dev/null)" in
     MINGW*|MSYS*|CYGWIN*) tls_fallback=1 ;;

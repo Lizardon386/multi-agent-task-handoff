@@ -54,10 +54,10 @@ n=$(awk '/^## 下一步/{f=1;next}/^## /{f=0}f&&/^[0-9]+\. /{n++}END{print n+0}'
 if [ "$n" -le 3 ]; then ok "下一步: $n"; else bad "下一步: $n > 3"; fi
 
 # 4. 引用一致性
-if grep -q 'C01.*C14' SKILL.md && grep -q 'C14' assets/CHECK.md; then
-  ok "引用: C01–C14 在 CHECK"
+if grep -q 'C01.*C15' SKILL.md && grep -q 'C15' assets/CHECK.md; then
+  ok "引用: C01–C15 在 CHECK"
 else
-  bad "引用: SKILL 的 C14 与 CHECK 不一致"
+  bad "引用: SKILL 的 C15 与 CHECK 不一致"
 fi
 if grep -q 'S08' SKILL.md && grep -q 'S08' assets/PROBE.md && grep -q 'L110' SKILL.md && grep -q 'L110' assets/PROBE.md; then
   ok "引用: S08 / L110 在 PROBE"
@@ -160,7 +160,7 @@ if command -v tar >/dev/null 2>&1; then
   if (cd "$repo" && tar -cf - --exclude=.git --exclude=.skill-version --exclude=.skill-sync-paths .) | (cd "$tmp/src" && tar -xf -) 2>/dev/null; then
     if AGENT_CONFIG="$tmp/icfg" sh "$tmp/src/install.sh" --target "$tmp/skills/multi-agent-task-handoff" --noregister >/dev/null 2>&1; then
       dst=$tmp/skills/multi-agent-task-handoff
-      if [ -f "$dst/scripts/selftest.sh" ] && grep -q 'C14' "$dst/assets/CHECK.md" && grep -q 'L110' "$dst/assets/PROBE.md"; then
+      if [ -f "$dst/scripts/selftest.sh" ] && grep -q 'C15' "$dst/assets/CHECK.md" && grep -q 'L110' "$dst/assets/PROBE.md"; then
         ok "副本: 文件与清单同步"
       else
         bad "副本: 文件或清单不同步"
@@ -191,6 +191,54 @@ if [ -n "$real_obs_before" ]; then
   fi
 else
   sk "观察文件: 真实文件不存在，跳过"
+fi
+
+# 11. 密钥门禁（临时 git 仓 + 本地 bare remote）
+if command -v git >/dev/null 2>&1 && command -v tar >/dev/null 2>&1; then
+  sec=$tmp/sec
+  mkdir -p "$sec"
+  if (cd "$repo" && tar -cf - --exclude=.git --exclude=.skill-version --exclude=.skill-sync-paths .) | (cd "$sec" && tar -xf -) 2>/dev/null \
+    && ( cd "$sec" && git init -q -b main && git config user.email test@example.com && git config user.name test && git add -A && git commit -qm init ) >/dev/null 2>&1; then
+    git init -q --bare "$tmp/sec-remote.git"
+    ( cd "$sec" && git remote add origin "$tmp/sec-remote.git" && git push -qu origin main ) >/dev/null 2>&1
+    before=$(git -C "$sec" rev-list --count HEAD 2>/dev/null || echo 0)
+    printf '\n- api_key = "sk-abcdefghijklmnopqrstuvwx"\n- password = "supersecret123"\n' >> "$sec/handoff/CONTEXT.md"
+    sec_out=$( cd "$sec" && sh scripts/handoff.sh --save 2>&1 ); sec_rc=$?
+    if [ "$sec_rc" -eq 0 ]; then
+      bad "密钥门禁: --save 未阻断"
+    else
+      after=$(git -C "$sec" rev-list --count HEAD 2>/dev/null || echo 0)
+      if [ "$before" = "$after" ]; then ok "密钥门禁: --save 阻断且未提交"; else bad "密钥门禁: --save 阻断但发生提交"; fi
+      if printf '%s' "$sec_out" | grep -q 'secret:api_key' \
+        && printf '%s' "$sec_out" | grep -q 'secret:credential' \
+        && ! printf '%s' "$sec_out" | grep -q 'sk-abcdefghijklmnopqrstuvwx' \
+        && ! printf '%s' "$sec_out" | grep -q 'supersecret123'; then
+        ok "密钥门禁: 只报类型不泄露内容"
+      else
+        bad "密钥门禁: 输出包含内容或缺少类型"
+      fi
+    fi
+    rbefore=$(git -C "$tmp/sec-remote.git" rev-list --count HEAD 2>/dev/null || echo 0)
+    if ( cd "$sec" && sh scripts/handoff.sh --push >/dev/null 2>&1 ); then
+      bad "密钥门禁: --push 未阻断"
+    else
+      rafter=$(git -C "$tmp/sec-remote.git" rev-list --count HEAD 2>/dev/null || echo 0)
+      if [ "$rbefore" = "$rafter" ]; then ok "密钥门禁: --push 阻断且远端未变"; else bad "密钥门禁: --push 阻断但远端变化"; fi
+    fi
+    nl=$(awk 'END{print NR+0}' "$sec/handoff/CONTEXT.md")
+    awk -v n="$nl" 'NR <= n - 2' "$sec/handoff/CONTEXT.md" > "$sec/handoff/CONTEXT.md.tmp" \
+      && mv "$sec/handoff/CONTEXT.md.tmp" "$sec/handoff/CONTEXT.md"
+    printf '\n- token: <TOKEN>\n' >> "$sec/handoff/CONTEXT.md"
+    if ( cd "$sec" && sh scripts/handoff.sh --push >/dev/null 2>&1 ); then
+      ok "密钥门禁: 占位符不误报"
+    else
+      bad "密钥门禁: 占位符被误报"
+    fi
+  else
+    bad "密钥门禁: 临时仓初始化失败"
+  fi
+else
+  sk "密钥门禁: 无 git/tar，跳过"
 fi
 
 # 汇总
