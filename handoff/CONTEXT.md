@@ -75,7 +75,7 @@
 ## 交接记录（只记关键动作，≤10 条）
 > 超出先压卡到 `COMPACT_BACKUP.md`；不写日常细节。
 
-- 2026-11-19 cc-haha：实现密钥扫描门禁：`--save`（add 前）/ `--push`（推送前）扫 `handoff/*.md`，命中只报文件:行:类型、不打印内容；CHECK 增 C15；selftest 增阻断/不泄露/占位符不误报 fixture（45 PASS）。
+- 2026-11-19 cc-haha：实现密钥扫描门禁：`--save`（add 前）/ `--push`（推送前）扫 `handoff/*.md`，命中只报文件:行:类型、不打印内容；CHECK 增 C15；selftest 增阻断/不泄露/占位符不误报 + 模式矩阵 fixture（52 PASS）。
 - 2026-11-17 cc-haha：能力表填表规则接入 `--probe` §5 / CHECK C05 / SKILL `--probe` 完成定义；均指向 `assets/AGENT_CAPABILITIES.md.tpl` 的归属/写法/时效/行规则。
 - 2026-11-16 cc-haha：`plan/` 默认不提交；5 个 git 项目 `.gitignore` 加 `plan/`；PROJECT_RULES / 模板 / CHECK C14 / selftest 增加「plan/ 已忽略」检查。
 - 2026-11-13 cc-haha：plan/ 计划产出落地（SKILL 压回 150 行、C14/S08/L110/K05）；新增 `scripts/selftest.sh` 机械回归（40 PASS）并接入 `--save` / `--syncall` 门禁；`--save` 同步失败不再推送；阻断路径（save 无提交、syncall 无副本）实测通过。

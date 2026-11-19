@@ -234,6 +234,31 @@ if command -v git >/dev/null 2>&1 && command -v tar >/dev/null 2>&1; then
     else
       bad "密钥门禁: 占位符被误报"
     fi
+    sec_reg_fail() {
+      printf '%s\n' "$2" > "$sec/handoff/zz-sec-$1.md"
+      if ( cd "$sec" && sh scripts/handoff.sh --push >/dev/null 2>&1 ); then
+        bad "密钥模式: $1 未阻断"
+      else
+        ok "密钥模式: $1 阻断"
+      fi
+      rm -f "$sec/handoff/zz-sec-$1.md"
+    }
+    sec_reg_pass() {
+      printf '%s\n' "$2" > "$sec/handoff/zz-sec-$1.md"
+      if ( cd "$sec" && sh scripts/handoff.sh --push >/dev/null 2>&1 ); then
+        ok "密钥抑制: $1 放行"
+      else
+        bad "密钥抑制: $1 误报"
+      fi
+      rm -f "$sec/handoff/zz-sec-$1.md"
+    }
+    sec_reg_fail ghp 'token: ghp_abcdefghijklmnopqrstuvwxyz0123456789'
+    sec_reg_fail akia 'aws = AKIAIOSFODNN7EXAMPLE'
+    sec_reg_fail privkey '-----BEGIN RSA PRIVATE KEY-----'
+    sec_reg_fail access 'access_key = "abcdefgh12345678"'
+    sec_reg_pass templ 'token: ${TOKEN}'
+    sec_reg_pass redacted 'token: REDACTED_VALUE'
+    sec_reg_pass commitref 'token: commit:abc123def456'
   else
     bad "密钥门禁: 临时仓初始化失败"
   fi
