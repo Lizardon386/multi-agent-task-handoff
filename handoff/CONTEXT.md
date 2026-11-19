@@ -28,6 +28,7 @@
 > 只写当前状态与在飞文件；已完成项压缩为结果，逐版本流水搬入 `COMPACT_BACKUP.md`；推送状态以 `git status -sb` 为准。
 
 - 已完成：
+  - 2026-11-19：密钥扫描门禁（`--save` add 前 / `--push` 推送前）+ CHECK C15；selftest 覆盖模式矩阵与不泄露断言（52 PASS）；提交 `07879ac` / `28a6010`。
   - 2026-11-16：`plan/` 默认不提交；5 个 git 项目 `.gitignore` 加 `plan/`（本仓库已提交，其他项目本地配置）；PROJECT_RULES / 模板 / CHECK C14 / selftest 同步。
   - 2026-11-13：plan/ 计划产出落地（SKILL 压回 150 行、C14/S08/L110/K05）；新增 `scripts/selftest.sh` 机械回归（40 PASS）并接入 `--save` / `--syncall` 门禁；`--save` 同步失败不再推送；阻断路径实测通过。
   - 2026-11-13：在 3178 / uno-online / uno-webgame / color-duel / dsp-hal-eval 上执行 `--doc` / `--suspend` 验证；uno-online 完成 V4 迁移并与平台项目双向解耦后推送 `a95095f`；uno-webgame 删除过时 AGENTS.md 并按最新模板重排；3178 侧引用已清理；协议代码未改。
