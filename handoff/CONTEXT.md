@@ -37,7 +37,8 @@
   - 2026-11-11 ZCode：`--probe --live` S+L1/L2 全项（L101 PONG 逐字、L102 建会话、L105/L106、L108、L201 5/5、L202 一致、K03 fork 独立）；L103/L104 记 ⛔；能力表更新至 ZCode 3.18.0、ZCode 必测格无「待测」；临时项目已删，2 个测试会话归档残留。
 - 进行中：无。
 - 在飞文件（勿动）：无。
-- 维护侧优化（跨 agent 可见摘要）：已落地 selftest（52 项）/ CHECK C01–C15 / `plan/` 落点 / `--observe` / 密钥门禁；剩余 `[否决]`、`[暂缓]`、引用 ID、frontmatter、未脚本化 C 项仍在观察，未触发实施。本机细节见 `plan/golden-squishing-map.md`（不入库）。
+- 维护侧优化（跨 agent 可见摘要）：已落地 selftest（52 项）/ CHECK C01–C15 / `plan/` 落点 / `--observe` / 密钥门禁；剩余 `[否决]`、`[暂缓]`、引用 ID、frontmatter 使用率为 0，不实施。
+- 优化落地规则：C 项脚本化按证据触发——同类问题再现 ≥2 次或造成返工才下沉，当前候选 C08/C09（2026-11-24 取证命中 2/1 次）；用户明确要求时除外。本机细节见 `plan/golden-squishing-map.md`（不入库）。
 
 ## 下一步
 > 只写可执行的 1–3 条；不写愿望或背景。
@@ -62,6 +63,7 @@
 - 观察记录：协议命令出现 L2/L3 异常且 `[defaults].observe` 未关闭时，跑 `scripts/handoff.sh --observe <L2|L3> "<事件>"`；只记 skill 自身缺陷，不记环境故障/宿主限制/用户操作错误；开关默认 on。
 - 密钥：`--save` / `--push` 扫描 `handoff/*.md`，命中即阻断且只报类型与位置；写卡时用 `<TOKEN>`、`${VAR}` 等占位符，不贴真实凭据。
 - 优先级：Windows 体验维护优先；Ubuntu/Linux 双平台往返降为低优先级 backlog，Windows 稳定后再做。
+- 优化项按证据落地：同类问题 ≥2 次或造成返工才实施；检查项优先留 `CHECK.md`，不预先脚本化；用户明确要求时除外。
 
 ## 坑与约束
 > 只写会踩的坑与约束；协议级边界见 `SKILL.md` / `../docs/DESIGN.md`，本卡不重复；平时可追加，`--suspend` 时归并，≤10 类。
