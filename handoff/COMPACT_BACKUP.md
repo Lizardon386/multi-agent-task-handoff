@@ -1,7 +1,7 @@
 # multi-agent-task-handoff · 压卡备份
 
 > 状态历史、已完成归档与逐条变更，2026-10-28 从 CONTEXT.md 原样搬出；当前状态以 [CONTEXT.md](CONTEXT.md) 为准。
-> 最近更新：2026-11-12
+> 最近更新：2026-11-24
 > V3 起文档迁入 `handoff/`；本文件是历史归档，不复制当前状态。
 
 ## 状态历史
@@ -148,5 +148,7 @@
 - 2026-11-12 cc-haha：新增 `assets/CHECK.md` 固定检查清单（C01–C12）；`--check`/`--fix` 按清单输出 `[OK]/[WARN]/[SKIP]`；`--save` 一行摘要、`--syncall` 实际同步汇总；PROMPT 45→26、CONTEXT 80→77（记录 10→7）；实测清单 12 项、save 一行、syncall 2 份汇总。
 
 - 2026-11-12 cc-haha：能力表/工作区规则/AGENTS/模板记录 PowerShell 优先 pwsh 7（绝对路径，不每次探测，5.1 兜底）；实测绝对路径调用返回 7.7.0。
+
+- 2026-11-12 cc-haha：修复文档过时项（README/COMMANDS/DESIGN 日期、README 体检行、DESIGN CHECK.md 资产/完成定义/维护自检）与 `--doc` 措辞；项目文档模板去 skill 专属命令，CHECK 增加 C13 模板通用性；实测 13 项与模板扫描通过。
 
 <!-- multi-agent-task-handoff: scope=handoff -->

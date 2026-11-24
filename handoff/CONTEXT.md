@@ -1,7 +1,7 @@
 # multi-agent-task-handoff · 上下文与进展
 
 > 多 agent 任务交接：状态写在 `handoff/`，下一个 agent 读卡接手；本卡只记跨机有用的状态与坑。
-> 最近更新：2026-11-13
+> 最近更新：2026-11-24
 > 项目目录：`D:\agent_workspace\multi-agent-task-handoff`
 > 状态锚点：`git log -1 --oneline`；推 GitHub 前 `gh auth status`
 > 验证命令：`git status -sb`；`bash install.sh --dryrun`；`bash scripts/handoff.sh --printpath`；`bash scripts/handoff.sh --syncall --dryrun`
@@ -41,9 +41,9 @@
 ## 下一步
 > 只写可执行的 1–3 条；不写愿望或背景。
 
-1. Ubuntu/Linux 双平台往返（Windows 已通过）：`--doc` → `--resume` → `--suspend`，再跑 `--check`、`--fix`、`--probe`（含 L109 观察记录）、`--post`；覆盖非 git 项目、空格路径、XDG / `%APPDATA%` 变体。
-2. 跨宿主验证 selftest 与门禁：Qoder / ZCode / OpenCode / WorkBuddy 跑 `--save`（含 FAIL 阻断）与 `--syncall`。
-3. cc-haha 计划落点 L110：在临时项目触发计划模式，确认落 `<临时项目>/plan/` 并清理；主目录新会话已实测落 `plan/`（2026-11-17）。
+1. Windows 体验维护（当前 OpenCode/OpenChamber）：跑 `--check`，修 C01/C04/C07/C10 后用 `--fix` 复验；覆盖 `--save`/`--push`、`--syncall`、`install.sh --dryrun`、`scripts/运行时.bat`、`%APPDATA%`、空格路径、非 git 项目、CRLF。
+2. Windows 跨宿主：Qoder / ZCode / OpenCode / WorkBuddy 跑 selftest、密钥门禁与 `--save` FAIL 阻断；恢复或清理 ZCode 副本；cc-haha L110 计划落点。
+3. 低优先级 backlog：Ubuntu/Linux 双平台往返（原第 1 条，Windows 稳定后再做）；优化计划 `plan/golden-squishing-map.md` 剩余三项（`[否决]`/`[暂缓]`/引用 ID、frontmatter、未脚本化 C 项）仍在观察，未触发实施。
 
 ## MEMORY 提炼
 
@@ -60,6 +60,7 @@
 - 注册表迁移只在 `install.sh` 实际安装并登记时；只读/dryrun 不写；`--gear` 读取/写入需要 `config.toml`，`list` 不需要配置。
 - 观察记录：协议命令出现 L2/L3 异常且 `[defaults].observe` 未关闭时，跑 `scripts/handoff.sh --observe <L2|L3> "<事件>"`；只记 skill 自身缺陷，不记环境故障/宿主限制/用户操作错误；开关默认 on。
 - 密钥：`--save` / `--push` 扫描 `handoff/*.md`，命中即阻断且只报类型与位置；写卡时用 `<TOKEN>`、`${VAR}` 等占位符，不贴真实凭据。
+- 优先级：Windows 体验维护优先；Ubuntu/Linux 双平台往返降为低优先级 backlog，Windows 稳定后再做。
 
 ## 坑与约束
 > 只写会踩的坑与约束；协议级边界见 `SKILL.md` / `../docs/DESIGN.md`，本卡不重复；平时可追加，`--suspend` 时归并，≤10 类。
@@ -76,6 +77,7 @@
 ## 交接记录（只记关键动作，≤10 条）
 > 超出先压卡到 `COMPACT_BACKUP.md`；不写日常细节。
 
+- 2026-11-24 OpenCode：用户调整优先级——Windows 体验维护优先，Ubuntu/Linux 双平台往返降为低优先级；下一步重排为 Windows 回归 / 跨宿主 / ZCode 副本与 cc-haha L110；resume 验证 5/6 副本当前（ZCode 缺失）、doc guard OK；优化计划仍观察；未开工。
 - 2026-11-19 cc-haha：实现密钥扫描门禁：`--save`（add 前）/ `--push`（推送前）扫 `handoff/*.md`，命中只报文件:行:类型、不打印内容；CHECK 增 C15；selftest 增阻断/不泄露/占位符不误报 + 模式矩阵 fixture（52 PASS）。
 - 2026-11-17 cc-haha：能力表填表规则接入 `--probe` §5 / CHECK C05 / SKILL `--probe` 完成定义；均指向 `assets/AGENT_CAPABILITIES.md.tpl` 的归属/写法/时效/行规则。
 - 2026-11-16 cc-haha：`plan/` 默认不提交；5 个 git 项目 `.gitignore` 加 `plan/`；PROJECT_RULES / 模板 / CHECK C14 / selftest 增加「plan/ 已忽略」检查。
@@ -85,6 +87,4 @@
 - 2026-11-12 cc-haha：`--probe` 清单增 L109（临时 `AGENT_CONFIG` 验证 `--observe` 写入/开关/清理，不写能力表）；下一步删除已完成的「现有项目逐个迁移」条。
 - 2026-11-12 cc-haha：AGENTS 收敛为纯入口指针（16→9 行）、PROJECT_RULES 承接工作区根/产物/同主题分目录/$AGENT_CONFIG 路径；新增 `assets/AGENTS.md.tpl`，CHECK C10 改为按模板播种；模板扫描无本机/宿主专属。
 - 2026-11-12 cc-haha：新增 `--observe` 自动观察记录（`[defaults].observe` 默认 on，`--gear observe=off` 关闭）；写 `$AGENT_CONFIG/OBSERVATIONS.md`；SKILL/HELP/COMMANDS/DESIGN/README/配置模板同步；补测空文件/多行/CRLF/截断/空格路径/非法值与组合参数，修复空文件不建表头与 CRLF/tab 归一化；安装副本回归通过。
-- 2026-11-12 cc-haha：修复文档过时项（README/COMMANDS/DESIGN 日期、README 体检行、DESIGN CHECK.md 资产/完成定义/维护自检）与 `--doc` 措辞；项目文档模板去 skill 专属命令，CHECK 增加 C13 模板通用性；实测 13 项与模板扫描通过。
-
 <!-- multi-agent-task-handoff: scope=handoff -->
