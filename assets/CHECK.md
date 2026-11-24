@@ -2,7 +2,7 @@
 
 > 用途：固定 `--check` / `--fix` 的逐项检查，避免自由裁量和漏检；输出即动作记录，不额外写日志。
 > 执行：`--check` 只读，逐项输出 `[OK]` / `[WARN]` / `[SKIP]`；`--fix` 只修标记「可修」的项，其余只报告；默认不提交。
-> 最近更新：2026-11-12
+> 最近更新：2026-11-24
 
 ## 输出格式
 
@@ -28,8 +28,8 @@
 | C09 | CONTEXT 限额 | ≤100 行、记录 ≤10、坑 ≤10 | 只报告：`--suspend` 压卡 |
 | C10 | 工作区文档 | `AGENTS.md` / `PROJECT_RULES.md` 存在；AGENTS 只做入口指针并指向 PROJECT_RULES；PROJECT_RULES 指向 `$AGENT_CONFIG` 与 `handoff/` | 可修：确认后从 `assets/AGENTS.md.tpl` / `assets/PROJECT_RULES.md.tpl` 播种 |
 | C11 | 源仓库一致性 | SKILL / HELP / COMMANDS / 模板 / examples 的命令、签名、路径一致 | 只报告（非源仓库 SKIP） |
-| C12 | probe 完成度 | 当前宿主能力表必测格无「待测」；缺失/策略阻止有 ⛔/🟡 + 证据 | 只报告：跑 `--probe` |
-| C13 | 模板通用性 | README / DESIGN / COMMANDS / CONTEXT / PROMPT 模板不含本 skill 专属命令、脚本路径、宿主名；专属内容用 `<占位符>`；允许 `handoff/`、`docs/`、scope 标记与 `--suspend` | 只报告 |
+| C12 | probe 待测清零 | 当前宿主能力表必测格无「待测」；缺失/策略阻止记 ⛔/🟡 + 证据，🟡 带证据不记 WARN | 只报告：跑 `--probe` |
+| C13 | 模板通用性 | README / DESIGN / COMMANDS / CONTEXT / PROMPT 模板不含本 skill 专属命令、脚本路径、宿主名；专属内容用 `<占位符>`；允许 `handoff/`、`docs/`、scope 标记与 `--suspend`；非源仓库默认 SKIP，检查安装副本时写明对象 | 只报告 |
 | C14 | 计划落点与宿主库残留 | 能力表「计划产出」：当前宿主可配置的，配置键指向 `plan`；`plan/` 存在时无协议外命名（宿主随机名除外）；宿主默认计划库中可归属本项目的文件已迁入或列在报告；git 项目 `plan/` 应被 `.gitignore` 忽略 | 只报告：按能力表配置 / 跑 `--probe` / `--doc` 迁移 |
 | C15 | 密钥扫描 | `handoff/*.md` 无 `sk-` / `ghp_` / `github_pat_` / `AKIA` / 私钥块 / credential 赋值命中；占位符与引用不计 | 只报告：改占位符或移出文件；`--save` / `--push` 会阻断 |
 

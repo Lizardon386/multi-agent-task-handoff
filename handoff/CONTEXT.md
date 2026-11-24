@@ -80,6 +80,7 @@
 ## 交接记录（只记关键动作，≤10 条）
 > 超出先压卡到 `COMPACT_BACKUP.md`；不写日常细节。
 
+- 2026-11-24 cc-haha：`--check` C12 改名「probe 待测清零」并注明 🟡 带证据不记 WARN；C13 补「非源仓库默认 SKIP」；DESIGN/README/COMMANDS 的 C 项范围同步到 C01–C15。
 - 2026-11-24 cc-haha：ZCode 已卸载：从 `sync-paths` 移除副本登记（5 条），能力表保留 3.18.0 历史证据并注明重装后按 `--probe` 复验覆盖；下一步不再追旧副本。
 - 2026-11-24 OpenCode：用户调整优先级——Windows 体验维护优先，Ubuntu/Linux 双平台往返降为低优先级；下一步重排为 Windows 回归 / 跨宿主 / ZCode 副本与 cc-haha L110；resume 验证 5/6 副本当前（ZCode 缺失）、doc guard OK；优化计划仍观察；未开工。
 - 2026-11-19 cc-haha：实现密钥扫描门禁：`--save`（add 前）/ `--push`（推送前）扫 `handoff/*.md`，命中只报文件:行:类型、不打印内容；CHECK 增 C15；selftest 增阻断/不泄露/占位符不误报 + 模式矩阵 fixture（52 PASS）。
@@ -89,5 +90,4 @@
 - 2026-11-13 cc-haha：借鉴 agents-md：PROJECT_RULES/模板增「同一问题两次纠正即停」；OBSERVATIONS 表头增「写具体、同类合并、问题消失删除」；脚本内置表头同步。
 - 2026-11-13 cc-haha：多项目执行 `--doc` / `--suspend`（3178 引用清理、uno-online 迁移与解耦并推送 `a95095f`、uno-webgame 标准迁移并删 AGENTS.md、color-duel / dsp-hal-eval 补标记）；发现跨项目链接随迁移失效并手工同步；协议代码未改。
 - 2026-11-12 cc-haha：`--probe` 清单增 L109（临时 `AGENT_CONFIG` 验证 `--observe` 写入/开关/清理，不写能力表）；下一步删除已完成的「现有项目逐个迁移」条。
-- 2026-11-12 cc-haha：AGENTS 收敛为纯入口指针（16→9 行）、PROJECT_RULES 承接工作区根/产物/同主题分目录/$AGENT_CONFIG 路径；新增 `assets/AGENTS.md.tpl`，CHECK C10 改为按模板播种；模板扫描无本机/宿主专属。
 <!-- multi-agent-task-handoff: scope=handoff -->
