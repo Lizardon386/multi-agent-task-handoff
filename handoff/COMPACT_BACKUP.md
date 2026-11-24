@@ -151,4 +151,6 @@
 
 - 2026-11-12 cc-haha：修复文档过时项（README/COMMANDS/DESIGN 日期、README 体检行、DESIGN CHECK.md 资产/完成定义/维护自检）与 `--doc` 措辞；项目文档模板去 skill 专属命令，CHECK 增加 C13 模板通用性；实测 13 项与模板扫描通过。
 
+- 2026-11-12 cc-haha：新增 `--observe` 自动观察记录（`[defaults].observe` 默认 on，`--gear observe=off` 关闭）；写 `$AGENT_CONFIG/OBSERVATIONS.md`；SKILL/HELP/COMMANDS/DESIGN/README/配置模板同步；补测空文件/多行/CRLF/截断/空格路径/非法值与组合参数，修复空文件不建表头与 CRLF/tab 归一化；安装副本回归通过。
+
 <!-- multi-agent-task-handoff: scope=handoff -->
