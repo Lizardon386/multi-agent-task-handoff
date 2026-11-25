@@ -374,6 +374,124 @@ else
   sk "handoff 门禁: 无安装副本或 git，跳过"
 fi
 
+# 13. 交接状态门禁的边界与回归（仅补测试，不改门禁逻辑）
+hskill=$tmp/skills/multi-agent-task-handoff/scripts/handoff.sh
+if [ -f "$hskill" ] && command -v git >/dev/null 2>&1; then
+  hxcfg=$tmp/hxcfg
+  mkdir -p "$hxcfg"
+  hx_setup() {
+    hx=$tmp/hx-$1
+    rm -rf "$hx"
+    mkdir -p "$hx/handoff"
+    ( cd "$hx" && git init -q -b main && git config user.email test@example.com && git config user.name test ) >/dev/null 2>&1
+    printf '# card\n\n## 现在在哪\n- ok\n' > "$hx/handoff/CONTEXT.md"
+    printf '# prompt\n' > "$hx/handoff/PROMPT.md"
+    printf 'r\n' > "$hx/README.md"
+  }
+  hx_run() { ( cd "$hx" && AGENT_CONFIG="$hxcfg" sh "$hskill" "$@" 2>&1 ); }
+
+  hx_setup rec11
+  { printf '# card\n\n## 交接记录\n'; i=1; while [ "$i" -le 11 ]; do printf '%s\n' "- 2026-01-01 r$i"; i=$((i+1)); done; } > "$hx/handoff/CONTEXT.md"
+  sleep 1
+  touch "$hx/handoff/PROMPT.md"
+  ( cd "$hx" && git add -A && git commit -qm rec11 ) >/dev/null 2>&1
+  out=$(hx_run --push --dryrun); rc=$?
+  if [ "$rc" -eq 0 ] && printf '%s' "$out" | grep -q 'context-records'; then ok "边界: 11 条记录 WARN"; else bad "边界: 11 条记录 rc=$rc $out"; fi
+
+  hx_nop=$tmp/hx-nop
+  rm -rf "$hx_nop"
+  mkdir -p "$hx_nop/handoff"
+  ( cd "$hx_nop" && git init -q -b main && git config user.email test@example.com && git config user.name test ) >/dev/null 2>&1
+  printf '# card\n' > "$hx_nop/handoff/CONTEXT.md"
+  printf 'r\n' > "$hx_nop/README.md"
+  ( cd "$hx_nop" && git add -A && git commit -qm init ) >/dev/null 2>&1
+  git init -q --bare "$tmp/hx-nop-remote.git"
+  ( cd "$hx_nop" && git remote add origin "$tmp/hx-nop-remote.git" && git push -qu origin main ) >/dev/null 2>&1
+  printf 'more\n' >> "$hx_nop/README.md"
+  ( cd "$hx_nop" && git add README.md && git commit -qm more ) >/dev/null 2>&1
+  hx=$hx_nop
+  out=$(hx_run --push); rc=$?
+  nop_after=$(git -C "$tmp/hx-nop-remote.git" rev-list --count refs/heads/main 2>/dev/null || echo 0)
+  if [ "$rc" -eq 0 ] && printf '%s' "$out" | grep -q 'prompt-missing' && [ "$nop_after" -eq 2 ]; then
+    ok "边界: PROMPT 缺失只 WARN 且 push 成功"
+  else
+    bad "边界: PROMPT 缺失 rc=$rc remote=$nop_after $out"
+  fi
+
+  if command -v tar >/dev/null 2>&1; then
+    hx_save=$tmp/hx-save
+    rm -rf "$hx_save"
+    mkdir -p "$hx_save"
+    if (cd "$repo" && tar -cf - --exclude=.git --exclude=.skill-version --exclude=.skill-sync-paths .) | (cd "$hx_save" && tar -xf -) 2>/dev/null \
+      && ( cd "$hx_save" && git init -q -b main && git config user.email test@example.com && git config user.name test && git add -A && git commit -qm init ) >/dev/null 2>&1; then
+      printf '\n- new\n' >> "$hx_save/handoff/CONTEXT.md"
+      before=$(git -C "$hx_save" rev-list --count HEAD 2>/dev/null || echo 0)
+      save_out=$( cd "$hx_save" && sh scripts/handoff.sh --save 2>&1 ); save_rc=$?
+      after=$(git -C "$hx_save" rev-list --count HEAD 2>/dev/null || echo 0)
+      if [ "$save_rc" -eq 1 ] \
+        && printf '%s' "$save_out" | grep -q 'prompt-stale' \
+        && printf '%s' "$save_out" | grep -q '交接状态未就绪，未暂存、未提交' \
+        && [ "$before" = "$after" ]; then
+        ok "边界: --save precommit 旧 PROMPT 阻断且未提交"
+      else
+        bad "边界: --save precommit rc=$save_rc before=$before after=$after $save_out"
+      fi
+    else
+      bad "边界: --save precommit 临时仓初始化失败"
+    fi
+  else
+    sk "边界: --save precommit 无 tar，跳过"
+  fi
+
+  hx_setup same
+  ( cd "$hx" && git add -A && git commit -qm all ) >/dev/null 2>&1
+  out=$(hx_run --push --dryrun); rc=$?
+  if [ "$rc" -eq 0 ] && ! printf '%s' "$out" | grep -q 'card-behind-repo'; then
+    ok "边界: 同提交代码+CONTEXT 不报 behind"
+  else
+    bad "边界: 同提交误报 behind rc=$rc $out"
+  fi
+
+  hx_setup tol
+  if ( cd "$hx" && GIT_AUTHOR_DATE='2026-01-01T00:00:00' GIT_COMMITTER_DATE='2026-01-01T00:00:00' git add -A && GIT_AUTHOR_DATE='2026-01-01T00:00:00' GIT_COMMITTER_DATE='2026-01-01T00:00:00' git commit -qm init ) >/dev/null 2>&1 \
+    && touch -d '2026-01-01 00:00:00' "$hx/handoff/CONTEXT.md" 2>/dev/null \
+    && touch -d '2026-01-01 00:00:01' "$hx/handoff/PROMPT.md" 2>/dev/null; then
+    mkdir -p "$hx/docs"
+    printf 'a\n' > "$hx/docs/a.md"
+    ( cd "$hx" && git add docs/a.md && GIT_AUTHOR_DATE='2026-01-01T00:00:30' GIT_COMMITTER_DATE='2026-01-01T00:00:30' git commit -qm a ) >/dev/null 2>&1
+    out=$(hx_run --push --dryrun); rc=$?
+    if [ "$rc" -eq 0 ] && ! printf '%s' "$out" | grep -q 'card-behind-repo'; then
+      ok "边界: 60s 容差内不报 behind"
+    else
+      bad "边界: 60s 容差内误报 rc=$rc $out"
+    fi
+    printf 'b\n' > "$hx/docs/b.md"
+    ( cd "$hx" && git add docs/b.md && GIT_AUTHOR_DATE='2026-01-01T00:02:00' GIT_COMMITTER_DATE='2026-01-01T00:02:00' git commit -qm b ) >/dev/null 2>&1
+    out=$(hx_run --push --dryrun); rc=$?
+    if [ "$rc" -eq 0 ] && printf '%s' "$out" | grep -q 'card-behind-repo'; then
+      ok "边界: 超过 60s 报 behind"
+    else
+      bad "边界: 超过 60s 未报 rc=$rc $out"
+    fi
+  else
+    sk "边界: 60s 容差需要 touch -d / 固定提交时间，跳过"
+  fi
+
+  hx_setup b100
+  { printf '# card\n\n## 交接记录\n'; i=1; while [ "$i" -le 10 ]; do printf '%s\n' "- 2026-01-01 r$i"; i=$((i+1)); done; printf '\n## 坑与约束\n'; i=1; while [ "$i" -le 10 ]; do printf '%s\n' "- p$i"; i=$((i+1)); done; i=1; while [ "$i" -le 75 ]; do printf 'line %s\n' "$i"; i=$((i+1)); done; } > "$hx/handoff/CONTEXT.md"
+  sleep 1
+  touch "$hx/handoff/PROMPT.md"
+  ( cd "$hx" && git add -A && git commit -qm b100 ) >/dev/null 2>&1
+  out=$(hx_run --push --dryrun); rc=$?
+  if [ "$rc" -eq 0 ] && ! printf '%s' "$out" | grep -qE 'context-lines|context-records|context-pits'; then
+    ok "边界: 100 行/10 记录/10 坑不报限额"
+  else
+    bad "边界: 100/10/10 误报 rc=$rc $out"
+  fi
+else
+  sk "边界: 无安装副本或 git，跳过"
+fi
+
 # 汇总
 if [ "$fail" -eq 0 ]; then
   printf 'result: PASS（PASS=%s FAIL=0 SKIP=%s）\n' "$pass" "$skip"
