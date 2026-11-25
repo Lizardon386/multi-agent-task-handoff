@@ -37,7 +37,7 @@
   - 2026-11-11 ZCode：`--probe --live` S+L1/L2 全项（L101 PONG 逐字、L102 建会话、L105/L106、L108、L201 5/5、L202 一致、K03 fork 独立）；L103/L104 记 ⛔；能力表更新至 ZCode 3.18.0、ZCode 必测格无「待测」；临时项目已删，2 个测试会话归档残留。
 - 进行中：无。
 - 在飞文件（勿动）：无。
-- 维护侧优化（跨 agent 可见摘要）：已落地 selftest（63 项）/ CHECK C01–C16 / `plan/` 落点 / `--observe` / 密钥门禁 / 卡片新鲜度门禁；剩余 `[否决]`、`[暂缓]`、引用 ID、frontmatter 使用率为 0，不实施。
+- 维护侧优化（跨 agent 可见摘要）：已落地 selftest（70 项）/ CHECK C01–C16 / `plan/` 落点 / `--observe` / 密钥门禁 / 卡片新鲜度门禁；剩余 `[否决]`、`[暂缓]`、引用 ID、frontmatter 使用率为 0，不实施。
 - 优化落地规则：C 项脚本化按证据触发——同类问题再现 ≥2 次或造成返工才下沉，当前候选 C08/C09（2026-11-24 取证命中 2/1 次）；用户明确要求时除外。本机细节见 `plan/golden-squishing-map.md`（不入库）。
 
 ## 下一步
@@ -80,7 +80,7 @@
 ## 交接记录（只记关键动作，≤10 条）
 > 超出先压卡到 `COMPACT_BACKUP.md`；不写日常细节。
 
-- 2026-11-25 cc-haha：交接状态门禁：新增 `check_handoff_state`（PROMPT 新鲜度/限额/未提交/仓库领先），`--save` 提交前与 `--push` 推送前阻断，`--push --dryrun` 供 `--resume` 只读检查；CHECK 增 C16；selftest 63 PASS；真实复验 3178 FAIL、dsp WARN、KM-office OK。
+- 2026-11-25 cc-haha：交接状态门禁：新增 `check_handoff_state`（PROMPT 新鲜度/限额/未提交/仓库领先），`--save` 提交前与 `--push` 推送前阻断，`--push --dryrun` 供 `--resume` 只读检查；CHECK 增 C16；selftest 70 PASS（含记录数/缺 PROMPT/save precommit/同提交/60s 容差/100 行边界）；真实复验 3178 FAIL、dsp WARN、KM-office OK。
 - 2026-11-24 cc-haha：`--check` C12 改名「probe 待测清零」并注明 🟡 带证据不记 WARN；C13 补「非源仓库默认 SKIP」；DESIGN/README/COMMANDS 的 C 项范围同步到 C01–C15。
 - 2026-11-24 cc-haha：ZCode 已卸载：从 `sync-paths` 移除副本登记（5 条），能力表保留 3.18.0 历史证据并注明重装后按 `--probe` 复验覆盖；下一步不再追旧副本。
 - 2026-11-24 OpenCode：用户调整优先级——Windows 体验维护优先，Ubuntu/Linux 双平台往返降为低优先级；下一步重排为 Windows 回归 / 跨宿主 / ZCode 副本与 cc-haha L110；resume 验证 5/6 副本当前（ZCode 缺失）、doc guard OK；优化计划仍观察；未开工。
