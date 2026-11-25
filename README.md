@@ -107,7 +107,7 @@ agent 会把 skill 安装到当前宿主的 `skills/multi-agent-task-handoff`，
 | 接手别人的任务 | `接手` / `--resume` | 读 PROMPT → CONTEXT，核锚点；必跑 `git status`，其余验证按需 |
 | 本轮收工 | `收工` / `--suspend` | 按需压卡、写 CONTEXT、覆盖 PROMPT、对齐安装副本（仅源仓库）；`--push` 在项目目录推送当前仓库（源仓库环境推源仓库），网络错误重试 3 次，Windows 再走 TLS 回退 |
 | 热交接给另一个会话 | `--post "<内容>" [--new \| --next <ID \| 会话名>]` | 只投消息，不写卡、不动 git；默认目标读 `[defaults].post` |
-| 体检/修复 | `--check` / `--fix` | 按 `assets/CHECK.md` 的 C01–C15 逐项检查（只读）；`--fix` 只修可修项，文档整理交给 `--doc` |
+| 体检/修复 | `--check` / `--fix` | 按 `assets/CHECK.md` 的 C01–C16 逐项检查（只读）；`--fix` 只修可修项，文档整理交给 `--doc` |
 | 摸底宿主能力 | `--probe` | 按 `assets/PROBE.md` 固定清单实测并更新能力表；`--live` 先出计划、确认一次，跑完 L1（通道）+ L2（真接盘），临时项目/会话测后清理 |
 | 路径诊断 | `--printpath` | 表格输出配置目录、工作区根、能力表（含日期）、源仓库、宿主识别来源、当前安装副本与全部副本的路径和 commit；`--host` / `--target` 可显式指定 |
 | 改默认挡位 | `--gear <key>=<值>` / `--gear list` | 写入 `config.toml` 的 `[defaults]`；用 `--gear list` 查看键与允许值，非法值不改文件 |

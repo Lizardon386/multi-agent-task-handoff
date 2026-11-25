@@ -54,10 +54,10 @@ n=$(awk '/^## 下一步/{f=1;next}/^## /{f=0}f&&/^[0-9]+\. /{n++}END{print n+0}'
 if [ "$n" -le 3 ]; then ok "下一步: $n"; else bad "下一步: $n > 3"; fi
 
 # 4. 引用一致性
-if grep -q 'C01.*C15' SKILL.md && grep -q 'C15' assets/CHECK.md; then
-  ok "引用: C01–C15 在 CHECK"
+if grep -q 'C01.*C16' SKILL.md && grep -q 'C16' assets/CHECK.md; then
+  ok "引用: C01–C16 在 CHECK"
 else
-  bad "引用: SKILL 的 C15 与 CHECK 不一致"
+  bad "引用: SKILL 的 C16 与 CHECK 不一致"
 fi
 if grep -q 'S08' SKILL.md && grep -q 'S08' assets/PROBE.md && grep -q 'L110' SKILL.md && grep -q 'L110' assets/PROBE.md; then
   ok "引用: S08 / L110 在 PROBE"
@@ -160,7 +160,7 @@ if command -v tar >/dev/null 2>&1; then
   if (cd "$repo" && tar -cf - --exclude=.git --exclude=.skill-version --exclude=.skill-sync-paths .) | (cd "$tmp/src" && tar -xf -) 2>/dev/null; then
     if AGENT_CONFIG="$tmp/icfg" sh "$tmp/src/install.sh" --target "$tmp/skills/multi-agent-task-handoff" --noregister >/dev/null 2>&1; then
       dst=$tmp/skills/multi-agent-task-handoff
-      if [ -f "$dst/scripts/selftest.sh" ] && grep -q 'C15' "$dst/assets/CHECK.md" && grep -q 'L110' "$dst/assets/PROBE.md"; then
+      if [ -f "$dst/scripts/selftest.sh" ] && grep -q 'C16' "$dst/assets/CHECK.md" && grep -q 'L110' "$dst/assets/PROBE.md"; then
         ok "副本: 文件与清单同步"
       else
         bad "副本: 文件或清单不同步"
@@ -203,6 +203,8 @@ if command -v git >/dev/null 2>&1 && command -v tar >/dev/null 2>&1; then
     ( cd "$sec" && git remote add origin "$tmp/sec-remote.git" && git push -qu origin main ) >/dev/null 2>&1
     before=$(git -C "$sec" rev-list --count HEAD 2>/dev/null || echo 0)
     printf '\n- api_key = "sk-abcdefghijklmnopqrstuvwx"\n- password = "supersecret123"\n' >> "$sec/handoff/CONTEXT.md"
+    sleep 1
+    touch "$sec/handoff/PROMPT.md"
     sec_out=$( cd "$sec" && sh scripts/handoff.sh --save 2>&1 ); sec_rc=$?
     if [ "$sec_rc" -eq 0 ]; then
       bad "密钥门禁: --save 未阻断"
@@ -218,6 +220,9 @@ if command -v git >/dev/null 2>&1 && command -v tar >/dev/null 2>&1; then
         bad "密钥门禁: 输出包含内容或缺少类型"
       fi
     fi
+    ( cd "$sec" && git add handoff/CONTEXT.md && git commit -qm secret ) >/dev/null 2>&1
+    sleep 1
+    touch "$sec/handoff/PROMPT.md"
     rbefore=$(git -C "$tmp/sec-remote.git" rev-list --count HEAD 2>/dev/null || echo 0)
     if ( cd "$sec" && sh scripts/handoff.sh --push >/dev/null 2>&1 ); then
       bad "密钥门禁: --push 未阻断"
@@ -229,14 +234,17 @@ if command -v git >/dev/null 2>&1 && command -v tar >/dev/null 2>&1; then
     awk -v n="$nl" 'NR <= n - 2' "$sec/handoff/CONTEXT.md" > "$sec/handoff/CONTEXT.md.tmp" \
       && mv "$sec/handoff/CONTEXT.md.tmp" "$sec/handoff/CONTEXT.md"
     printf '\n- token: <TOKEN>\n' >> "$sec/handoff/CONTEXT.md"
-    if ( cd "$sec" && sh scripts/handoff.sh --push >/dev/null 2>&1 ); then
+    ( cd "$sec" && git add handoff/CONTEXT.md && git commit -qm placeholder ) >/dev/null 2>&1
+    sleep 1
+    touch "$sec/handoff/PROMPT.md"
+    if ( cd "$sec" && sh scripts/handoff.sh --push --dryrun >/dev/null 2>&1 ); then
       ok "密钥门禁: 占位符不误报"
     else
       bad "密钥门禁: 占位符被误报"
     fi
     sec_reg_fail() {
       printf '%s\n' "$2" > "$sec/handoff/zz-sec-$1.md"
-      if ( cd "$sec" && sh scripts/handoff.sh --push >/dev/null 2>&1 ); then
+      if ( cd "$sec" && sh scripts/handoff.sh --push --dryrun >/dev/null 2>&1 ); then
         bad "密钥模式: $1 未阻断"
       else
         ok "密钥模式: $1 阻断"
@@ -245,7 +253,7 @@ if command -v git >/dev/null 2>&1 && command -v tar >/dev/null 2>&1; then
     }
     sec_reg_pass() {
       printf '%s\n' "$2" > "$sec/handoff/zz-sec-$1.md"
-      if ( cd "$sec" && sh scripts/handoff.sh --push >/dev/null 2>&1 ); then
+      if ( cd "$sec" && sh scripts/handoff.sh --push --dryrun >/dev/null 2>&1 ); then
         ok "密钥抑制: $1 放行"
       else
         bad "密钥抑制: $1 误报"
@@ -264,6 +272,106 @@ if command -v git >/dev/null 2>&1 && command -v tar >/dev/null 2>&1; then
   fi
 else
   sk "密钥门禁: 无 git/tar，跳过"
+fi
+
+# 12. 交接状态门禁（安装副本无 .git，push_dir=临时项目）
+installed_handoff=$tmp/skills/multi-agent-task-handoff/scripts/handoff.sh
+if [ -f "$installed_handoff" ] && command -v git >/dev/null 2>&1; then
+  hcfg=$tmp/hscfg
+  mkdir -p "$hcfg"
+  hs_setup() {
+    hp=$tmp/hs-$1
+    rm -rf "$hp"
+    mkdir -p "$hp/handoff"
+    ( cd "$hp" && git init -q -b main && git config user.email test@example.com && git config user.name test ) >/dev/null 2>&1
+    printf '# card\n\n## 现在在哪\n- ok\n' > "$hp/handoff/CONTEXT.md"
+    printf '# prompt\n' > "$hp/handoff/PROMPT.md"
+    ( cd "$hp" && git add -A && git commit -qm init ) >/dev/null 2>&1
+  }
+  hs_run() { ( cd "$hp" && AGENT_CONFIG="$hcfg" sh "$installed_handoff" "$@" 2>&1 ); }
+
+  hs_setup fresh
+  out=$(hs_run --push --dryrun); rc=$?
+  if [ "$rc" -eq 0 ] && printf '%s' "$out" | grep -q 'result: OK'; then ok "handoff: 干净卡片 OK"; else bad "handoff: 干净卡片 rc=$rc $out"; fi
+
+  hs_setup nohand
+  ( cd "$hp" && rm -rf handoff && git add -A && git commit -qm nohand ) >/dev/null 2>&1
+  out=$(hs_run --push --dryrun); rc=$?
+  if [ "$rc" -eq 0 ] && printf '%s' "$out" | grep -q 'result: OK' && ! printf '%s' "$out" | grep -q 'FAIL'; then ok "handoff: 无卡片不误报"; else bad "handoff: 无卡片误报 rc=$rc $out"; fi
+
+  hs_setup stale
+  sleep 1
+  printf '\n- new\n' >> "$hp/handoff/CONTEXT.md"
+  out=$(hs_run --push --dryrun); rc=$?
+  if [ "$rc" -eq 1 ] && printf '%s' "$out" | grep -q 'prompt-stale'; then ok "handoff: PROMPT 旧阻断"; else bad "handoff: PROMPT 旧未阻断 rc=$rc $out"; fi
+
+  hs_setup dirty
+  printf '\n- new\n' >> "$hp/handoff/CONTEXT.md"
+  sleep 1
+  touch "$hp/handoff/PROMPT.md"
+  out=$(hs_run --push --dryrun); rc=$?
+  if [ "$rc" -eq 1 ] && printf '%s' "$out" | grep -q 'context-dirty'; then ok "handoff: CONTEXT 未提交阻断"; else bad "handoff: CONTEXT 未提交未阻断 rc=$rc $out"; fi
+
+  hs_setup limit
+  { printf '# card\n\n## 坑与约束\n'; i=1; while [ "$i" -le 11 ]; do printf '%s\n' "- pit $i"; i=$((i+1)); done; i=1; while [ "$i" -le 87 ]; do printf 'line %s\n' "$i"; i=$((i+1)); done; } > "$hp/handoff/CONTEXT.md"
+  ( cd "$hp" && git add -A && git commit -qm limit ) >/dev/null 2>&1
+  touch "$hp/handoff/PROMPT.md"
+  out=$(hs_run --push --dryrun); rc=$?
+  if [ "$rc" -eq 0 ] && printf '%s' "$out" | grep -q 'context-lines' && printf '%s' "$out" | grep -q 'context-pits'; then ok "handoff: 限额 WARN"; else bad "handoff: 限额未报 rc=$rc $out"; fi
+
+  hs_setup behind
+  if touch -d '2026-01-01 00:00:00' "$hp/handoff/CONTEXT.md" 2>/dev/null \
+    && touch -d '2026-01-01 00:01:00' "$hp/handoff/PROMPT.md" 2>/dev/null \
+    && ( cd "$hp" && GIT_AUTHOR_DATE='2026-01-01T00:00:00' GIT_COMMITTER_DATE='2026-01-01T00:00:00' git commit -q --amend --no-edit ) >/dev/null 2>&1 \
+    && mkdir -p "$hp/docs" && printf 'd\n' > "$hp/docs/d.md" \
+    && ( cd "$hp" && git add docs/d.md && GIT_AUTHOR_DATE='2026-01-02T00:00:00' GIT_COMMITTER_DATE='2026-01-02T00:00:00' git commit -qm docs ) >/dev/null 2>&1; then
+    out=$(hs_run --push --dryrun); rc=$?
+    if [ "$rc" -eq 0 ] && printf '%s' "$out" | grep -q 'card-behind-repo'; then ok "handoff: 仓库领先卡片 WARN"; else bad "handoff: 仓库领先未报 rc=$rc $out"; fi
+  else
+    sk "handoff: behind 需要 touch -d，跳过"
+  fi
+
+  hs_setup ignored
+  printf 'handoff/\n' > "$hp/.gitignore"
+  ( cd "$hp" && git rm -rq --cached handoff && git add .gitignore && git commit -qm ignore ) >/dev/null 2>&1
+  printf '\n- new\n' >> "$hp/handoff/CONTEXT.md"
+  sleep 1
+  touch "$hp/handoff/PROMPT.md"
+  out=$(hs_run --push --dryrun); rc=$?
+  if [ "$rc" -eq 0 ] && ! printf '%s' "$out" | grep -q 'context-dirty'; then ok "handoff: ignore 跳过 dirty"; else bad "handoff: ignore 误报 rc=$rc $out"; fi
+
+  nongit=$tmp/hs-nongit
+  rm -rf "$nongit"
+  mkdir -p "$nongit/handoff"
+  printf '# card\n' > "$nongit/handoff/CONTEXT.md"
+  printf '# prompt\n' > "$nongit/handoff/PROMPT.md"
+  out=$( cd "$nongit" && AGENT_CONFIG="$hcfg" sh "$installed_handoff" --push --dryrun 2>&1 ); rc=$?
+  if [ "$rc" -eq 0 ] && printf '%s' "$out" | grep -q '非 git'; then ok "handoff: 非 git dryrun"; else bad "handoff: 非 git dryrun rc=$rc $out"; fi
+
+  hs_setup pushnoh
+  ( cd "$hp" && rm -rf handoff && git add -A && git commit -qm nohand ) >/dev/null 2>&1
+  git init -q --bare "$tmp/hs-remote-noh.git"
+  ( cd "$hp" && git remote add origin "$tmp/hs-remote-noh.git" && git push -qu origin main ) >/dev/null 2>&1
+  out=$(hs_run --push); rc=$?
+  if [ "$rc" -eq 0 ] && printf '%s' "$out" | grep -q '已推送'; then ok "handoff: 无卡片 push 不误伤"; else bad "handoff: 无卡片 push rc=$rc $out"; fi
+
+  hs_setup pushstale
+  git init -q --bare "$tmp/hs-remote-stale.git"
+  ( cd "$hp" && git remote add origin "$tmp/hs-remote-stale.git" && git push -qu origin main ) >/dev/null 2>&1
+  before=$(git -C "$tmp/hs-remote-stale.git" rev-list --count HEAD 2>/dev/null || echo 0)
+  sleep 1
+  printf '\n- new\n' >> "$hp/handoff/CONTEXT.md"
+  out=$(hs_run --push); rc=$?
+  after=$(git -C "$tmp/hs-remote-stale.git" rev-list --count HEAD 2>/dev/null || echo 0)
+  if [ "$rc" -eq 1 ] && [ "$before" = "$after" ]; then ok "handoff: 旧卡 push 阻断"; else bad "handoff: 旧卡 push rc=$rc before=$before after=$after"; fi
+
+  hs_setup pushok
+  git init -q --bare "$tmp/hs-remote-ok.git"
+  ( cd "$hp" && git remote add origin "$tmp/hs-remote-ok.git" && git push -qu origin main ) >/dev/null 2>&1
+  out=$(hs_run --push); rc=$?
+  if [ "$rc" -eq 0 ] && printf '%s' "$out" | grep -q '已推送'; then ok "handoff: 干净卡片 push"; else bad "handoff: 干净卡片 push rc=$rc $out"; fi
+else
+  sk "handoff 门禁: 无安装副本或 git，跳过"
 fi
 
 # 汇总

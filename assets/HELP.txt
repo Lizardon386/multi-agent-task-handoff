@@ -10,7 +10,8 @@ multi-agent-task-handoff — 多 agent 任务交接
                             压卡（按需）+ 收工 + 写 handoff/PROMPT.md
                               --local   只写卡与 PROMPT，不操作 git
                               --commit  提交协议管理文档（含 --doc 的移动/删除）
-                              --push    提交并推送（隐含 commit；网络错误重试 3 次，间隔 3 秒；
+                              --push    提交并推送（隐含 commit；推送前检查卡片新鲜度与密钥，
+                                        FAIL 不推送；网络错误重试 3 次，间隔 3 秒；
                                         Windows 再加 HTTP/1.1 + OpenSSL 回退 3 次）
                             默认挡位读 config.toml 的 [defaults].suspend
   --post <message> [--new | --next <ID | 会话名>]
@@ -67,6 +68,7 @@ multi-agent-task-handoff — 多 agent 任务交接
   --new / --next 只能跟 --post；两者不能同时用；message 必填
   --live 只能跟 --probe
   --printpath 是独立命令；--host 只能跟 --printpath；--target 可跟 --printpath / --doc
+  --dryrun 可跟 --syncall / --push；--push --dryrun 只检查卡片与密钥，不推送
   --observe 是独立命令；等级只支持 L2 / L3
   --gear 是独立命令；键与允许值由脚本映射决定，写入值非法时不修改
   --help 单独使用

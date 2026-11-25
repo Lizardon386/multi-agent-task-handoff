@@ -32,10 +32,11 @@
 | C13 | 模板通用性 | README / DESIGN / COMMANDS / CONTEXT / PROMPT 模板不含本 skill 专属命令、脚本路径、宿主名；专属内容用 `<占位符>`；允许 `handoff/`、`docs/`、scope 标记与 `--suspend`；非源仓库默认 SKIP，检查安装副本时写明对象 | 只报告 |
 | C14 | 计划落点与宿主库残留 | 能力表「计划产出」：当前宿主可配置的，配置键指向 `plan`；`plan/` 存在时无协议外命名（宿主随机名除外）；宿主默认计划库中可归属本项目的文件已迁入或列在报告；git 项目 `plan/` 应被 `.gitignore` 忽略 | 只报告：按能力表配置 / 跑 `--probe` / `--doc` 迁移 |
 | C15 | 密钥扫描 | `handoff/*.md` 无 `sk-` / `ghp_` / `github_pat_` / `AKIA` / 私钥块 / credential 赋值命中；占位符与引用不计 | 只报告：改占位符或移出文件；`--save` / `--push` 会阻断 |
+| C16 | 卡片新鲜度 | PROMPT 不早于 CONTEXT；PROMPT 缺失只 WARN；可用 `scripts/handoff.sh --push --dryrun` 只读检查 | 只报告：跑 `--suspend` 重建 PROMPT / 压卡 |
 
 ## 完成
 
-- 每项必须有 `[OK]` / `[WARN]` / `[SKIP]` 之一，不能省略（C01–C15）。
+- 每项必须有 `[OK]` / `[WARN]` / `[SKIP]` 之一，不能省略（C01–C16）。
 - `[WARN]` 写触发项与下一步命令；`[SKIP]` 写原因。
 - `--fix` 只执行 C01 / C04 / C07 / C10 的「可修」动作；其余只报告。
 - 非源仓库跳过 C11；文档整理项一律只报告「需跑 `--doc`」；内容过时走普通编辑，不归 `--doc`。

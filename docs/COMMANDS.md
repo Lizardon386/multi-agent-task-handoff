@@ -26,7 +26,7 @@
 | `--post <message> [--new \| --next <ID \| 会话名>]` | 热交接：把消息投给另一个会话 | `[defaults].post`，默认 `new` |
 | `--doc [--guard \| --init] [--target DIR]` | 文档整理：布局、标记、迁移；guard 维护/删失效行，init 只新增 | `[defaults].doc`，默认 `guard` |
 | `--observe <L2\|L3> <事件>` | 记录一条 skill 使用观察（脚本层） | `[defaults].observe`，默认 `on` |
-| `--check` | 按 `assets/CHECK.md` C01–C15 只读体检 | — |
+| `--check` | 按 `assets/CHECK.md` C01–C16 只读体检 | — |
 | `--fix` | 同一清单 + 修可修项 | — |
 | `--probe [--static \| --live]` | 摸底宿主能力并更新能力表 | `[defaults].probe`，默认 `static` |
 | `--printpath [--host NAME \| --target DIR]` | 只读路径诊断 | — |
@@ -38,7 +38,7 @@
 > 只说明接手的读取顺序、核对项与输出。
 
 - 语法：`--resume`，无参数；不写命令时默认也是它。
-- 行为：读 `handoff/PROMPT.md` → `handoff/CONTEXT.md` → 跨任务规则；核对 cwd 与项目目录、HEAD/工作树/副本锚点；验证分级：必跑 `git status -sb`；汇报状态、下一步、阻塞。
+- 行为：读 `handoff/PROMPT.md` → `handoff/CONTEXT.md` → 跨任务规则；核对 cwd 与项目目录、HEAD/工作树/副本锚点；验证分级：必跑 `git status -sb` 和 `scripts/handoff.sh --push --dryrun`（只读），FAIL/WARN 先报告；汇报状态、下一步、阻塞。
 - 按需标准：锚点不可核对（非命令式 / 无上次 HEAD / 与当前 HEAD 不符）或副本无法确认（非本次收工、行为异常、点名宿主、超 30 天 / 版本变化）→ `--printpath` + `--syncall --dryrun`；文档动过（`--doc` / 迁移 / 布局变更）→ `--doc --guard`；用户明确要求 → 对应命令；未跑项在汇报中注明。
 - 边界：只读；不写卡、不迁移文档、不动 git；冲突以 CONTEXT 为准。
 - 常见错误：cwd 与项目目录不一致、PROMPT 缺失或锚点过期、验证命令失败；先报告，不静默按过期状态开工。
@@ -52,7 +52,7 @@
   - `--local`：写 CONTEXT/PROMPT、按需压卡，不操作 git。
   - `--commit`：额外提交协议管理文档（`handoff/` 与带标记文档及其移动/删除）。
   - `--push`：隐含 commit，提交后推送；普通项目在项目目录运行安装副本的 `scripts/handoff.sh --push`（推当前目录仓库），源仓库环境推源仓库；网络错误重试 3 次 / 3 秒，Windows 再加 HTTP/1.1 + OpenSSL 回退 3 次。
-- 行为：必要时压卡；覆盖 `handoff/PROMPT.md`（瘦身指针卡，已决策 / 勿动 / 坑在 CONTEXT）；源仓库收工末尾跑 `scripts/handoff.sh --syncall` 对齐安装副本。
+- 行为：必要时压卡；覆盖 `handoff/PROMPT.md`（瘦身指针卡，已决策 / 勿动 / 坑在 CONTEXT）；`--commit` / `--push` 前先跑 `scripts/handoff.sh --push --dryrun`，FAIL 先补写 PROMPT/压卡再提交；源仓库收工末尾跑 `scripts/handoff.sh --syncall` 对齐安装副本。
 - 边界：默认不操作 git；不装钩子；安装副本跳过 syncall；未确认推送成功不写「已推送」。
 - 常见错误：CONTEXT 缺失、推送认证失败/非快进、从安装副本跑 `--syncall`；保留本地提交并报告。
 
@@ -89,7 +89,7 @@
 > 只说明固定清单与报告口径。
 
 - 语法：`--check`，无参数。
-- 行为：按 `assets/CHECK.md` 固定清单逐项执行（C01–C15），逐项输出 `[OK]/[WARN]/[SKIP]`；只读。
+- 行为：按 `assets/CHECK.md` 固定清单逐项执行（C01–C16），逐项输出 `[OK]/[WARN]/[SKIP]`；只读。
 - 边界：不改文件；缺 README/DESIGN 只提示 `--doc`；文档整理项只报告；非源仓库跳过 C11。
 - 常见错误：漏项（每项必须有状态）；把 `--check` 当迁移工具。
 
@@ -144,9 +144,18 @@
 ## --save [--all] [-m MSG] [--retries N] [--delay S]
 > 只说明提交前自测、同步与推送顺序。
 
-- 行为：有改动时先扫描 `handoff/*.md` 密钥，再跑 `scripts/selftest.sh`；任一 FAIL 不暂存、不提交。通过后提交、同步副本、推送（网络错误重试 3 次 / 3 秒）。
+- 行为：有改动时先检查卡片新鲜度（PROMPT 不早于 CONTEXT、限额），再扫描 `handoff/*.md` 密钥，再跑 `scripts/selftest.sh`；任一 FAIL 不暂存、不提交。通过后提交、同步副本、推送（网络错误重试 3 次 / 3 秒）。
 - 边界：同步失败不推送，提交留在本地；默认只提交已跟踪修改，`--all` 含新文件；`--syncall` 在第一次遇到落后副本时跑同一自测，`--dryrun` 不跑。
 - 常见错误：selftest FAIL（先修）、`sync-paths` 缺失、无上游分支。
+
+## --push [--dryrun] [--retries N] [--delay S]
+> 只说明推送前检查与 dryrun。
+
+- 语法：`--push [--dryrun] [--retries N] [--delay S]`；脚本层命令。
+- 行为：推送前检查 handoff 卡片新鲜度、限额与提交一致性，并扫描 `handoff/*.md` 密钥；任一 FAIL 不推送。
+- `--dryrun`：只检查、不推送，不要求上游；非 git 项目也可用（只检查卡片与密钥）。
+- 边界：上游缺失仍报错（dryrun 除外）；只重试网络错误；认证/非快进立即失败。
+- 常见错误：PROMPT 早于 CONTEXT、CONTEXT 未提交、卡片超限；先 `--suspend` 重建/压卡。
 
 ## --workspace <PATH> [--nosave]
 > 只说明工作区根来源与写回规则。

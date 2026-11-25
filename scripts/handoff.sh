@@ -33,8 +33,9 @@ usage() {
   --syncall [--dryrun]
                    按 $AGENT_CONFIG/sync-paths 逐份对齐到当前 HEAD，只补落后的
                    （必须从源仓库运行；--dryrun 只打印；注册表缺失时提示先跑 install.sh）
-  --push [--retries N] [--delay S]
-                   显式推送当前分支；源仓库推源仓库，安装副本环境推当前项目；
+  --push [--dryrun] [--retries N] [--delay S]
+                   显式推送当前分支；推送前检查卡片新鲜度与密钥，FAIL 不推送
+                   --dryrun 只检查、不推送；源仓库推源仓库，安装副本环境推当前项目；
                    网络错误重试 3 次 / 3 秒；Windows 再加 HTTP/1.1 + OpenSSL 回退 3 次
   --save [--all] [-m MSG] [--retries N] [--delay S]
                    提交已跟踪修改（--all 含新文件），同步副本，再推送（重试）
@@ -108,8 +109,8 @@ fi
 if [ "$mode" = doc ] && [ -n "$host_arg" ]; then
   usage_die "--host 只能跟 --printpath"
 fi
-if [ "$mode" != syncall ] && [ "$dry" = 1 ]; then
-  usage_die "--dryrun 只能跟 --syncall"
+if [ "$mode" != syncall ] && [ "$mode" != push ] && [ "$dry" = 1 ]; then
+  usage_die "--dryrun 只能跟 --syncall / --push"
 fi
 if [ "$mode" != push ] && [ "$mode" != save ] && { [ "$retries_set" = 1 ] || [ "$delay_set" = 1 ]; }; then
   usage_die "--retries / --delay 只能跟 --push / --save"
@@ -211,6 +212,73 @@ $hits
 EOF
   done
   return "$found"
+}
+
+file_mtime_epoch() {
+  stat -c %Y "$1" 2>/dev/null || stat -f %m "$1" 2>/dev/null || echo 0
+}
+
+# 交接状态检查：卡片新鲜度、限额与提交一致性。只读。
+# 用法：check_handoff_state <dir> <precommit|prepush>
+# 返回 0（无 FAIL）/ 1（有 FAIL）；WARN 不阻断。
+check_handoff_state() {
+  hs_dir=$1
+  hs_mode=${2:-prepush}
+  hs_fail=0
+  hs_warn=0
+  hs_ctx=$hs_dir/handoff/CONTEXT.md
+  [ -f "$hs_ctx" ] || return 0
+  hs_prompt=$hs_dir/handoff/PROMPT.md
+  if [ -f "$hs_prompt" ]; then
+    if [ "$hs_prompt" -ot "$hs_ctx" ]; then
+      printf 'FAIL  handoff: prompt-stale  handoff/PROMPT.md 早于 CONTEXT.md；先运行 --suspend 重新生成\n'
+      hs_fail=$((hs_fail + 1))
+    fi
+  else
+    printf 'WARN  handoff: prompt-missing  handoff/PROMPT.md 不存在；接手后先 --suspend 生成\n'
+    hs_warn=$((hs_warn + 1))
+  fi
+  hs_lines=$(awk 'END{print NR+0}' "$hs_ctx")
+  if [ "$hs_lines" -gt 100 ]; then
+    printf 'WARN  handoff: context-lines  CONTEXT %s 行 > 100；建议 --suspend 压卡\n' "$hs_lines"
+    hs_warn=$((hs_warn + 1))
+  fi
+  hs_records=$(awk '/^## .*交接记录/{f=1;next}/^## /{f=0}f&&/^- /{n++}END{print n+0}' "$hs_ctx")
+  if [ "$hs_records" -gt 10 ]; then
+    printf 'WARN  handoff: context-records  交接记录 %s 条 > 10；建议 --suspend 压卡\n' "$hs_records"
+    hs_warn=$((hs_warn + 1))
+  fi
+  hs_pits=$(awk '/^## .*(坑|约束)/{f=1;next}/^## /{f=0}f&&/^- /{n++}END{print n+0}' "$hs_ctx")
+  if [ "$hs_pits" -gt 10 ]; then
+    printf 'WARN  handoff: context-pits  坑/约束 %s 类 > 10；建议 --suspend 归并\n' "$hs_pits"
+    hs_warn=$((hs_warn + 1))
+  fi
+  if git -C "$hs_dir" rev-parse --git-dir >/dev/null 2>&1; then
+    if [ "$hs_mode" = prepush ] && ! git -C "$hs_dir" check-ignore -q handoff/CONTEXT.md; then
+      if [ -n "$(git -C "$hs_dir" status --porcelain -- handoff/CONTEXT.md 2>/dev/null)" ]; then
+        printf 'FAIL  handoff: context-dirty  handoff/CONTEXT.md 有未提交改动；先提交交接文档\n'
+        hs_fail=$((hs_fail + 1))
+      fi
+    fi
+    hs_mark=$(file_mtime_epoch "$hs_ctx")
+    hs_ctx_commit=$(git -C "$hs_dir" log -1 --format=%ct -- handoff/CONTEXT.md 2>/dev/null || true)
+    case "$hs_ctx_commit" in
+      ''|*[!0-9]*) ;;
+      *) [ "$hs_ctx_commit" -gt "$hs_mark" ] && hs_mark=$hs_ctx_commit ;;
+    esac
+    hs_last=$(git -C "$hs_dir" log -1 --format=%ct -- . ':(exclude)handoff' 2>/dev/null || true)
+    case "$hs_last" in
+      ''|*[!0-9]*) ;;
+      *)
+        if [ "$hs_last" -gt $((hs_mark + 60)) ]; then
+          printf 'WARN  handoff: card-behind-repo  最近的非 handoff 提交晚于 CONTEXT 提交/更新时间；若本轮已收工，请运行 --suspend\n'
+          hs_warn=$((hs_warn + 1))
+        fi
+        ;;
+    esac
+  fi
+  [ "$hs_fail" -gt 0 ] && return 1
+  return 0
 }
 
 if [ "$mode" = doc ]; then
@@ -441,6 +509,7 @@ if [ "$mode" = save ]; then
     echo "无改动，跳过"
     exit 0
   fi
+  check_handoff_state "$repo" precommit || die "交接状态未就绪，未暂存、未提交"
   check_secrets "$repo" || die "密钥扫描未通过，未暂存、未提交"
   sh "$script_dir/selftest.sh" || die "自测失败，未暂存、未提交"
   if [ "$all" = 1 ]; then
@@ -469,16 +538,38 @@ fi
 
 if [ "$mode" = push ]; then
   # 源仓库（脚本所在仓库有 .git）推源仓库；安装副本环境推当前项目的 git 仓库
+  hs_non_git=0
   if git -C "$repo" rev-parse --git-dir >/dev/null 2>&1; then
     push_dir=$repo
   else
     push_dir=$(pwd -P)
-    git -C "$push_dir" rev-parse --git-dir >/dev/null 2>&1 \
-      || die "--push 需要 git 仓库：源仓库或当前项目"
+    if ! git -C "$push_dir" rev-parse --git-dir >/dev/null 2>&1; then
+      hs_non_git=1
+      [ "$dry" = 1 ] || die "--push 需要 git 仓库：源仓库或当前项目"
+    fi
   fi
+  if [ "$dry" = 1 ]; then
+    hs_rc=0
+    check_handoff_state "$push_dir" prepush || hs_rc=1
+    ss_rc=0
+    check_secrets "$push_dir" || ss_rc=1
+    suffix=
+    [ "$hs_non_git" = 1 ] && suffix="，非 git"
+    if [ "$hs_rc" -eq 1 ] || [ "$ss_rc" -eq 1 ]; then
+      printf 'result: FAIL（dryrun%s，未推送）\n' "$suffix"
+      exit 1
+    fi
+    if [ "$hs_warn" -gt 0 ]; then
+      printf 'result: WARN（dryrun%s，未推送）\n' "$suffix"
+    else
+      printf 'result: OK（dryrun%s，未推送）\n' "$suffix"
+    fi
+    exit 0
+  fi
+  check_handoff_state "$push_dir" prepush || die "交接状态未就绪，未推送"
+  check_secrets "$push_dir" || die "密钥扫描未通过，未推送"
   git -C "$push_dir" rev-parse --abbrev-ref --symbolic-full-name '@{u}' >/dev/null 2>&1 \
     || die "当前分支没有上游；先 git push -u origin <branch>"
-  check_secrets "$push_dir" || die "密钥扫描未通过，未推送"
   printf '推送目标: %s\n' "$push_dir"
   case "$(uname -s 2>/dev/null)" in
     MINGW*|MSYS*|CYGWIN*) tls_fallback=1 ;;

@@ -141,7 +141,7 @@ flowchart LR
 | 换机迁移 | 能力表整表带走，只重填「本机环境」块；`AGENTS.md` / `PROJECT_RULES.md` 复制；`sync-paths` 与宿主 memory 不带；`config.toml` 只改 workspace |
 | 迁移范围 | 所有项目级文档按角色迁移：README（若存在）留根；设计/方案/指导类进 `docs/`；交接类进 `handoff/`；客制化名同样按类迁移，不留在根 |
 | 迁移判定 | V1/V2/V3 三档特征两条同时满足：文件名符合模板（含旧名 压卡备份.md、COMPACTION_BACKUP.md），标题含项目目录名（含义一致即可，如 color-duel 的「变色对决」）；不命中的设计/方案类按角色判定，判不准问用户 |
-| 完成定义 | 文档与安装副本一致；`--help` 与命令表一致；`--check` 按 `assets/CHECK.md` 的 C01–C15 每项有状态且无 WARN；当前宿主 probe 必测格无「待测」；卡 ≤100 行；根目录若存在项目文档 `.md`，只能是 `README.md`（包文件 `SKILL.md` 除外） |
+| 完成定义 | 文档与安装副本一致；`--help` 与命令表一致；`--check` 按 `assets/CHECK.md` 的 C01–C16 每项有状态且无 WARN；当前宿主 probe 必测格无「待测」；卡 ≤100 行；根目录若存在项目文档 `.md`，只能是 `README.md`（包文件 `SKILL.md` 除外） |
 
 ### 数据、兼容性与迁移
 
@@ -169,7 +169,7 @@ flowchart LR
 - 宿主差异只进 `$AGENT_CONFIG/AGENT_CAPABILITIES.md`；`SKILL.md` 只举例，不写宿主专属规则。
 - 宿主识别只做粗分（环境变量）；包装版（cc-haha 等）的差异进能力表 Host/版本与备注，协议不写宿主分支。
 - `--probe` 固定清单放 `assets/PROBE.md`；`SKILL.md` 只留指针、确认粒度与完成定义；live 先出计划，确认一次后跑完全部适用项，仅计划外副作用停。
-- `--check` / `--fix` 固定清单放 `assets/CHECK.md`（C01–C15）；`--check` 只读逐项输出，`--fix` 只修 C01/C04/C07/C10；内容过时走普通编辑，不归 `--doc`。
+- `--check` / `--fix` 固定清单放 `assets/CHECK.md`（C01–C16）；`--check` 只读逐项输出，`--fix` 只修 C01/C04/C07/C10；内容过时走普通编辑，不归 `--doc`。
 - 旧仓迁移是逐项目人工动作，不默认扫描全盘；先 `--check` 出清单，再由 `--doc` 迁移。
 - 迁移按角色处理所有项目级文档：README（若存在）留根，设计/方案/指导类进 `docs/`，交接类进 `handoff/`；客制化名同样迁移，不留在根。判不准时给选项，不自行决定。
 - 文档增删迁移只在 `--doc`；先跑 `scripts/handoff.sh --doc --guard`，只删 `## 文档` 表中的失效协议行，其余 WARN/SUGGEST 只报告；只做结构层增删移动、标记、文档表与迁移链接；不改正文内容语义（原有死链/旧路径/历史内容只报告）；内容创建只走 `--doc --init`，只新增、不重建/还原；`--fix` 不搬、不建、不删文档。
@@ -193,6 +193,7 @@ flowchart LR
 - 批量循环只用 POSIX sh 内建（`while read`、`printf '%.7s'`）：Git Bash 每个外部进程约 0.9 秒，副本多时会把同步拖慢。
 - 版本表只列主版本，小版本进 `CONTEXT.md` 记录与 `COMPACT_BACKUP.md`；废弃表按阶段追加；`CONTEXT.md` 的坑平时可追加，`--suspend` 时归并成 ≤10 类；`--check` 只报行数/记录数/类别超限，不自动改写。
 - `--save` 提交前跑 `scripts/selftest.sh`，FAIL 不提交；同步失败不推送。`--syncall` 在第一次遇到落后副本时跑同一自测，`--dryrun` 不跑。
+- 卡片新鲜度门禁：`--save` 提交前、`--push` 推送前跑 `check_handoff_state`；PROMPT 早于 CONTEXT 或 CONTEXT 未提交（`prepush`）时 FAIL，限额/仓库领先卡片时 WARN。`--push --dryrun` 只读，供 `--resume` 使用；`--suspend` 的 `--commit` / `--push` 前先跑同一 dryrun。
 
 ### --doc 的 guard / init
 
